@@ -8,9 +8,9 @@
     <meta property="og:site_name" content="SL Politics" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary" />
-    <link rel="icon" href="/lion-logo-light.png" type="image/png" media="(prefers-color-scheme: light)" />
-    <link rel="icon" href="/lion-logo-dark.png" type="image/png" media="(prefers-color-scheme: dark)" />
-    <link rel="icon" href="/lion-logo-light.png" type="image/png" />
+    <link rel="icon" href="/lion-logo-light-128.png" type="image/png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/lion-logo-dark-128.png" type="image/png" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/lion-logo-light-128.png" type="image/png" />
     <script>
       (function () {
         try {
@@ -21,7 +21,30 @@
     </script>
     <!-- Fonts are self-hosted (L-10, docs/security-audit-followup-2026-09-04.md,
          src/styles/base.css's @font-face rules) — no Google Fonts request, no
-         preconnect needed for a same-origin resource. -->
+         preconnect needed for a same-origin resource.
+
+         Self-hosted still leaves them LATE, which the preloads below fix. A
+         @font-face file is discovered only once the stylesheet has been
+         fetched and parsed AND some text has been laid out that needs it:
+         measured on a production build, the two families that render every
+         page did not start downloading until 478ms, four hundred of those
+         after the CSS had already arrived. With `font-display: swap` that is
+         a visible re-flow of the h1 — the largest text on the page, in
+         Source Serif 4 — several hundred milliseconds in.
+
+         Exactly two files, not eight. Only the LATIN subsets are preloaded:
+         the -ext files carry a `unicode-range` the vast majority of pages
+         never touch, and preloading a font the page does not use is a
+         warning in the console and wasted bandwidth on a phone. IBM Plex
+         Mono is left out for the same reason — it sets source ids and
+         retrieval dates, which are real but never above the fold.
+
+         `crossorigin` is REQUIRED even though these are same-origin: fonts
+         are fetched in CORS mode, so a preload without it is a different
+         request from the one @font-face makes, and the browser downloads
+         each file twice. -->
+    <link rel="preload" href="/fonts/source-serif-4-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/ibm-plex-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
     <title>SL Politics — Sri Lankan political profiles, public records and government information</title>
   </head>
   <body>

@@ -349,10 +349,24 @@ export function ActionLink({ label, href, back=false }) {
   return <a className={`action-link${back ? ' action-link--back' : ''} u-plain`} href={href}>{back ? <Icon name="arrowLeft"/> : null}<span>{label}</span>{back ? null : <Icon name="arrowRight"/>}</a>;
 }
 
-export function Pagination({ page, onMore }) {
+/**
+ * `step` is how many records the next press actually reveals — NOT
+ * `page.perPage`, which is how many are revealed in total.
+ *
+ * The directory calls `paginate(results, { perPage: shown })`, so `perPage`
+ * grows with every press while the batch size stays twelve. The button read
+ * its count from `perPage` and so promised "Load 24 more", then "Load 36
+ * more", while each press still added twelve: a control that misstates its
+ * own effect, and the reader has no way to tell except by counting cards.
+ * `step` defaults to `page.perPage` so the figure is unchanged for a caller
+ * that paginates conventionally, where the two genuinely are the same
+ * number.
+ */
+export function Pagination({ page, onMore, step = null }) {
   const { t } = useI18n();
   if (page.total === 0) return null;
-  return <div className="pagination"><p className="pagination__status" role="status">{t('common.showingOfRecords', { shown: page.shown, total: page.total })}</p>{page.hasMore ? <button type="button" className="btn btn--secondary" onClick={onMore}>{t('common.loadMore', { count: Math.min(page.perPage, page.total - page.shown) })}</button> : null}</div>;
+  const batch = Math.min(step ?? page.perPage, page.total - page.shown);
+  return <div className="pagination"><p className="pagination__status" role="status">{t('common.showingOfRecords', { shown: page.shown, total: page.total })}</p>{page.hasMore ? <button type="button" className="btn btn--secondary" onClick={onMore}>{t('common.loadMore', { count: batch })}</button> : null}</div>;
 }
 
 export function Fact({ iconName, text, muted=false, label=null }) {

@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { matchRoute, legacyRedirect } from "./router.tsx";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
 
 describe("matchRoute", () => {
   it("matches the homepage", () => {
@@ -75,5 +80,61 @@ describe("legacyRedirect", () => {
     expect(legacyRedirect("/directory", "?q=a")).toBeNull();
     expect(legacyRedirect("/", "")).toBeNull();
     expect(legacyRedirect("/corrections", "")).toBeNull();
+  });
+});
+
+/**
+ * Javora — the scroll on a route change must JUMP, not animate.
+ *
+ * A source-level assertion, which is unusual here and earned. The bug it
+ * pins was invisible to every other kind of test and looked correct in
+ * review: `window.scrollTo({ top: 0, behavior: "auto" })` reads as "scroll
+ * instantly", but in a ScrollToOptions "auto" means "use this element's CSS
+ * scroll-behavior" — and base.css sets `html { scroll-behavior: smooth }`
+ * site-wide so that in-page anchor jumps glide. So the one call written to
+ * opt OUT of smooth scrolling was the one inheriting it: measured from
+ * scrollY 1600, `behavior: "auto"` left scrollY at 1600 on the next line and
+ * only reached 0 several hundred milliseconds later, which animated a long
+ * scroll up through the page the reader had just left, made the view
+ * transition below capture its "after" snapshot at the OLD offset, and on a
+ * back navigation raced the browser's own restoration to land between the
+ * two.
+ *
+ * Nothing observable from a unit test distinguishes the two values — there
+ * is no DOM here to scroll — so the guard is the source itself, plus the CSS
+ * declaration that is the whole reason "auto" is wrong.
+ */
+describe("route-change scroll", () => {
+  /*
+   * Comments stripped first. The prose above `window.scrollTo` in router.tsx
+   * has to name the wrong value in order to explain why it is wrong, and a
+   * naive search of the raw file would read that explanation as the defect
+   * it warns about.
+   */
+  const codeOnly = (source: string) =>
+    source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+  const router = codeOnly(readFileSync(join(HERE, "router.tsx"), "utf8"));
+  const base = readFileSync(join(HERE, "..", "styles", "base.css"), "utf8");
+
+  it("scrolls with behavior: \"instant\"", () => {
+    expect(router).toMatch(/window\.scrollTo\(\{\s*top:\s*0,\s*behavior:\s*"instant"\s*\}\)/);
+  });
+
+  it("never passes behavior: \"auto\", which defers to the smooth CSS default", () => {
+    expect(router).not.toMatch(/behavior:\s*"auto"/);
+  });
+
+  it("is guarding against a real global default, not a hypothetical one", () => {
+    // If this ever stops being true the rule above can be revisited — until
+    // then "auto" and "instant" are genuinely different behaviours here.
+    expect(base).toMatch(/html\s*\{[^}]*scroll-behavior:\s*smooth/);
+  });
+
+  it("leaves a back/forward navigation's scroll position to the browser", () => {
+    // The other half of the fix: following a link starts at the top, pressing
+    // Back resumes where the reader was. See `poppedHistory`.
+    expect(router).toMatch(/if\s*\(!poppedHistory\)\s*window\.scrollTo/);
+    expect(router).toMatch(/poppedHistory = true;/);
   });
 });

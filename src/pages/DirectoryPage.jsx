@@ -9,7 +9,10 @@ import {
   DATASET, emptyFacets, queryPeople, facetOptions, paginate, directoryStats,
   initialCounts, ALPHABET,
 } from '../services/repository.ts';
-import { pushSearch, replaceSearch } from '../lib/router.tsx';
+import {
+  pushSearch, replaceSearch, readViewState, mergeViewState, useIsomorphicLayoutEffect,
+} from '../lib/router.tsx';
+import { rememberDirectorySearch } from '../lib/directoryReturn.ts';
 import { useDebouncedValue } from '../lib/useDebouncedValue.ts';
 import { applyPageMeta } from '../lib/seo.ts';
 import { routeMeta } from '../lib/pageMeta.ts';
@@ -106,16 +109,45 @@ export default function DirectoryPage({ route }) {
   /**
    * How many records are revealed, reset whenever the query changes.
    *
-   * Stored alongside the search string it belongs to and adjusted during
-   * render rather than in an effect: resetting via useEffect would render one
-   * frame showing the previous page size against the new result set, then
+   * Stored alongside the search string it belongs to and RESET during render
+   * rather than in an effect: resetting via useEffect would render one frame
+   * showing the previous page size against the new result set, then
    * immediately re-render — a visible flash and a wasted pass.
+   *
+   * It starts at PER_PAGE and is RESTORED from the history entry by the
+   * layout effect below.
+   *
+   * It used to start at twelve and stay there: someone who pressed "Load
+   * more" six times to reach the W's, opened a name and came back was handed
+   * the first twelve records again — and now that the browser restores their
+   * scroll offset as well (see `useRouteTransition` in router.tsx), that
+   * offset would point past the end of a list that had silently shrunk back
+   * to one screen. `lib/router.tsx`'s view state carries the count; a filter
+   * change starts a fresh entry with none, which is the reset this needs.
+   *
+   * Restored in an effect rather than in this initialiser, even though an
+   * initialiser would be the obvious place, because this page is prerendered
+   * with twelve cards and the FIRST client render has to match that HTML
+   * exactly or hydration fails and React throws the whole prerendered tree
+   * away (see CLAUDE.md's prerender invariants). A reader who reloads
+   * /directory after revealing forty-eight records is exactly the case that
+   * would have hit it. A LAYOUT effect, so the correction is flushed before
+   * the browser paints and there is no visible step from twelve to
+   * forty-eight.
    */
   const [paging, setPaging] = React.useState({ search: route.search, shown: PER_PAGE });
   const shown = paging.search === route.search ? paging.shown : PER_PAGE;
   if (paging.search !== route.search) {
     setPaging({ search: route.search, shown: PER_PAGE });
   }
+
+  useIsomorphicLayoutEffect(() => {
+    const stored = readViewState().shown;
+    if (!Number.isInteger(stored) || stored <= PER_PAGE) return;
+    setPaging(current => (current.search === route.search && current.shown >= stored
+      ? current
+      : { search: route.search, shown: stored }));
+  }, [route.search]);
 
   /**
    * Which cards, if any, were just revealed by a "Show more" click — an
@@ -132,6 +164,9 @@ export default function DirectoryPage({ route }) {
     const next = shown + PER_PAGE;
     setReveal({ search: route.search, from: shown, to: next });
     setPaging({ search: route.search, shown: next });
+    // Recorded against THIS history entry, without touching the URL — so the
+    // reader comes back to the list they built. See the layout effect above.
+    mergeViewState({ shown: next });
   };
 
   /*
@@ -197,6 +232,14 @@ export default function DirectoryPage({ route }) {
   const stats = React.useMemo(() => directoryStats(today), [today]);
 
   React.useEffect(() => { applyPageMeta(routeMeta('directory')); }, []);
+
+  /*
+    Remember this exact view of the register so a profile's "Back to
+    Directory" returns to it rather than to the unfiltered 1,623 — see
+    lib/directoryReturn.ts. An effect rather than a render-time call because
+    it notifies subscribers, and a store may not be written to during render.
+  */
+  React.useEffect(() => { rememberDirectorySearch(route.search); }, [route.search]);
 
   /**
    * Toggling a filter pushes a history entry, so back steps through filter
@@ -429,7 +472,7 @@ export default function DirectoryPage({ route }) {
                       />;
                     })}
                   </div>
-                  <Pagination page={page} onMore={showMore}/>
+                  <Pagination page={page} onMore={showMore} step={PER_PAGE}/>
                   <div className="u-mt-8">
                     {datasetNotice}
                     <p className="divider-note">

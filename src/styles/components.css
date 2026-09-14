@@ -1601,7 +1601,12 @@
   font-size: var(--text-md);
   font-weight: 600;
   line-height: 1.4;
+  letter-spacing: 0;
   color: var(--text-primary);
+  /* Same reason as `.entry__title` above: this moved h4 -> h3 to close the
+     profile's heading-level gap, and base.css's per-element measures differ
+     (40ch vs 26ch). Pinned so the semantics changed and the layout did not. */
+  max-width: 40ch;
 }
 
 .timeline__type {
@@ -2291,8 +2296,18 @@
   font-size: var(--text-md);
   font-weight: 600;
   line-height: 1.35;
+  letter-spacing: 0;
   color: var(--text-primary);
   min-width: 0;
+  /* Stated here rather than inherited from base.css's element rules, which
+     give h4 40ch and h3 26ch. These titles are `<h3>` now (the profile's
+     heading levels were one rung too deep — see SectionCard in
+     PersonPage.jsx) and a Sri Lankan ministerial title routinely runs past
+     26 characters, so inheriting the h3 cap would have broken
+     "Minister of Justice, Public Administration, Home Affairs…" across four
+     lines as a side effect of a semantic fix. 40ch is the measure this
+     element was designed at; it now says so itself. */
+  max-width: 40ch;
   /* Long official titles must wrap, never overflow their card. */
   overflow-wrap: anywhere;
 }
@@ -2361,10 +2376,23 @@
   border-bottom: 1px solid var(--border);
 }
 
-.section-card__head h3 {
+/*
+   `:is(h2, h3)`, because the ELEMENT changed and the look must not.
+
+   A profile's section titles are `<h2>` (see SectionCard in PersonPage.jsx —
+   the outline used to skip the h2 level entirely on all 1,623 records);
+   PersonDecisionPage and the decision prototype still render `<h3>` here.
+   Both get the same card-title treatment rather than base.css's much larger
+   `h2` size, so correcting the heading LEVEL does not resize anything on the
+   page. `letter-spacing` is pinned here for the same reason: base.css gives
+   h2 and h3 slightly different tracking, and this rule has to win over both
+   so the two elements render identically.
+*/
+.section-card__head :is(h2, h3) {
   font-family: var(--font-serif);
   font-size: var(--text-lg);
   font-weight: 600;
+  letter-spacing: -0.008em;
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);

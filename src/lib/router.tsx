@@ -141,6 +141,24 @@ export function legacyRedirect(pathname: string, search: string): string | null 
 
 const ROUTE_EVENT = "javora:routechange";
 
+/**
+ * Whether the route change now being processed came from the BACK/FORWARD
+ * buttons rather than from a link.
+ *
+ * `useRouteTransition` needs the distinction and cannot recover it from the
+ * route alone: following a link should land the reader at the top of the new
+ * page, while going back should return them to where they were reading. The
+ * browser already restores that offset itself (`history.scrollRestoration`
+ * defaults to "auto"), so on a pop the correct action is to do nothing and
+ * let it.
+ *
+ * Set before the route state is committed, in both directions, so the layout
+ * effect that reads it always sees the value for the navigation it is
+ * reacting to. Module scope rather than React state because it is not
+ * rendered — writing it during an event handler must not schedule a render.
+ */
+let poppedHistory = false;
+
 /** Navigate client-side. `replace` swaps the entry instead of pushing one. */
 export function navigate(href: string, { replace = false } = {}): void {
   const url = new URL(href, window.location.origin);
@@ -149,6 +167,7 @@ export function navigate(href: string, { replace = false } = {}): void {
 
   if (next === current && !url.hash) return;
 
+  poppedHistory = false;
   if (replace) window.history.replaceState(null, "", url.pathname + url.search + url.hash);
   else window.history.pushState(null, "", url.pathname + url.search + url.hash);
 
@@ -162,6 +181,7 @@ export function navigate(href: string, { replace = false } = {}): void {
  */
 export function replaceSearch(search: string): void {
   const url = `${window.location.pathname}${search ? `?${search}` : ""}`;
+  poppedHistory = false;
   window.history.replaceState(null, "", url);
   window.dispatchEvent(new CustomEvent(ROUTE_EVENT));
 }
@@ -169,8 +189,52 @@ export function replaceSearch(search: string): void {
 /** Push a query-string change so back/forward step through filter states. */
 export function pushSearch(search: string): void {
   const url = `${window.location.pathname}${search ? `?${search}` : ""}`;
+  poppedHistory = false;
   window.history.pushState(null, "", url);
   window.dispatchEvent(new CustomEvent(ROUTE_EVENT));
+}
+
+/* --------------------------------------------------------------------------
+   Per-entry view state
+
+   State that belongs to ONE history entry rather than to the address — how
+   far down an incrementally-revealed list the reader had got, and nothing
+   more. It lives here because this module is the only place that touches
+   `window.history`, and because its lifecycle is the router's: every
+   `navigate`/`pushSearch` above starts a fresh entry with no state, and every
+   `replaceSearch` clears the current one, which is exactly the behaviour
+   wanted — changing the filters SHOULD start the list again, while stepping
+   back to a list already read should not.
+
+   Deliberately NOT the query string. A shared or bookmarked /directory link
+   should carry the search, the facets and the sort, because those are what
+   the reader is showing someone; "I had pressed Load more four times" is not
+   part of that, and putting it in the URL would paste it into every link and
+   every A-Z href.
+   -------------------------------------------------------------------------- */
+
+export interface ViewState {
+  /** Records revealed so far in the directory's incremental list. */
+  shown?: number;
+}
+
+/** This history entry's view state, or an empty object. */
+export function readViewState(): ViewState {
+  if (typeof window === "undefined") return {};
+  const state: unknown = window.history.state;
+  return state && typeof state === "object" ? (state as ViewState) : {};
+}
+
+/**
+ * Merge into this history entry's view state, without navigating.
+ *
+ * No URL argument, so the address is untouched, and no route event, so
+ * nothing re-renders: the caller is already re-rendering for its own reason
+ * and this is only recording what to come back to.
+ */
+export function mergeViewState(patch: ViewState): void {
+  if (typeof window === "undefined") return;
+  window.history.replaceState({ ...readViewState(), ...patch }, "");
 }
 
 /** Whether a click should be left to the browser. */
@@ -275,6 +339,15 @@ export function useRoute(ssrRoute?: Route): Route {
      * public-record site cannot assume a fast device, and a hard cut here
      * costs nothing but a 160ms crossfade, this route skips the transition
      * rather than risk the stall on real hardware this could not measure.
+     *
+     * A BACK/FORWARD navigation is deliberately NOT exempted. It looks as
+     * though it should be — the browser restores that entry's scroll offset
+     * asynchronously around the popstate, and a view transition suppresses
+     * rendering across roughly that window — but measured on the production
+     * build with real input, /government restored to its exact offset (1200
+     * -> 1200) with the transition running. The scroll fix a pop needs is in
+     * `useRouteTransition` below, which stops SCROLLING to the top; it is
+     * not here.
      */
     const update = () => {
       const next = read();
@@ -294,11 +367,19 @@ export function useRoute(ssrRoute?: Route): Route {
         setRoute(next);
       }
     };
-    window.addEventListener("popstate", update);
+    // Marks the navigation as a pop BEFORE the route commits, so the layout
+    // effect in `useRouteTransition` leaves the browser's own scroll
+    // restoration alone rather than yanking the reader back to the top of a
+    // page they were already partway down. See `poppedHistory`.
+    const onPopState = () => {
+      poppedHistory = true;
+      update();
+    };
+    window.addEventListener("popstate", onPopState);
     window.addEventListener(ROUTE_EVENT, update);
     document.addEventListener("click", onDocumentClick);
     return () => {
-      window.removeEventListener("popstate", update);
+      window.removeEventListener("popstate", onPopState);
       window.removeEventListener(ROUTE_EVENT, update);
       document.removeEventListener("click", onDocumentClick);
     };
@@ -322,8 +403,12 @@ export function useRoute(ssrRoute?: Route): Route {
  * ordinary passive effect runs too late for that — the scroll-to-top and
  * focus move would land after the screenshot, so the crossfade would show
  * whatever was at the OLD scroll offset instead of the new page's top.
+ *
+ * Exported because `DirectoryPage` needs the same thing for the same reason:
+ * it restores its revealed-record count before paint, and it is one of the
+ * prerendered routes, so a bare `useLayoutEffect` would warn on every build.
  */
-const useIsomorphicLayoutEffect = typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
+export const useIsomorphicLayoutEffect = typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
 
 /**
  * Move focus and scroll position on navigation.
@@ -331,6 +416,15 @@ const useIsomorphicLayoutEffect = typeof window === "undefined" ? React.useEffec
  * Skipped on the initial render — moving focus before the user has interacted
  * would be disorienting and would fight the browser's own restoration on a
  * back navigation.
+ *
+ * TWO DIFFERENT NAVIGATIONS, TWO DIFFERENT SCROLL ANSWERS. Following a link
+ * is arriving somewhere new, so it starts at the top. Pressing Back is
+ * returning to something already being read, so it keeps the offset the
+ * browser restores — on a 1,623-person directory that is the difference
+ * between resuming where you left off and starting the register again. Only
+ * the scroll differs: focus moves to the main landmark either way, because a
+ * screen-reader user is equally stranded by a page that silently replaced
+ * itself whichever button did it.
  */
 export function useRouteTransition(route: Route): void {
   const firstRender = React.useRef(true);
@@ -342,7 +436,25 @@ export function useRouteTransition(route: Route): void {
       return;
     }
 
-    window.scrollTo({ top: 0, behavior: "auto" });
+    /*
+     * "instant", NOT "auto".
+     *
+     * In a ScrollToOptions, "auto" does not mean "jump" — it means "defer to
+     * the element's own CSS scroll-behavior", and base.css sets
+     * `html { scroll-behavior: smooth }` site-wide for in-page anchor jumps.
+     * So this call, whose entire job is to opt OUT of that default, was
+     * opting straight back INTO it: measured with
+     * window.scrollTo({top: 0, behavior: "auto"}) from scrollY 1600, scrollY
+     * was still 1600 on the next line, and only reached 0 several hundred ms
+     * later. Three consequences, all of them things this file is written to
+     * avoid: every navigation animated a long scroll up through the page the
+     * reader had just left; the view transition below captured its "after"
+     * snapshot at the OLD offset, which is precisely what running this as a
+     * layout effect exists to prevent; and on a back navigation the animation
+     * raced the browser's own restoration and landed somewhere between the
+     * two (1500 -> 949, measured). "instant" is the value that means jump.
+     */
+    if (!poppedHistory) window.scrollTo({ top: 0, behavior: "instant" });
     const main = document.getElementById("main");
     if (main) {
       main.setAttribute("tabindex", "-1");

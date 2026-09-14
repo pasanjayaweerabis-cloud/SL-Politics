@@ -180,9 +180,14 @@
    viewport-level scroll into view is governed by `html`'s scroll-behavior
    regardless of what's set on the target. That rule was a no-op: kept the
    global default here instead, and useRouteTransition in src/lib/router.tsx
-   passes an explicit behavior: "auto" to window.scrollTo on route change
+   passes an explicit behavior: "instant" to window.scrollTo on route change
    for exactly this reason — it has to opt out, because this is the one
-   scroll that should never inherit the smooth default. */
+   scroll that should never inherit the smooth default.
+
+   "instant" and not "auto": in a ScrollToOptions, "auto" means "use this
+   element's CSS scroll-behavior", i.e. exactly the smooth default declared
+   below, so the call that was written to opt out of this rule was in fact
+   inheriting it. See the measurement in router.tsx's own comment. */
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;

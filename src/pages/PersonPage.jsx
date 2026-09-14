@@ -22,20 +22,49 @@ import { safeExternalHref } from '../lib/externalUrl.ts';
 import { useI18n } from '../lib/i18n.jsx';
 import { getProfileContent } from '../data/profileContent.ts';
 import { recordProfileVisit } from '../lib/recentProfiles.ts';
+import { useDirectoryReturnHref } from '../lib/directoryReturn.ts';
 import PortfolioProfile from './PortfolioProfile.jsx';
 
 /* ==========================================================================
    Shared building blocks
    ========================================================================== */
 
+/**
+ * `<h2>`, not `<h3>`.
+ *
+ * Every profile is `<h1>` the person's name, and these are the record's
+ * top-level sections under it — but they were marked up two levels down, so
+ * all 1,623 profiles shipped an outline of h1 → h3 → h4 with no h2 anywhere
+ * except the footer. Heading level is how a screen-reader user navigates a
+ * long document, and on this site's principal page type the ladder had its
+ * second rung missing. Nothing about the SIZE of these headings changed: the
+ * `.section-card__head` rule that styles them now matches both elements, so
+ * the visual hierarchy is exactly what it was and only the semantics were
+ * corrected. Entry titles inside a section moved h4 → h3 to match.
+ */
 function SectionCard({ icon, title, action = null, children }) {
   return <section className="section-card">
     <div className="section-card__head">
-      <h3><Icon name={icon}/><span>{title}</span></h3>
+      <h2><Icon name={icon}/><span>{title}</span></h2>
       {action}
     </div>
     {children}
   </section>;
+}
+
+/**
+ * The profile's way back to the register.
+ *
+ * Renders the plain `/directory` in the prerendered HTML and adopts the
+ * reader's own last view of the directory once hydrated — see
+ * lib/directoryReturn.ts for why that is a session-scoped memory rather than
+ * something encoded in this page's URL.
+ */
+function BackToDirectory() {
+  const { t } = useI18n();
+  return <div className="profile-header__nav">
+    <ActionLink label={t('person.backToDirectory')} href={useDirectoryReturnHref()} back/>
+  </div>;
 }
 
 function Subsection({ icon, title, badge = null, children }) {
@@ -329,9 +358,9 @@ function LegalChallengeEntry({ row }) {
   const pending = row.outcome === 'pending';
   return <article className="entry entry--review">
     <div className="entry__head">
-      <h4 className="entry__title">
+      <h3 className="entry__title">
         {row.challengeType === 'quo-warranto' ? t('person.writOfQuoWarranto') : row.challengeType}
-      </h4>
+      </h3>
       <span className="badge badge--review">
         <Icon name="clock"/><span>{pending ? t('person.underReview') : row.outcome}</span>
       </span>
@@ -371,7 +400,7 @@ function LegalChallengeEntry({ row }) {
 function RecordEntry({ title, badge, org, period, children }) {
   return <article className="entry">
     <div className="entry__head">
-      <h4 className="entry__title">{title}</h4>
+      <h3 className="entry__title">{title}</h3>
       {badge}
     </div>
     {org}
@@ -462,11 +491,11 @@ function PositionEntry({ position, today, showMinistry = false }) {
   const future = !current && !position.endDate && isFuture(position.startDate, today);
   return <article className="entry">
     <div className="entry__head">
-      <h4 className="entry__title">
+      <h3 className="entry__title">
         {position.title}
         {current ? <> <CurrentBadge/></> : null}
         {future ? <> <span className="badge badge--review">{t('person.notYetAssumed')}</span></> : null}
-      </h4>
+      </h3>
       <EvidencePill evidence={evidenceFor(position.claim)}/>
     </div>
     <p className="entry__org">{position.institution}</p>
@@ -530,7 +559,7 @@ function PoliticalCareerTab({ view, today }) {
                 const party = getParty(affiliation.partyId);
                 return <article className="entry" key={affiliation.id}>
                   <div className="entry__head">
-                    <h4 className="entry__title">{party ? party.name : affiliation.partyId}</h4>
+                    <h3 className="entry__title">{party ? party.name : affiliation.partyId}</h3>
                     <EvidencePill evidence={evidenceFor(affiliation.claim)}/>
                   </div>
                   <p className="entry__org">
@@ -558,7 +587,7 @@ function PoliticalCareerTab({ view, today }) {
                   <time className="timeline__date" dateTime={event.eventDate}>{formatDate(event.eventDate)}</time>
                   <EvidencePill evidence={evidenceFor(event.claim)}/>
                 </div>
-                <h4 className="timeline__title">{event.title}</h4>
+                <h3 className="timeline__title">{event.title}</h3>
                 <p className="timeline__type">{t(`person.${EVENT_TYPE_KEY[event.eventType] ?? 'eventRecord'}`)}</p>
                 {event.description ? <p className="timeline__desc">{event.description}</p> : null}
               </li>
@@ -595,9 +624,9 @@ function SourcesCard({ view }) {
             const sourceHref = safeExternalHref(source.url);
             return <article className="entry" key={sourceId}>
               <div className="entry__head">
-                <h4 className="entry__title">
+                <h3 className="entry__title">
                   <span className="source-card__id">{source.id}</span> {source.name}
-                </h4>
+                </h3>
                 {sourceHref
                   ? <a className="btn btn--secondary btn--sm" href={sourceHref} target="_blank" rel="noopener noreferrer">
                       <span>{t('person.visit')}</span><Icon name="external"/>
@@ -652,7 +681,9 @@ export default function PersonPage({ slug, route }) {
  * route (App.jsx) can render the exact same thing.
  */
 export function PortfolioPersonPage({ slug, content }) {
-  const { t } = useI18n();
+  // No `useI18n` here any more: the one translated string this component had
+  // was the back link's label, and that moved into `BackToDirectory` along
+  // with the destination it needs to resolve.
   const view = React.useMemo(() => getPersonBySlug(slug), [slug]);
 
   // Same shared metadata definition the tabbed layout uses, so this profile
@@ -666,7 +697,7 @@ export function PortfolioPersonPage({ slug, content }) {
   return <>
     <header className="profile-header">
       <div className="container">
-        <div className="profile-header__nav"><ActionLink label={t('person.backToDirectory')} href="/directory" back/></div>
+        <BackToDirectory/>
       </div>
     </header>
     <PortfolioProfile content={content}/>
@@ -724,7 +755,7 @@ function TabbedPersonPage({ slug, route }) {
   return <>
     <header className="profile-header">
       <div className="container">
-        <div className="profile-header__nav"><ActionLink label={t('person.backToDirectory')} href="/directory" back/></div>
+        <BackToDirectory/>
         {view ? <ProfileHeader view={view} today={today}/> : <h1>{t('person.recordNotFound')}</h1>}
       </div>
     </header>

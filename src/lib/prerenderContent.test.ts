@@ -4,6 +4,7 @@ import React from "react";
 import { TabPanel } from "../components/Tabs.jsx";
 import { ProfileResult, ProfileResultLink } from "../components/Primitives.jsx";
 import App from "../App.jsx";
+import { discoverablePeople, sortForDisplay } from "../services/repository.ts";
 
 /**
  * Javora — what a crawler actually receives.
@@ -177,5 +178,51 @@ describe("ProfileResultLink always renders its anchor, hidden", () => {
   it("is always hidden — this stand-in is never the visible state", () => {
     const html = renderToString(React.createElement(ProfileResultLink, { view }));
     expect(html).toMatch(/hidden=""|hidden(?=[\s>])/);
+  });
+});
+
+/**
+ * Javora — a person profile's heading outline must not skip a level.
+ *
+ * Heading level is how a screen-reader user moves through a long document,
+ * and a profile is this site's longest and most important one: an official
+ * overview, education, professional experience, every political office held,
+ * a party history, a timeline and the sources behind all of it.
+ *
+ * THE BUG THIS EXISTS TO CATCH. Every one of those sections was marked up as
+ * `<h3>`, with their entries as `<h4>`, under the person's `<h1>` name — so
+ * all 1,623 profiles shipped an outline of h1 → h3 → h4 with no `<h2>`
+ * anywhere except the site footer. Nothing looked wrong: the headings were
+ * styled by class and rendered at exactly the intended sizes, so the defect
+ * was invisible in a browser and invisible to every test that checked what
+ * the page SAYS rather than how it is structured. Found by extracting the
+ * outline from a built page.
+ *
+ * Asserted over the real rendered route rather than a component in
+ * isolation, so the chrome's own headings (nav, footer) are part of the
+ * sequence exactly as a reader's screen reader encounters them.
+ */
+describe("person profile heading outline", () => {
+  const slug = sortForDisplay(discoverablePeople(new Date()), new Date())[0]!.person.slug;
+  const route = { name: "person" as const, params: { slug }, path: `/person/${slug}`, search: "" };
+  const html = renderToString(React.createElement(App, { ssrRoute: route }));
+  const levels = [...html.matchAll(/<h([1-6])[\s>]/g)].map((m) => Number(m[1]));
+
+  it("renders exactly one h1 — the person's name", () => {
+    expect(levels.filter((level) => level === 1)).toHaveLength(1);
+  });
+
+  it("never jumps more than one level deeper than the heading before it", () => {
+    const skips = levels
+      .map((level, i) => ({ level, previous: levels[i - 1] ?? level }))
+      .filter(({ level, previous }) => level - previous > 1);
+    expect(skips).toEqual([]);
+  });
+
+  it("puts the record's sections at h2, directly under the name", () => {
+    // The level that was missing. If SectionCard ever drops back to <h3>,
+    // the skip check above fires too — this one names the cause.
+    expect(levels).toContain(2);
+    expect(html).toMatch(/<h2[^>]*>.*?Official Overview/s);
   });
 });

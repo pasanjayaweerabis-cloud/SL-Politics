@@ -72,11 +72,24 @@ const FOOTER_GROUPS = [
   },
 ];
 
-export function BrandLockup({ href='/', markSize=34, name='SL Politics' }) {
+/**
+ * `highlight`, when it names a substring actually present in `name`, wraps
+ * just that word in `.brand__name-shine` (the sweeping-light animation in
+ * layout.css) instead of the whole lockup — the header's plain "SL Politics"
+ * never opts in, only the footer's "SL Politics By Javora" call below does.
+ */
+export function BrandLockup({ href='/', markSize=34, name='SL Politics', highlight }) {
+  const splitAt = highlight ? name.indexOf(highlight) : -1;
   return <a className="brand u-plain" href={href} aria-label="SL Politics — home">
-    <img className="brand__mark brand__mark--light" src="/lion-logo-light.png" alt="" width={markSize} height={markSize} decoding="async"/>
-    <img className="brand__mark brand__mark--dark" src="/lion-logo-dark.png" alt="" width={markSize} height={markSize} decoding="async"/>
-    <span className="brand__name">{name}</span>
+    <img className="brand__mark brand__mark--light" src="/lion-logo-light-128.png" alt="" width={markSize} height={markSize} decoding="async"/>
+    <img className="brand__mark brand__mark--dark" src="/lion-logo-dark-128.png" alt="" width={markSize} height={markSize} decoding="async"/>
+    <span className="brand__name">
+      {splitAt >= 0 ? <>
+        {name.slice(0, splitAt)}
+        <span className="brand__name-shine">{highlight}</span>
+        {name.slice(splitAt + highlight.length)}
+      </> : name}
+    </span>
   </a>;
 }
 
@@ -238,8 +251,8 @@ export function Chrome({ route }) {
     <nav className={navClassName} aria-label="Primary navigation">
       <div className="nav__inner">
         <a className="nav__logo u-plain" href="/" aria-label="SL Politics — home">
-          <img className="nav__logo-img nav__logo-img--light" src="/lion-logo-light.png" alt="" width={28} height={28} decoding="async"/>
-          <img className="nav__logo-img nav__logo-img--dark" src="/lion-logo-dark.png" alt="" width={28} height={28} decoding="async"/>
+          <img className="nav__logo-img nav__logo-img--light" src="/lion-logo-light-128.png" alt="" width={28} height={28} decoding="async"/>
+          <img className="nav__logo-img nav__logo-img--dark" src="/lion-logo-dark-128.png" alt="" width={28} height={28} decoding="async"/>
           <span className="nav__logo-name">SL Politics</span>
         </a>
         <span className="nav__hairline" aria-hidden="true"></span>
@@ -284,7 +297,7 @@ export function Footer() {
   const { t } = useI18n();
   return <footer className="footer"><div className="container footer__inner">
     <div className="footer__brand">
-      <BrandLockup markSize={30} name={t('footer.brandName')}/>
+      <BrandLockup markSize={30} name={t('footer.brandName')} highlight="Javora"/>
       <p className="footer__tagline">{t('footer.tagline')}</p>
     </div>
     <nav className="footer__nav" aria-label="Footer">

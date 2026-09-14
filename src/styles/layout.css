@@ -125,6 +125,32 @@
   gap: var(--space-3);
   flex-shrink: 0;
   text-decoration: none;
+  position: relative;
+}
+
+/*
+   The header's home link is a 28px mark, and below 900px the wordmark beside
+   it is hidden (`.nav__logo-name`, below) — so on a phone, where every other
+   control in this bar is a comfortable 44px, the one link back to the
+   homepage was a 28px square. Above WCAG 2.2's 24px floor, well under the
+   44px this site holds everything else to.
+
+   Extended with a pseudo-element rather than by padding the link, because
+   padding would push the mark inward and move the brand off the grid every
+   other page element is aligned to. This grows the hit area around the mark
+   and leaves the mark exactly where it is. It reaches rightward into the gap
+   before the hairline, which holds nothing clickable, so no two targets
+   overlap.
+*/
+.nav__logo::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 44px;
+  min-width: 44px;
+  transform: translateY(-50%);
 }
 
 .nav__logo-mark {
@@ -237,6 +263,38 @@
   letter-spacing: -0.01em;
   color: var(--text-primary);
   line-height: 1;
+}
+
+/* Footer-only "Javora" glint: a diagonal band of --brand-shine sweeps across
+   just that word, then holds for the rest of the cycle (the 50%/100% keyframe
+   pair below), echoing the same brief-pass-then-pause rhythm a hover shine
+   uses without ever drawing attention away from the nav's plain wordmark.
+   `color` is a non-animating fallback for browsers without text background-
+   clip; the global prefers-reduced-motion rule in base.css already collapses
+   the animation to a single, effectively instant frame. */
+.brand__name-shine {
+  display: inline-block;
+  color: var(--text-primary);
+  background-image: linear-gradient(
+    100deg,
+    var(--text-primary) 0%,
+    var(--text-primary) 40%,
+    var(--brand-shine) 50%,
+    var(--text-primary) 60%,
+    var(--text-primary) 100%
+  );
+  background-size: 250% 100%;
+  background-position: 200% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: brand-shine 3.2s ease-in-out infinite;
+}
+
+@keyframes brand-shine {
+  0%   { background-position: 200% 0; }
+  45%  { background-position: -70% 0; }
+  100% { background-position: -70% 0; }
 }
 
 /* ---- Desktop links -------------------------------------------------- */

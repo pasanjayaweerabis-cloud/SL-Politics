@@ -36,6 +36,10 @@
   --deep-teal:             #24545A;
   --sage:                  #BFD5C8;
   --sage-light:            #DCE8E0;
+  /* Sweep colour for the footer brand name's shine animation — a translucent
+     lift off --primary, not a new hue, so the glint reads as light catching
+     the wordmark rather than a colour change. */
+  --brand-shine:           rgba(23, 59, 77, 0.45);
 
   /* ---- Text -------------------------------------------------------- */
   --text-primary:          #253238;
@@ -184,6 +188,7 @@
   --d-deep-teal:             #4F817E;
   --d-sage:                  #7F9F91;
   --d-sage-light:            #AFC5B9;
+  --d-brand-shine:           rgba(231, 238, 235, 0.55);
 
   --d-text-primary:          #E7EEEB;
   --d-text-secondary:        #C1CFCC;
@@ -330,6 +335,7 @@
   --deep-teal:             var(--d-deep-teal);
   --sage:                  var(--d-sage);
   --sage-light:            var(--d-sage-light);
+  --brand-shine:           var(--d-brand-shine);
 
   --text-primary:          var(--d-text-primary);
   --text-secondary:        var(--d-text-secondary);
@@ -428,6 +434,7 @@
     --deep-teal:             var(--d-deep-teal);
     --sage:                  var(--d-sage);
     --sage-light:            var(--d-sage-light);
+    --brand-shine:           var(--d-brand-shine);
 
     --text-primary:          var(--d-text-primary);
     --text-secondary:        var(--d-text-secondary);
