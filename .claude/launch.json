@@ -1,0 +1,31 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "javora-dev",
+      "runtimeExecutable": "/Users/pasan/.local/node/bin/node",
+      "runtimeArgs": [
+        "node_modules/vite/bin/vite.js"
+      ],
+      "autoPort": true
+    },
+    {
+      "name": "javora-dev-lan",
+      "runtimeExecutable": "/Users/pasan/.local/node/bin/node",
+      "runtimeArgs": [
+        "node_modules/vite/bin/vite.js",
+        "--host",
+        "0.0.0.0"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "javora-dist",
+      "runtimeExecutable": "/Users/pasan/.local/node/bin/node",
+      "runtimeArgs": [
+        "scripts/serve-dist.mjs"
+      ],
+      "port": 5190
+    }
+  ]
+}

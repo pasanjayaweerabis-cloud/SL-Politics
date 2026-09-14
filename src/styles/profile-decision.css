@@ -1,0 +1,453 @@
+/* ==========================================================================
+   Profile — decision-first layout
+   ==========================================================================
+
+   The person page laid out as four questions rather than as a pile of tabs.
+   Kept in its own file: the layout is one page's, it is the most likely part
+   of the site to be redesigned again, and components.css is already 2,500
+   lines.
+
+   Everything here is expressed in tokens from tokens.css, so the page follows
+   the reader's light/dark choice. The design this came from used a fixed dark
+   palette (see the git history of pages/DecisionProfilePrototype.css); porting
+   those literals across would have produced a page that ignored the theme
+   toggle and failed contrast in light mode.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Hero additions
+   -------------------------------------------------------------------------- */
+
+.pf-hero__aliases {
+  margin: var(--space-1) 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* --------------------------------------------------------------------------
+   Fact strip
+
+   One hairline grid: the container paints --border and the cells paint over
+   it, so the rules between cells are the gaps rather than per-cell borders
+   that would double up.
+   -------------------------------------------------------------------------- */
+
+.pf-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.pf-fact {
+  background: var(--surface);
+  padding: var(--space-4) var(--space-5);
+}
+
+.pf-fact__label {
+  margin: 0;
+  font-size: var(--text-micro);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: var(--lh-snug);
+}
+
+.pf-fact__value {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  line-height: var(--lh-heading);
+  color: var(--figure);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-fact__note {
+  display: block;
+  margin-top: var(--space-1);
+  font-family: var(--font-sans);
+  font-size: var(--text-micro);
+  line-height: var(--lh-snug);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Numbered section headings
+   -------------------------------------------------------------------------- */
+
+.pf-sec {
+  margin-top: var(--space-12);
+}
+
+.pf-sec__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border);
+}
+
+.pf-sec__no {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--accent-gold-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-sec__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--track-display);
+  color: var(--text-primary);
+}
+
+.pf-sec__q {
+  margin: 0 0 0 auto;
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* --------------------------------------------------------------------------
+   Cards and label -> value rows
+   -------------------------------------------------------------------------- */
+
+.pf-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.pf-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-6);
+}
+
+.pf-card__title {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pf-rows {
+  margin: 0;
+}
+
+.pf-row {
+  padding: var(--space-3) 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.pf-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.pf-row__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pf-row__value {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* An entry inside a row carries the card's own padding already. */
+.pf-row__value .entry {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.pf-row__value .entry:first-child {
+  padding-top: 0;
+}
+
+/* --------------------------------------------------------------------------
+   02 — offices
+
+   The left border carries the distinction the section is built on: an office
+   with a ministry behind it, versus a seat that never had one.
+   -------------------------------------------------------------------------- */
+
+.pf-offices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.pf-office {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-6);
+}
+
+.pf-office--executive {
+  border-left-color: var(--accent-gold);
+}
+
+.pf-office__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.pf-office__name {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  line-height: var(--lh-heading);
+  color: var(--text-primary);
+}
+
+.pf-office__suffix {
+  margin-left: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-micro);
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.pf-office__tenure {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.pf-office__scope {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.pf-office__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.pf-office__terms {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pf-office__terms li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-top: 1px dashed var(--border);
+}
+
+/* --------------------------------------------------------------------------
+   Caveats and measures
+   -------------------------------------------------------------------------- */
+
+.pf-caveat {
+  margin-top: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface-soft);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  line-height: var(--lh-body);
+  color: var(--text-secondary);
+}
+
+.pf-caveat strong {
+  color: var(--warning-text);
+}
+
+.pf-measures {
+  margin-top: var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-6);
+}
+
+.pf-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.pf-tile {
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+
+.pf-tile__label {
+  margin: 0;
+  font-size: var(--text-micro);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pf-tile__value {
+  margin: var(--space-2) 0 0;
+}
+
+/* The absent value must never be mistaken for a figure: no mono, no numerals,
+   no weight — it reads as the sentence it is. */
+.pf-tile__value .unrecorded {
+  margin: 0;
+  font-style: italic;
+}
+
+.pf-note {
+  margin: var(--space-4) 0 0;
+  max-width: var(--measure);
+  font-size: var(--text-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   03 — what nobody publishes
+   -------------------------------------------------------------------------- */
+
+.pf-disclosure {
+  padding: var(--space-2) var(--space-6);
+}
+
+.pf-disclosure__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.pf-disclosure__row:last-child {
+  border-bottom: none;
+}
+
+.pf-disclosure__row dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.pf-disclosure__row dt::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--text-muted);
+}
+
+.pf-disclosure__row dd {
+  margin: 0;
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   04 — go deeper
+   -------------------------------------------------------------------------- */
+
+.pf-deeper {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
+.pf-deeper__title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  line-height: var(--lh-heading);
+  color: var(--text-primary);
+}
+
+.pf-deeper__body {
+  margin: 0 0 var(--space-3);
+  max-width: var(--measure);
+  font-size: var(--text-sm);
+  line-height: var(--lh-body);
+  color: var(--text-secondary);
+}
+
+.pf-deeper__body:last-child {
+  margin-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Narrow screens
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 720px) {
+  .pf-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pf-sec__q {
+    margin-left: 0;
+    text-align: left;
+    flex-basis: 100%;
+  }
+
+  .pf-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pf-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pf-card,
+  .pf-office,
+  .pf-measures,
+  .pf-deeper {
+    padding: var(--space-4);
+  }
+
+  .pf-disclosure {
+    padding: var(--space-1) var(--space-4);
+  }
+
+  .pf-disclosure__row dd {
+    text-align: left;
+  }
+}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SL Politics is a neutral public information platform for Sri Lanka. Explore source-linked profiles, public positions, timelines and institutional records." />
+    <meta name="color-scheme" content="light dark" />
+    <meta property="og:site_name" content="SL Politics" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href="/lion-logo-light.png" type="image/png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/lion-logo-dark.png" type="image/png" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/lion-logo-light.png" type="image/png" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('javora.theme');
+          if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+    <!-- Fonts are self-hosted (L-10, docs/security-audit-followup-2026-09-04.md,
+         src/styles/base.css's @font-face rules) — no Google Fonts request, no
+         preconnect needed for a same-origin resource. -->
+    <title>SL Politics — Sri Lankan political profiles, public records and government information</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

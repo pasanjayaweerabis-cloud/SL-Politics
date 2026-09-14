@@ -1,0 +1,531 @@
+/* ==========================================================================
+   Home hero (v2) — full-viewport photo hero + floating header build.
+   Every colour/size here reads from the `--hh-*` tokens in tokens.css,
+   which are scoped to exactly this file and `.site-header` — see the note
+   there on why they are prefixed instead of reusing the site's own text/
+   surface tokens.
+   ========================================================================== */
+
+.home-hero {
+  position: relative;
+  isolation: isolate;
+  z-index: 1;
+  /*
+     Deliberately a little under a full viewport.
+     
+     At exactly 100svh the hero is the entire first screen and the product
+     — search results, the register, the government page — begins below a
+     fold with nothing visible to say anything is there. Leaving ~12svh of
+     the next section showing is the difference between "a photograph" and
+     "a photograph on top of a site", and it costs the hero nothing: the
+     content block inside it is nowhere near that tall.
+     
+     `min()` rather than a bare percentage so a very tall desktop window
+     doesn't stretch the photo into a wall.
+  */
+  min-height: min(88svh, 860px);
+  display: flex;
+  align-items: flex-end;
+  color: var(--hh-white);
+}
+
+.home-hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+}
+
+/* The <picture> wrapper is a normal inline-level box with no height of its
+   own — without this, `img { height: 100% }` below resolves against
+   <picture>'s auto (content-based) height instead of `.home-hero__media`'s,
+   so the browser falls back to the image's intrinsic aspect ratio and it
+   renders far shorter than the section, leaving everything under that point
+   sitting on bare veil with no photo behind it. Stretching <picture> itself
+   to fill the media layer is what lets the percentage chain reach the img. */
+.home-hero__media picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.home-hero__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* wallpaper1 is a wide panorama (1750x899) with its two landmarks —
+     Sigiriya rock and the Buddha statue — sitting left-of-centre and at
+     the right edge. On a full-height mobile/tablet portrait viewport,
+     `cover` scales the image up so much to fill the height that a
+     centered crop shows only the sky/foliage between them, losing both.
+     Shifting toward the rock keeps at least one recognisable landmark in
+     frame at every width; see the breakpoints below for how far. */
+  object-position: 58% center;
+}
+
+.home-hero__veil {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* Vertical layer listed first (top layer), horizontal second (bottom
+     layer) — CSS paints the first background-image on top, and the build
+     spec's "bottom → top" stacking order names the horizontal scrim as the
+     lower layer. */
+  background-image:
+    linear-gradient(180deg, rgba(4, 18, 14, 0.35) 0%, rgba(4, 18, 14, 0) 28%, rgba(4, 18, 14, 0.55) 100%),
+    linear-gradient(90deg, rgba(4, 18, 14, 0.82) 0%, rgba(4, 18, 14, 0.55) 42%, rgba(4, 18, 14, 0.1) 72%, rgba(4, 18, 14, 0) 100%);
+}
+
+.home-hero__content {
+  position: relative;
+  width: 100%;
+  max-width: 1520px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 40px);
+  /* Fluid, not stepped at breakpoints — top clears the floating header
+     (see .site-header--overlay) down to a still-safe floor on short/narrow
+     viewports; bottom leaves breathing room before the viewport edge. Sized
+     so the whole content block keeps fitting inside `.home-hero`'s
+     `min-height: 100svh`, which is what keeps every element here sitting on
+     the photo rather than spilling past it. */
+  padding-block: clamp(104px, 15vw, 180px) clamp(20px, 4vw, 40px);
+}
+
+.home-hero svg { stroke-width: 1.5; }
+
+/* ---- Eyebrow ---------------------------------------------------------- */
+
+.home-hero__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 clamp(14px, 2.4vw, 24px);
+  font-size: clamp(0.68rem, 1.4vw, 0.78rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.home-hero__rule { flex: none; height: 1px; background: rgba(255, 255, 255, 0.45); }
+.home-hero__rule--short { width: 18px; }
+.home-hero__rule--long { width: 70px; }
+
+/* ---- Headline / sub ---------------------------------------------------- */
+
+.home-hero__title {
+  margin: 0;
+  max-width: none;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  /* Wide floor so this scales continuously down to the smallest phones
+     instead of jumping at a breakpoint (see the removed <639px override). */
+  font-size: clamp(1.9rem, 6.2vw, 4.6rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--hh-white);
+  overflow-wrap: break-word;
+}
+
+.home-hero__title-accent { color: var(--hh-mint-300); }
+
+.home-hero__sub {
+  margin: clamp(12px, 2.2vw, 20px) 0 0;
+  max-width: 52ch;
+  font-size: clamp(0.92rem, 1.6vw, 1.1rem);
+  line-height: 1.55;
+  color: var(--hh-text-muted);
+}
+
+/* ---- Search pill -------------------------------------------------------
+   Wraps SearchField's shared icon+input+clear markup (see SearchField.jsx)
+   in the hero build's own pill chrome, rather than the site-wide `.search`
+   look — hence the overrides on `.search__*` scoped to this ancestor only. */
+
+/* The pill is wrapped by `SearchTypeahead`'s own positioning root (see
+   SearchPill.jsx), so the spacing and the width cap that used to sit on the
+   form move out to the wrapper — the suggestion panel anchors to the
+   wrapper and must be exactly as wide as the pill, not wider. */
+.home-hero__search-root {
+  width: 100%;
+  max-width: 770px;
+  margin-top: clamp(22px, 4vw, 34px);
+}
+
+.home-hero__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: clamp(58px, 8vw, 74px);
+  /* Slightly see-through so the photo still reads behind the pill, rather
+     than a fully opaque card — backdrop-filter keeps the input legible
+     over busy parts of the image. */
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .home-hero__search { background: rgba(255, 255, 255, 0.96); }
+}
+
+.home-hero__search:focus-within {
+  outline: 2px solid var(--hh-mint-300);
+  outline-offset: 2px;
+}
+
+.home-hero__search .search__field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+  padding-inline: 28px 12px;
+}
+
+.home-hero__search .search__icon { width: 22px; height: 22px; color: rgba(18, 33, 28, 0.45); flex: none; }
+
+.home-hero__search .search__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  color: #12211c;
+}
+
+.home-hero__search .search__input::placeholder { color: rgba(18, 33, 28, 0.45); }
+.home-hero__search .search__clear { flex: none; color: rgba(18, 33, 28, 0.45); }
+
+.home-hero__search-submit {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: calc(100% - 16px);
+  margin: 8px 8px 8px 0;
+  padding-inline: 28px;
+  border: none;
+  border-radius: 999px;
+  background: var(--hh-green-900);
+  color: var(--hh-white);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.home-hero__search-submit:hover { background: var(--hh-green-800); }
+.home-hero__search-submit:focus-visible { outline: 2px solid var(--hh-mint-300); outline-offset: 2px; }
+.home-hero__search-submit svg { width: 16px; height: 16px; }
+
+/* ---- Popular searches --------------------------------------------------- */
+
+.home-hero__popular {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-hero__popular-label {
+  margin-right: 4px;
+  color: var(--hh-text-dim);
+  font-size: 0.9rem;
+}
+
+.home-hero__pill {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding-inline: 20px;
+  border: 1px solid var(--hh-pill-border);
+  border-radius: 999px;
+  color: var(--hh-white);
+  font-size: 0.9rem;
+  text-decoration: none;
+  background: transparent;
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.home-hero__pill:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.45); }
+.home-hero__pill:focus-visible { outline: 2px solid var(--hh-mint-300); outline-offset: 2px; }
+
+/* ---- Key public figures ------------------------------------------------- */
+
+.home-hero__figures-head {
+  margin-top: 44px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-hero__figures-heading {
+  margin: 0;
+  max-width: none;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--hh-white);
+}
+
+.home-hero__figures-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--hh-white);
+}
+
+.home-hero__figures-link svg { width: 18px; height: 18px; }
+.home-hero__figures-link:focus-visible { outline: 2px solid var(--hh-mint-300); outline-offset: 2px; border-radius: 4px; }
+
+.home-hero__figures {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.home-hero__figure,
+.home-hero__figure--empty {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 96px;
+  padding: 16px 20px;
+  background: var(--hh-glass-bg);
+  border: 1px solid var(--hh-glass-border);
+  border-radius: 16px;
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .home-hero__figure,
+  .home-hero__figure--empty { background: rgba(9, 28, 22, 0.86); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-hero__figure:hover {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: color-mix(in srgb, var(--hh-glass-bg) 94%, white 6%);
+    transform: translateY(-2px);
+  }
+}
+
+.home-hero__figure:focus-visible { outline: 2px solid var(--hh-mint-300); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero__figure { transition: none; }
+  .home-hero__figure:hover { transform: none; }
+}
+
+.home-hero__figure .avatar,
+.home-hero__figure--empty .avatar {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.home-hero__figure--empty .avatar { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); opacity: 0.7; }
+
+.home-hero__figure-text { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+
+.home-hero__figure-name {
+  font-weight: 600;
+  color: var(--hh-white);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(255, 255, 255, 0.5);
+}
+
+.home-hero__figure--empty .home-hero__figure-name { text-decoration: none; }
+
+.home-hero__figure-role { font-size: 0.9rem; color: var(--hh-text-dim); }
+
+.home-hero__figure-chevron { flex: none; width: 18px; height: 18px; color: rgba(255, 255, 255, 0.5); }
+
+/* ---- Stats strip --------------------------------------------------------- */
+
+.home-hero__stats {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  height: 92px;
+  padding-inline: 32px;
+  background: var(--hh-glass-bg);
+  border: 1px solid var(--hh-glass-border);
+  border-radius: 16px;
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .home-hero__stats { background: rgba(9, 28, 22, 0.86); }
+}
+
+.home-hero__stats-count { flex: none; display: flex; align-items: center; gap: 16px; padding-right: 32px; }
+.home-hero__stats-count svg { flex: none; width: 28px; height: 28px; color: rgba(255, 255, 255, 0.75); }
+.home-hero__stats-number { display: block; font-family: var(--font-serif); font-weight: 700; font-size: 2.6rem; line-height: 1; color: var(--hh-white); }
+.home-hero__stats-label { display: block; margin-top: 4px; font-size: 0.9rem; color: var(--hh-text-dim); }
+
+.home-hero__stats-item { position: relative; flex: 1; display: flex; align-items: center; gap: 12px; padding-inline: 32px; }
+.home-hero__stats-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 1px;
+  height: 48px;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.14);
+}
+.home-hero__stats-item svg { flex: none; width: 22px; height: 22px; color: rgba(255, 255, 255, 0.75); }
+.home-hero__stats-item-title { display: block; font-size: 0.95rem; font-weight: 600; color: var(--hh-white); }
+.home-hero__stats-item-sub { display: block; margin-top: 2px; font-size: 0.85rem; color: var(--hh-text-dim); }
+
+/* ---- Bottom row ----------------------------------------------------------- */
+
+.home-hero__bottom {
+  margin-top: clamp(24px, 5vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+/* `.home-hero__cta` is the same affordance `.home-hero__scroll` was, as a
+   real link — see HomeHero.jsx. The two share every rule; only the element
+   and the destination changed. */
+.home-hero__scroll,
+.home-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--hh-text-dim);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.home-hero__cta { text-decoration: none; }
+.home-hero__cta:hover { color: var(--hh-white); }
+
+.home-hero__scroll-circle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(36px, 6vw, 44px);
+  height: clamp(36px, 6vw, 44px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  color: var(--hh-white);
+  transition: border-color var(--dur) var(--ease);
+}
+
+.home-hero__scroll-circle svg { width: 18px; height: 18px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .home-hero__scroll:hover .home-hero__scroll-circle,
+  .home-hero__cta:hover .home-hero__scroll-circle { border-color: rgba(255, 255, 255, 0.6); }
+}
+
+.home-hero__cta:focus-visible .home-hero__scroll-circle,
+.home-hero__scroll:focus-visible .home-hero__scroll-circle { outline: 2px solid var(--hh-mint-300); outline-offset: 2px; }
+
+.home-hero__bottom-tagline {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--hh-text-dim);
+  font-size: 0.9rem;
+}
+
+.home-hero__bottom-rule { width: 64px; height: 1px; background: rgba(255, 255, 255, 0.35); flex: none; }
+
+/* ==========================================================================
+   Responsive
+   Sizing itself (padding, type, search pill, scroll circle) is fluid via
+   `clamp()` above, so it scales continuously with viewport width instead of
+   jumping at these breakpoints — they now only hold layout changes that
+   genuinely need a hard switch (a button collapsing to icon-only, a row
+   changing from horizontal to stacked), not size adjustments.
+   ========================================================================== */
+
+/* 640–899px: search button collapses to an icon-only circle. Header
+   collapse to hamburger lives in site-header.css at the matching
+   breakpoint. */
+@media (max-width: 899px) {
+  .home-hero__search-submit { width: 58px; padding-inline: 0; border-radius: 50%; justify-content: center; }
+  .home-hero__search-submit span { display: none; }
+
+  /* Tablet portrait crops the panorama hardest (scaling to cover a
+     roughly 3:4 viewport leaves well under half the width visible) —
+     centre on Sigiriya rock rather than the gap between the two
+     landmarks. */
+  .home-hero__media img { object-position: 40% center; }
+}
+
+/* <640px: bottom row stacks and drops the tagline. */
+@media (max-width: 639px) {
+  .home-hero__bottom { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .home-hero__bottom-tagline { display: none; }
+
+  /*
+     The scrim is directional — strongest at the left, clearing by ~72% of
+     the width — because on a wide screen the copy sits in the left third and
+     the photograph is meant to read in the right two. At phone width there
+     is no "right two-thirds": the 0.82-alpha end of that gradient covers
+     almost the entire frame and the wallpaper renders as a near-black
+     rectangle. Same job, rotated: dark where the text actually is (top and
+     bottom bands) and clear through the middle, so the photo survives the
+     crop it was always going to get.
+  */
+  .home-hero__veil {
+    background-image:
+      linear-gradient(180deg, rgba(4, 18, 14, 0.72) 0%, rgba(4, 18, 14, 0.34) 34%, rgba(4, 18, 14, 0.42) 62%, rgba(4, 18, 14, 0.88) 100%);
+  }
+
+  /* Phone portrait is even narrower relative to the fixed hero height;
+     hold the same rock-centred crop rather than drifting further. */
+  .home-hero__media img { object-position: 36% center; }
+}
+
+/*
+ * `.nav--overlay` (layout.css) stays `position: fixed` for the entire home
+ * route, not just while over the hero photo — so the section right after
+ * the hero is the one place a reader actually lands directly under it: once
+ * the hero scrolls fully out of view (whether via `scrollToNext` above or by
+ * hand), this section's own top edge reaches the very top of the viewport,
+ * and the standard `.section` padding-top (`--space-16`, 64px) falls short
+ * of the pill's real footprint (16px offset + 76px `.nav__inner` height =
+ * 92px), leaving its heading hidden behind the bar. The fix has to be extra
+ * padding here, not a shorter scroll: stopping short instead would leave the
+ * gap showing the hero photo's own tail rather than this section's
+ * background, since the two sit flush with no gap between them in the
+ * document.
+ */
+.home-hero + .section { padding-top: calc(16px + 76px + var(--space-6)); }

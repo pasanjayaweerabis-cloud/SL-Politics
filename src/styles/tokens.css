@@ -1,0 +1,684 @@
+/* ==========================================================================
+   Javora — Design Tokens
+   "Civic Calm" light theme + "Civic Calm Dark" evening theme.
+   One system, two moods. The dark theme is authored, not inverted.
+   --------------------------------------------------------------------------
+   Structure, and why:
+
+     :root                 the light palette, and every non-colour token.
+     :root                 the dark palette's raw values, as --d-* names.
+     dark mapping          assigns --d-* onto the live token names, via two
+                           selectors. The hex values are written once, so the
+                           two dark entry points cannot drift apart — an
+                           earlier draft kept two full copies and they did.
+
+   The two entry points are an explicit reader choice (data-theme="dark") and
+   the system preference (prefers-color-scheme, honoured only when the reader
+   has not chosen). An explicit "light" wins over the system preference in
+   both directions.
+   ========================================================================== */
+
+:root {
+  /* ---- Surfaces ---------------------------------------------------- */
+  --background:            #F7F8F5;
+  --background-secondary:  #EEF3EF;
+  --surface:               #FFFFFF;
+  --surface-elevated:      #FFFFFF;
+  --surface-soft:          #EEF3EF;
+  --surface-inset:         #F2F5F1;
+  --footer-bg:             #EEF3EF;
+  --nav-bg:                #FFFFFF;
+
+  /* ---- Brand ------------------------------------------------------- */
+  --primary:               #173B4D;
+  --primary-dark:          #102B39;
+  --secondary:             #356B6D;
+  --deep-teal:             #24545A;
+  --sage:                  #BFD5C8;
+  --sage-light:            #DCE8E0;
+
+  /* ---- Text -------------------------------------------------------- */
+  --text-primary:          #253238;
+  --text-secondary:        #45545A;
+  /* #5F6B6D measured 4.91:1 on --surface-soft at 11-13px — technically AA,
+     but --text-muted also carries .meta and .mono at those small sizes,
+     where "passes" and "comfortable" diverge. Lifted a step: 7.02:1 on
+     --background, 6.66:1 on --surface-soft. See audit #5. */
+  --text-muted:            #4B5759;
+  --text-on-brand:         #F4F7F4;
+
+  /* ---- Lines ------------------------------------------------------- */
+  --border:                #DDE5E0;
+  --border-strong:         #C6D3CB;
+  /* Decorative card outlines stay at --border's 1.20:1 on purpose — meeting
+     3:1 there would cost the calm the palette was built for. But the same
+     tokens also draw text inputs, the search field, checkboxes, radios and
+     .btn--secondary, where the border IS the control's boundary and WCAG
+     1.4.11 (3:1 non-text contrast) genuinely binds. This pair is used only
+     on those control boundaries. 3.34:1 on --background, 3.56:1 on white.
+     See audit #5 / typography.css PART D. */
+  --control-border:        #7A8C83;
+  --control-border-hover:  #5F6F68;
+
+  /* ---- Status ------------------------------------------------------ */
+  --success:               #3E7658;
+  --success-text:          #2F5B44;
+  --success-bg:            #E8F1EA;
+  --success-border:        #C3DCCC;
+
+  --warning:               #A87832;
+  --warning-text:          #7A5420;
+  --warning-bg:            #F7EFE1;
+  --warning-border:        #E3D0AE;
+
+  --danger:                #9A4F4F;
+  --danger-text:           #833E3E;
+  --danger-bg:             #F6EAEA;
+  --danger-border:         #E2C6C6;
+
+  --info:                  #356B6D;
+  --info-text:             #29585A;
+  --info-bg:               #E6EFEE;
+  --info-border:           #C2D8D6;
+
+  --neutral-chip-bg:       #EEF3EF;
+  --neutral-chip-border:   #D5E0D8;
+  --neutral-chip-text:     #45545A;
+
+  --accent-gold:           #C49A5A;
+  --accent-gold-text:      #7F5F2C;
+
+  /* ---- Links ------------------------------------------------------- */
+  --link:                  #24545A;
+  --link-hover:            #173B4D;
+
+  /* ---- Accent roles ------------------------------------------------ */
+  --monogram:              #356B6D;   /* initials in a portrait placeholder */
+  --figure:                #173B4D;   /* large counted numerals            */
+
+  /* ---- Interactive ------------------------------------------------- */
+  --btn-primary-bg:        #173B4D;
+  --btn-primary-bg-hover:  #24545A;
+  --btn-primary-bg-active: #102B39;
+  --btn-primary-text:      #F4F7F4;
+  --focus-outline:         #356B6D;
+  --focus-ring:            rgba(53, 107, 109, 0.45);
+
+  /* ---- Elevation (deliberately restrained) ------------------------- */
+  --shadow-xs:  0 1px 2px rgba(37, 50, 56, 0.05);
+  --shadow-sm:  0 1px 3px rgba(37, 50, 56, 0.06), 0 1px 2px rgba(37, 50, 56, 0.04);
+  --shadow-md:  0 4px 14px rgba(23, 59, 77, 0.08);
+  --shadow-lg:  0 12px 32px rgba(23, 59, 77, 0.12);
+
+  /* ---- Hero atmosphere --------------------------------------------- */
+  /* Directional scrim: the content column sits at the left, so the veil is
+     strongest there and clears by ~58% of the hero's width, leaving the
+     right two-fifths of the photo clean. Carried as a token, not a
+     hardcoded gradient in layout.css, so the dark theme can restate the
+     same shape with its own background colour below. No focus gradient, no
+     filter: the photo itself is otherwise untouched. */
+  --hero-veil: linear-gradient(90deg, rgba(247, 248, 245, 0.58) 0%, rgba(247, 248, 245, 0.3) 45%, rgba(247, 248, 245, 0) 68%);
+  /* This photo's sky and misted midground (where the h1/sub sit) are
+     already pale by design — a strong veil there just washes the photo out
+     for no contrast benefit. The dark leaf frame low in the shot (where the
+     offices rail and hint line sit) is the opposite problem: measured
+     directly, pixel-sampled against those rows' actual rendered position,
+     the sky-tuned veil alone left the hint line as low as 1:1 contrast. A
+     second, vertical layer compensates, but only low in the frame (from 68%
+     down) so it never touches the sky behind the headline. The two compound
+     (this one paints on top) rather than replacing each other. */
+  --hero-focus: linear-gradient(180deg, rgba(247, 248, 245, 0) 0%, rgba(247, 248, 245, 0) 60%, rgba(247, 248, 245, 0.78) 100%);
+  --hero-image-filter: none;
+  --hero-label: #24545A;
+  --hero-rule:  rgba(36, 84, 90, 0.22);
+  /* Hero body text does NOT use --text-secondary / --text-muted. Those are
+     measured against flat surfaces (audit #5: 7.38:1 and 7.02:1 on
+     --background / --surface-soft), and the hero is not one — it is a photo
+     whose local luminance runs from bright sky to dark rock, where a nominal
+     ratio means little. Darker here for that reason, but held a step lighter
+     than the h1's --text-primary so the heading stays the loudest element.
+     Dark mode maps these straight back to the global pair; only the light
+     theme has the problem. */
+  --hero-sub-text:  #2E3C42;
+  --hero-hint-text: #3A4749;
+  /* The veil above is deliberately near-transparent through the top two-
+     thirds so the wallpaper reads clearly there — which is exactly where the
+     h1 and subtitle sit. A soft light-coloured halo behind the glyphs keeps
+     them legible against whatever the photo underneath happens to be
+     (rock, foliage, sky) without thickening the veil itself. The zero-offset
+     first layer is what separates the now-darker glyphs from mid-tone photo;
+     the wide outer stop alone left their edges muddy. */
+  --hero-text-shadow:
+      0 0 1px rgba(247, 248, 245, 0.92),
+      0 1px 2px rgba(247, 248, 245, 0.90),
+      0 2px 18px rgba(247, 248, 245, 0.70);
+
+  --scrim: rgba(37, 50, 56, 0.32);
+
+  /* ---- Logo -------------------------------------------------------- */
+  /* Supplied mark is a flat #939BA9 on transparency. Never recoloured. */
+  --logo-opacity: 1;
+
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   Dark palette — "a calm civic archive after sunset".
+   Raw values, declared once. Nothing reads these directly except the mapping
+   block below.
+   ========================================================================== */
+
+:root {
+  --d-background:            #10191B;
+  --d-background-secondary:  #142225;
+  --d-surface:               #19292C;
+  --d-surface-elevated:      #1E3033;
+  --d-surface-soft:          #213639;
+  --d-surface-inset:         #162528;
+  --d-footer-bg:             #0D1517;
+  --d-nav-bg:                #142225;
+
+  --d-primary:               #6EA6A1;
+  --d-primary-dark:          #4F817E;
+  --d-secondary:             #6EA6A1;
+  --d-deep-teal:             #4F817E;
+  --d-sage:                  #7F9F91;
+  --d-sage-light:            #AFC5B9;
+
+  --d-text-primary:          #E7EEEB;
+  --d-text-secondary:        #C1CFCC;
+  /* Same lift as the light --text-muted, same reason: #8EA19F measured
+     4.69:1 on --d-surface-soft — AA by 0.19, at the small sizes .meta and
+     .mono actually use it. Now 8.42:1 on --d-background, 6.0:1 on
+     --d-surface-soft. See audit #5. */
+  --d-text-muted:            #A3B6B4;
+  --d-text-on-brand:         #F1F5F3;
+
+  --d-border:                #2C4144;
+  --d-border-strong:         #3A5053;
+  /* Same control-only exception as the light theme's --control-border:
+     3.87:1 on --d-surface, 4.59:1 on --d-background. */
+  --d-control-border:        #6B868A;
+  --d-control-border-hover:  #85A0A4;
+
+  --d-success:               #72A98A;
+  --d-success-text:          #8BC0A0;
+  --d-success-bg:            #20352D;
+  --d-success-border:        #355747;
+
+  --d-warning:               #C2A06A;
+  --d-warning-text:          #C2A06A;
+  --d-warning-bg:            #352E22;
+  --d-warning-border:        #5A4B32;
+
+  --d-danger:                #C27D7D;
+  /* #C27D7D on --d-danger-bg measured 4.50:1 — AA to two decimal places
+     with zero margin, and ratios don't round up. One step lighter buys real
+     headroom: 5.35:1. See audit #5. */
+  --d-danger-text:           #CE8C8C;
+  --d-danger-bg:             #382426;
+  --d-danger-border:         #5C373A;
+
+  --d-info:                  #8CB6B4;
+  --d-info-text:             #8CB6B4;
+  --d-info-bg:               #1B3034;
+  --d-info-border:           #305156;
+
+  --d-neutral-chip-bg:       #213639;
+  --d-neutral-chip-border:   #3A5053;
+  --d-neutral-chip-text:     #C1CFCC;
+
+  --d-accent-gold:           #B99A68;
+  --d-accent-gold-text:      #B99A68;
+
+  --d-link:                  #78ABA7;
+  --d-link-hover:            #AFC5B9;
+
+  /* Lifted against the dark surfaces they sit on, rather than reusing the
+     interactive teal, which reads as a link where these are not links. */
+  --d-monogram:              #AFC5B9;
+  --d-figure:                #AFC5B9;
+
+  /* Accessibility adjustment: the specified #4F817E behind #F1F5F3 measures
+     3.75:1, short of the 4.5:1 AA threshold. Deepened once already to
+     #467673 (4.66:1) and, per the readability audit, once more — 4.66:1 was
+     passing with no real margin at the small sizes buttons actually use.
+     Now #3E6D6A, 5.30:1, with headroom deliberately taken rather than
+     stopping at the floor. #4F817E is unchanged as --primary-dark for
+     timeline accents and secondary elements, and serves as the hover state. */
+  --d-btn-primary-bg:        #3E6D6A;
+  --d-btn-primary-bg-hover:  #4F817E;
+  --d-btn-primary-bg-active: #3F6C6A;
+  --d-btn-primary-text:      #F1F5F3;
+  --d-focus-outline:         #6EA6A1;
+  --d-focus-ring:            rgba(110, 166, 161, 0.55);
+
+  /* Dark interfaces separate by surface and border, not by shadow. */
+  --d-shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.16);
+  --d-shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.18);
+  --d-shadow-md:  0 4px 14px rgba(0, 0, 0, 0.18);
+  --d-shadow-lg:  0 12px 32px rgba(0, 0, 0, 0.24);
+
+  /* Same directional shape as the light theme's veil, restated with the dark
+     background colour rather than aliased to it — the light veil's colour
+     would read as a pale smear across the evening photo. No focus gradient,
+     no filter otherwise. */
+  --d-hero-veil: linear-gradient(90deg, rgba(16, 25, 27, 0.62) 0%, rgba(16, 25, 27, 0.34) 45%, rgba(16, 25, 27, 0) 68%);
+  /* Same bottom-band compensation as the light theme's --hero-focus, same
+     reason: measured, not guessed. */
+  --d-hero-focus: linear-gradient(180deg, rgba(16, 25, 27, 0) 0%, rgba(16, 25, 27, 0) 60%, rgba(16, 25, 27, 0.8) 100%);
+  --d-hero-image-filter: none;
+  --d-hero-text-shadow:
+      0 0 1px rgba(16, 25, 27, 0.9),
+      0 1px 3px rgba(16, 25, 27, 0.85),
+      0 2px 20px rgba(16, 25, 27, 0.75);
+  /* Dark mode's own veil already carries enough contrast at the top; the
+     global text tokens work fine there, so alias rather than restate them. */
+  --d-hero-sub-text:  var(--d-text-secondary);
+  --d-hero-hint-text: var(--d-text-muted);
+  --d-hero-label: #AFC5B9;
+  --d-hero-rule:  rgba(175, 197, 185, 0.24);
+
+  --d-scrim: rgba(6, 12, 13, 0.65);
+
+  --d-logo-opacity: 0.94;
+
+  /* Header card, dark mode: same surface family as --d-nav-bg, same alpha
+     as the light card so the blur/opacity behaviour is unchanged, just
+     re-based to a dark card instead of a light one. */
+  --d-hh-header-bg:   rgba(20, 34, 37, 0.92);
+  --d-hh-header-text: #E7EEEB;
+  --d-hh-header-rgb:  231, 238, 235;
+
+  /* Header card while it still floats over the wallpaper photo (home route,
+     before the reader scrolls past it) — see `.nav--hero` in layout.css.
+     Dark mode's card is deliberately LESS transparent than light mode's
+     (0.5 vs 0.14): dark mode's card colour is already close to the photo's
+     shadow tones, so a very transparent card there reads as no card at all,
+     while light mode's pale card would otherwise fight the photo for
+     attention unless it nearly disappears. */
+  --d-hh-header-bg-hero:   rgba(15, 26, 28, 0.5);
+  --d-hh-header-text-hero: var(--d-hh-header-text);
+  --d-hh-header-rgb-hero:  var(--d-hh-header-rgb);
+
+  /* The active-page underline in the header. It was hardcoded to
+     --hh-green-900 (#0A3B2C) for both themes: measured against the dark
+     header card (#142225) that is 1.1:1 — the state indicator for "which
+     page am I on" was, in dark mode, invisible. Same problem over the home
+     hero photo, where the header text turns white. One token, three
+     values: here, in the light block below, and on `.nav--hero`. */
+  --d-hh-accent: #AFC5B9;
+}
+
+/* ==========================================================================
+   Dark mapping — written once, applied by both entry points.
+   ========================================================================== */
+
+:root[data-theme="dark"] {
+  --background:            var(--d-background);
+  --background-secondary:  var(--d-background-secondary);
+  --surface:               var(--d-surface);
+  --surface-elevated:      var(--d-surface-elevated);
+  --surface-soft:          var(--d-surface-soft);
+  --surface-inset:         var(--d-surface-inset);
+  --footer-bg:             var(--d-footer-bg);
+  --nav-bg:                var(--d-nav-bg);
+
+  --primary:               var(--d-primary);
+  --primary-dark:          var(--d-primary-dark);
+  --secondary:             var(--d-secondary);
+  --deep-teal:             var(--d-deep-teal);
+  --sage:                  var(--d-sage);
+  --sage-light:            var(--d-sage-light);
+
+  --text-primary:          var(--d-text-primary);
+  --text-secondary:        var(--d-text-secondary);
+  --text-muted:            var(--d-text-muted);
+  --text-on-brand:         var(--d-text-on-brand);
+
+  --border:                var(--d-border);
+  --border-strong:         var(--d-border-strong);
+  --control-border:        var(--d-control-border);
+  --control-border-hover:  var(--d-control-border-hover);
+
+  --success:               var(--d-success);
+  --success-text:          var(--d-success-text);
+  --success-bg:            var(--d-success-bg);
+  --success-border:        var(--d-success-border);
+
+  --warning:               var(--d-warning);
+  --warning-text:          var(--d-warning-text);
+  --warning-bg:            var(--d-warning-bg);
+  --warning-border:        var(--d-warning-border);
+
+  --danger:                var(--d-danger);
+  --danger-text:           var(--d-danger-text);
+  --danger-bg:             var(--d-danger-bg);
+  --danger-border:         var(--d-danger-border);
+
+  --info:                  var(--d-info);
+  --info-text:             var(--d-info-text);
+  --info-bg:               var(--d-info-bg);
+  --info-border:           var(--d-info-border);
+
+  --neutral-chip-bg:       var(--d-neutral-chip-bg);
+  --neutral-chip-border:   var(--d-neutral-chip-border);
+  --neutral-chip-text:     var(--d-neutral-chip-text);
+
+  --accent-gold:           var(--d-accent-gold);
+  --accent-gold-text:      var(--d-accent-gold-text);
+
+  --link:                  var(--d-link);
+  --link-hover:            var(--d-link-hover);
+
+  --monogram:              var(--d-monogram);
+  --figure:                var(--d-figure);
+
+  --btn-primary-bg:        var(--d-btn-primary-bg);
+  --btn-primary-bg-hover:  var(--d-btn-primary-bg-hover);
+  --btn-primary-bg-active: var(--d-btn-primary-bg-active);
+  --btn-primary-text:      var(--d-btn-primary-text);
+  --focus-outline:         var(--d-focus-outline);
+  --focus-ring:            var(--d-focus-ring);
+
+  --shadow-xs: var(--d-shadow-xs);
+  --shadow-sm: var(--d-shadow-sm);
+  --shadow-md: var(--d-shadow-md);
+  --shadow-lg: var(--d-shadow-lg);
+
+  --hero-veil:         var(--d-hero-veil);
+  --hero-focus:        var(--d-hero-focus);
+  --hero-image-filter: var(--d-hero-image-filter);
+  --hero-label:        var(--d-hero-label);
+  --hero-rule:         var(--d-hero-rule);
+  --hero-text-shadow:  var(--d-hero-text-shadow);
+  --hero-sub-text:     var(--d-hero-sub-text);
+  --hero-hint-text:    var(--d-hero-hint-text);
+
+  --scrim: var(--d-scrim);
+
+  --logo-opacity: var(--d-logo-opacity);
+
+  --hh-header-bg:  var(--d-hh-header-bg);
+  --hh-header-text: var(--d-hh-header-text);
+  --hh-header-rgb: var(--d-hh-header-rgb);
+  --hh-header-bg-hero:   var(--d-hh-header-bg-hero);
+  --hh-header-text-hero: var(--d-hh-header-text-hero);
+  --hh-header-rgb-hero:  var(--d-hh-header-rgb-hero);
+  --hh-accent:           var(--d-hh-accent);
+
+  color-scheme: dark;
+}
+
+/* System preference, honoured only when the reader has not chosen a theme. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background:            var(--d-background);
+    --background-secondary:  var(--d-background-secondary);
+    --surface:               var(--d-surface);
+    --surface-elevated:      var(--d-surface-elevated);
+    --surface-soft:          var(--d-surface-soft);
+    --surface-inset:         var(--d-surface-inset);
+    --footer-bg:             var(--d-footer-bg);
+    --nav-bg:                var(--d-nav-bg);
+
+    --primary:               var(--d-primary);
+    --primary-dark:          var(--d-primary-dark);
+    --secondary:             var(--d-secondary);
+    --deep-teal:             var(--d-deep-teal);
+    --sage:                  var(--d-sage);
+    --sage-light:            var(--d-sage-light);
+
+    --text-primary:          var(--d-text-primary);
+    --text-secondary:        var(--d-text-secondary);
+    --text-muted:            var(--d-text-muted);
+    --text-on-brand:         var(--d-text-on-brand);
+
+    --border:                var(--d-border);
+    --border-strong:         var(--d-border-strong);
+    --control-border:        var(--d-control-border);
+    --control-border-hover:  var(--d-control-border-hover);
+
+    --success:               var(--d-success);
+    --success-text:          var(--d-success-text);
+    --success-bg:            var(--d-success-bg);
+    --success-border:        var(--d-success-border);
+
+    --warning:               var(--d-warning);
+    --warning-text:          var(--d-warning-text);
+    --warning-bg:            var(--d-warning-bg);
+    --warning-border:        var(--d-warning-border);
+
+    --danger:                var(--d-danger);
+    --danger-text:           var(--d-danger-text);
+    --danger-bg:             var(--d-danger-bg);
+    --danger-border:         var(--d-danger-border);
+
+    --info:                  var(--d-info);
+    --info-text:             var(--d-info-text);
+    --info-bg:               var(--d-info-bg);
+    --info-border:           var(--d-info-border);
+
+    --neutral-chip-bg:       var(--d-neutral-chip-bg);
+    --neutral-chip-border:   var(--d-neutral-chip-border);
+    --neutral-chip-text:     var(--d-neutral-chip-text);
+
+    --accent-gold:           var(--d-accent-gold);
+    --accent-gold-text:      var(--d-accent-gold-text);
+
+    --link:                  var(--d-link);
+    --link-hover:            var(--d-link-hover);
+
+    --monogram:              var(--d-monogram);
+    --figure:                var(--d-figure);
+
+    --btn-primary-bg:        var(--d-btn-primary-bg);
+    --btn-primary-bg-hover:  var(--d-btn-primary-bg-hover);
+    --btn-primary-bg-active: var(--d-btn-primary-bg-active);
+    --btn-primary-text:      var(--d-btn-primary-text);
+    --focus-outline:         var(--d-focus-outline);
+    --focus-ring:            var(--d-focus-ring);
+
+    --shadow-xs: var(--d-shadow-xs);
+    --shadow-sm: var(--d-shadow-sm);
+    --shadow-md: var(--d-shadow-md);
+    --shadow-lg: var(--d-shadow-lg);
+
+    --hero-veil:         var(--d-hero-veil);
+    --hero-focus:        var(--d-hero-focus);
+    --hero-image-filter: var(--d-hero-image-filter);
+    --hero-label:        var(--d-hero-label);
+    --hero-rule:         var(--d-hero-rule);
+    --hero-text-shadow:  var(--d-hero-text-shadow);
+    --hero-sub-text:     var(--d-hero-sub-text);
+    --hero-hint-text:    var(--d-hero-hint-text);
+
+    --scrim: var(--d-scrim);
+
+    --logo-opacity: var(--d-logo-opacity);
+
+    --hh-header-bg:  var(--d-hh-header-bg);
+    --hh-header-text: var(--d-hh-header-text);
+    --hh-header-rgb: var(--d-hh-header-rgb);
+    --hh-header-bg-hero:   var(--d-hh-header-bg-hero);
+    --hh-header-text-hero: var(--d-hh-header-text-hero);
+    --hh-header-rgb-hero:  var(--d-hh-header-rgb-hero);
+    --hh-accent:           var(--d-hh-accent);
+
+    color-scheme: dark;
+  }
+}
+
+/* ==========================================================================
+   Non-colour tokens — identical across themes
+   ========================================================================== */
+
+:root {
+  --font-serif: "Source Serif 4", "Source Serif Pro", Charter, "Iowan Old Style",
+                "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  --font-sans:  "IBM Plex Sans", "Segoe UI", -apple-system, BlinkMacSystemFont,
+                Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:  "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Mono",
+                Consolas, "Liberation Mono", monospace;
+
+  /* Type scale, rebuilt from a 16px body at a ~1.18 ratio (deliberately
+     tight: a dense civic reference site, not a marketing page). Body was
+     0.9375rem (15px) — one step under the 16px floor for primary reading
+     copy, which meant every size downstream, including --text-sm (used 33x)
+     and the old --text-xs (used 15x), was running light too. --text-micro
+     is new: an absolute floor so nothing on the site renders below 12px.
+     See docs/typography-audit-2026-09-04.md #1. */
+  --text-micro: 0.75rem;    /* 12px — floor */
+  --text-xs:    0.8125rem;  /* 13px, was 12px */
+  --text-sm:    0.875rem;   /* 14px, was 13px */
+  --text-base:  1rem;       /* 16px, was 15px — body */
+  --text-md:    1.0625rem;  /* 17px, was 16px — lede */
+  --text-lg:    1.1875rem;  /* 19px, was 18px — h3 */
+  --text-xl:    1.375rem;   /* 22px, was 21px */
+  --text-2xl:   1.625rem;   /* 26px, was 24px */
+  --text-3xl:   2rem;       /* 32px, was 29px */
+
+  /* Line heights as tokens, unitless, so they stop being magic numbers
+     scattered across the stylesheet. */
+  --lh-tight:   1.15;   /* h1 */
+  --lh-heading: 1.25;   /* h2/h3 */
+  --lh-snug:    1.45;   /* labels, meta, chips */
+  --lh-body:    1.6;    /* body */
+  --lh-relaxed: 1.7;    /* lede, long-form */
+
+  /* Measure: nothing capped prose width before this, so a 1200px container
+     ran body text past 100 characters per line — each return sweep is a
+     saccade, and a long line means a longer blind jump and a mis-landed
+     re-read. Target 45-75 CPL, ~66 ideal; WCAG 1.4.8 (AAA) caps Latin at 80.
+     See audit #2. */
+  --measure:      66ch;
+  --measure-wide: 72ch;
+  --measure-lede: 60ch;
+
+  /* Tracking: loosened only where weight or case would otherwise crowd the
+     letterforms (uppercase micro-labels, bold buttons); tightened only on
+     large display headings, which read tighter than they measure. */
+  --track-display: -0.02em;
+  --track-body:     0em;
+  --track-label:    0.08em;
+  --track-button:   0.015em;
+
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  --radius-xs:   3px;
+  --radius-sm:   4px;
+  --radius:      6px;
+  --radius-md:   8px;
+  --radius-lg:   10px;
+  --radius-full: 999px;
+
+  --container:      1200px;
+  --container-text: 720px;
+  --nav-height:     64px;
+  /*
+     What the floating header actually occupies from the top of the viewport:
+     its 16px sticky offset plus `.nav__inner`'s 76px. --nav-height is the
+     older, smaller figure and still sizes the drawer's own head row; this is
+     the one anything positioned UNDER the bar (anchor scroll padding, the
+     sticky sub-navigations on the Government and portfolio pages) has to
+     clear, and the two are not the same number. Anchors used to land 4px
+     under the bar's lower edge because scroll-padding was computed from the
+     smaller one.
+  */
+  --nav-offset:     92px;
+
+  /*
+     The height of the sticky "On this page" bar (`.section-nav`), which on
+     the Government page sits BELOW the header and above the content. A
+     heading linked by that bar has to clear both, and `--nav-offset` only
+     accounts for the header — the first version of this reserved space for
+     the header alone, so every jump landed the section's own title
+     underneath the bar that had just been clicked.
+
+     It is a real measured height, not a guess, and it differs by breakpoint
+     because the links grow to a 40px touch target below 640px (4px padding
+     + 40px link + 2px border = 50px; 36px + the same trim = 46px above it).
+     `.section-nav__list` is pinned to this value with `min-height` so the
+     bar cannot silently outgrow the space reserved for it.
+  */
+  --section-nav-height: 46px;
+
+  --ease: cubic-bezier(0.32, 0.72, 0.29, 1);
+  --dur:  220ms;
+
+  /* Named siblings of --ease, not forks of it: --ease stays the general-
+     purpose curve (buttons, chips, colour crossfades) where it already reads
+     correctly. These cover the two jobs that need a different shape. */
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);   /* entrances/exits */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);   /* the drawer specifically */
+  --dur-press:   120ms;                            /* press-feedback scale */
+  --dur-fast:    140ms;                            /* fast entrance/exit */
+
+  /* --dur-exit is deliberately shorter than --dur-enter: on the way in, the
+     reader is deciding whether to attend to the new thing; on the way out,
+     the system is just confirming their decision already landed. */
+  --dur-enter:   200ms;                            /* entrance */
+  --dur-exit:    140ms;                            /* exit — always faster than enter */
+}
+
+/* ==========================================================================
+   Home hero (v2) — the floating-header / photo-hero build.
+   Prefixed `--hh-*` deliberately: these are a self-contained palette for the
+   home hero and its floating header only (per the build spec, always the
+   same regardless of the reader's light/dark choice), NOT a restatement of
+   the site's own `--text-muted` / `--surface` etc. Reusing those unprefixed
+   names would have silently repointed every OTHER page's text and surface
+   colours the moment this file loaded. Scope stays exactly `.home-hero` and
+   `.site-header` — see CLAUDE.md's "do not restyle outside the hero and
+   header" and the build prompt's non-negotiables.
+   ========================================================================== */
+:root {
+  --hh-green-900: #0A3B2C;
+  --hh-green-800: #0E4A38;
+  --hh-mint-300:  #A9D6BC;
+  --hh-white:     #FFFFFF;
+  --hh-text-muted: rgba(255, 255, 255, 0.72);
+  --hh-text-dim:   rgba(255, 255, 255, 0.55);
+  --hh-glass-bg:     rgba(10, 32, 26, 0.55);
+  --hh-glass-border: rgba(255, 255, 255, 0.12);
+  --hh-pill-border:  rgba(255, 255, 255, 0.28);
+  --hh-header-bg:   rgba(248, 250, 249, 0.92);
+  --hh-header-text: #12211C;
+  --hh-header-rgb:  18, 33, 28;
+
+  /* Header card while it still floats over the wallpaper photo — see the
+     dark-mode counterpart above for why light mode goes nearly invisible
+     (0.14) where dark mode only goes to 0.5. Text switches to white with a
+     shadow (`.nav--hero` in layout.css) since the dark card text colour
+     would otherwise sit unreadably close to the photo's own tones. */
+  --hh-header-bg-hero:   rgba(255, 255, 255, 0.14);
+  --hh-header-text-hero: #FFFFFF;
+  --hh-header-rgb-hero:  255, 255, 255;
+
+  /* See --d-hh-accent above for why this is a token rather than a literal. */
+  --hh-accent: var(--hh-green-900);
+}
+
+/* ==========================================================================
+   Breakpoint-dependent metrics
+
+   One token whose value genuinely differs by viewport, kept here beside its
+   own declaration rather than buried in the component stylesheet, so
+   anything computing against it (anchor clearance, sticky offsets) reads one
+   source of truth. See --section-nav-height above for the derivation.
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  :root { --section-nav-height: 50px; }
+}

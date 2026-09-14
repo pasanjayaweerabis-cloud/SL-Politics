@@ -1,0 +1,3697 @@
+/* ==========================================================================
+   Javora — Components
+   ========================================================================== */
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  /* WCAG 1.4.12: the layout must REFLOW, not overflow, when a reader forces
+     line-height 1.5x / letter-spacing 0.12em / word-spacing 0.16x. A fixed
+     `height` clips under that override; `min-height` + `padding-block` lets
+     the box grow instead. min-height 44px is also the touch-target minimum,
+     which a fixed 40px missed. See audit #6. */
+  height: auto;
+  min-height: 44px;
+  padding-inline: var(--space-5);
+  padding-block: 0.55rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: var(--text-base);
+  /* Bolder than body so the eye finds the click target; tracking opened to
+     compensate for the extra weight crowding the letterforms. Was 500/0. */
+  font-weight: 600;
+  letter-spacing: var(--track-button);
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  /* Hover effect (background/border/colour, ease-out) plus press feedback
+     (the `transform` line below, see `.btn:active`). `.theme-switching
+     :where(a, button, ...)` in base.css transitions these same colour
+     properties again for the ~260ms of an actual theme flip; restated here
+     (permanently, for ordinary hover/active feedback) alongside `transform`
+     so adding the latter doesn't clobber the former via the shorthand. */
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    transform var(--dur-press) var(--ease-out);
+}
+
+/* Press feedback — var(--dur-press) var(--ease-out) scale-down on click, no hover coupling. */
+.btn:active { transform: scale(0.97); }
+
+.btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.btn--primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-color: var(--btn-primary-bg);
+}
+.btn--primary:hover  { background: var(--btn-primary-bg-hover); border-color: var(--btn-primary-bg-hover); color: var(--btn-primary-text); }
+.btn--primary:active { background: var(--btn-primary-bg-active); }
+
+.btn--secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  /* This border IS the control's boundary, so it draws from --control-border
+     (3:1+) rather than the decorative --border-strong (1.45:1) — see
+     tokens.css PART A3. */
+  border-color: var(--control-border);
+}
+.btn--secondary:hover {
+  background: var(--surface-soft);
+  border-color: var(--control-border-hover);
+  color: var(--text-primary);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--link);
+  padding-inline: var(--space-2);
+}
+.btn--ghost:hover { color: var(--link-hover); background: var(--surface-soft); }
+
+.btn--sm { height: auto; min-height: 36px; padding-inline: var(--space-4); padding-block: 0.4rem; font-size: var(--text-sm); }
+.btn--block { width: 100%; }
+
+/* Tertiary text action — "View Portfolio", "Back to Directory". */
+.action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--link);
+  text-decoration: none;
+  transition: color var(--dur) var(--ease), transform var(--dur-press) var(--ease-out);
+}
+
+.action-link svg {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+
+.action-link:hover { color: var(--link-hover); }
+
+/* Press feedback — matches .btn/.icon-btn's ungated scale-down. */
+.action-link:active { transform: scale(0.98); }
+
+/* Hover effect: the arrow nudges 2px in its pointing direction. Fine-pointer
+   only, since :hover sticks after a tap on touch and would leave the arrow
+   permanently nudged until something else is touched. */
+@media (hover: hover) and (pointer: fine) {
+  .action-link:hover svg { transform: translateX(2px); }
+  .action-link--back:hover svg { transform: translateX(-2px); }
+}
+
+/* ==========================================================================
+   Badges & chips
+   ========================================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.1875rem var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.badge svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+.badge--verified { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
+.badge--verified svg { color: var(--success); }
+
+.badge--official { background: var(--info-bg); border-color: var(--info-border); color: var(--info-text); }
+.badge--official svg { color: var(--info); }
+
+.badge--sample { background: var(--neutral-chip-bg); border-color: var(--neutral-chip-border); color: var(--neutral-chip-text); }
+.badge--sample svg { color: var(--text-muted); }
+
+.badge--review { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning-text); }
+.badge--review svg { color: var(--warning); }
+
+.badge--unavailable { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger-text); }
+.badge--unavailable svg { color: var(--danger); }
+
+.badge--current {
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-micro);   /* was 0.625rem (10px) */
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  line-height: var(--lh-snug);
+  text-transform: uppercase;
+  padding: 0.125rem var(--space-2);
+}
+
+/* Neutral metadata chip — party, district. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.125rem var(--space-2);
+  border: 1px solid var(--neutral-chip-border);
+  border-radius: var(--radius-xs);
+  background: var(--neutral-chip-bg);
+  color: var(--neutral-chip-text);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip--gold {
+  border-color: color-mix(in srgb, var(--accent-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--accent-gold) 12%, transparent);
+  color: var(--accent-gold-text);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Source pill — mono record identifier. */
+.source-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.125rem var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface-inset);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);   /* was 0.625rem (10px) */
+  letter-spacing: var(--track-label);
+  line-height: var(--lh-snug);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-press) var(--ease-out);
+}
+
+.source-pill:hover { border-color: var(--border-strong); color: var(--text-secondary); }
+.source-pill svg { width: 10px; height: 10px; }
+
+/* Press feedback — only the linked variant (EvidencePill's real <a>) is ever
+   actually pressable; harmless no-op on the plain-span "no source" case. */
+.source-pill:active { transform: scale(0.98); }
+
+/* ==========================================================================
+   Cards & panels
+   ========================================================================== */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
+/* ---- Profile card (grid) ------------------------------------------- */
+
+/*
+ * `[hidden]` beats `display: flex` below. The two rules have equal
+ * specificity (one class, one attribute selector), and this stylesheet's
+ * author-origin rule would otherwise always win over the browser's built-in
+ * `[hidden] { display: none }`, since origin — not specificity — decides
+ * between a UA rule and an author rule at equal weight. Without this line,
+ * every profile card the Directory renders (see DirectoryPage.jsx — every
+ * result now renders in the static HTML for crawlability, with only the
+ * ones past "Show more" marked `hidden`) would display anyway, all 1,600+
+ * of them at once, on every page load.
+ */
+.profile-card[hidden] { display: none; }
+
+.profile-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  transition:
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    background-color var(--dur) var(--ease),
+    transform var(--dur-press) var(--ease-out);
+}
+
+/* Hover effect: a 2px lift plus border/shadow/background, site-wide 220ms —
+   only `transform` runs at the faster press timing (see `:active` below).
+   Fine-pointer only, so :hover sticking after a tap doesn't leave a card
+   lifted on touch. */
+@media (hover: hover) and (pointer: fine) {
+  .profile-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+    background: var(--surface-elevated);
+    transform: translateY(-2px);
+  }
+
+  /* Composed with the hover lift, not stacked after it — a mouse press
+     while hovered needs both offsets in one transform, or one clobbers
+     the other. */
+  .profile-card:hover:active { transform: translateY(-2px) scale(0.995); }
+}
+
+/* Press feedback for the no-hover (touch) case: a large surface gets the
+   barest scale, just enough to confirm the tap landed. */
+.profile-card:active { transform: scale(0.995); }
+
+.profile-card:focus-within {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.profile-card__body {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+}
+
+.profile-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.profile-card__name {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+
+.profile-card__name a { color: var(--text-primary); text-decoration: none; }
+.profile-card__name a:hover { color: var(--link); }
+
+/* Whole-card hit area, keyboard focus still lands on the real link. */
+.profile-card__name a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.profile-card__facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fact-line {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.fact-line svg {
+  width: 14px;
+  height: 14px;
+  margin-top: 0.14em;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.fact-line--muted { color: var(--text-muted); }
+
+.profile-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--border);
+  background: var(--surface-inset);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.profile-card__foot .meta { font-size: var(--text-xs); }
+
+/* Dense directory result: portrait beside the text. */
+.profile-card--result .profile-card__body {
+  flex-direction: row;
+  gap: var(--space-4);
+}
+
+.profile-card__col {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.profile-card--result .profile-card__name { font-size: var(--text-md); }
+
+/* Only the batch a "Show more" click just revealed gets this class (see
+   DirectoryPage.jsx) — the first PER_PAGE cards on initial paint never
+   carry it, so they never animate. 25ms per card, unclamped: 12 cards land
+   across 275ms of delay and the last one finishes at 475ms, so the batch
+   still lands inside half a second — but the stagger stays continuous. The
+   previous `min(index, 6) * 40ms` capped the total correctly and paid for
+   it with a visible slab: cards 7-12 all fired on the same frame. Purely
+   decorative — it must never gate interaction, so pointer events and click
+   handlers stay live throughout. */
+:root[data-hydrated] .profile-card--revealing {
+  transition:
+    opacity   var(--dur-enter) var(--ease-out),
+    transform var(--dur-enter) var(--ease-out);
+  transition-delay: calc(var(--reveal-index, 0) * 25ms);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ---- Avatar --------------------------------------------------------- */
+
+.avatar {
+  position: relative;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+}
+
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Gated on data-hydrated: without it a prerendered page, or a JS failure,
+   would leave every portrait permanently invisible behind this fade-in. */
+:root[data-hydrated] .avatar img {
+  opacity: 0;
+  transition: opacity var(--dur-enter) var(--ease-out);
+}
+:root[data-hydrated] .avatar img[data-loaded="true"] { opacity: 1; }
+
+.avatar__initials {
+  font-family: var(--font-serif);
+  font-size: var(--text-base);   /* was 1rem — still 16px on the new scale */
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--monogram);
+  user-select: none;
+}
+
+.avatar--sm { width: 44px; height: 44px; }
+.avatar--sm .avatar__initials { font-size: var(--text-sm); }   /* was 0.875rem — exact match, 14px */
+
+.avatar--lg {
+  width: 116px;
+  height: 116px;
+  border-radius: var(--radius-md);
+}
+.avatar--lg .avatar__initials { font-size: 2rem; }
+
+/* ---- Grids ---------------------------------------------------------- */
+
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
+  gap: var(--space-5);
+}
+
+/* A dip, not a crossfade between old and new content — the grid already
+   holds the new results by the time `data-swapping` is set, so this just
+   bridges the swap rather than remounting anything. Opacity only: these
+   cards carry text a reader may be mid-sentence in, so nothing here may
+   move. Floor of 0.55, not 0 — at tens of these a day it must be felt
+   rather than seen. */
+:root[data-hydrated] .grid-cards {
+  transition: opacity 120ms var(--ease-out);
+}
+:root[data-hydrated] .grid-cards[data-swapping="true"] { opacity: 0.55; }
+
+.grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+/* ---- Question band ---------------------------------------------------
+   Deliberately a different shape from both grids above: `auto-fit` (not
+   `auto-fill`, which `.grid-cards` uses) at a wider 260px floor, and exactly
+   as many cells as there are surviving tiles — no filler tile to square off
+   a short row. Each tile is a real `<a href>` into a live, verified query;
+   see HomePage.jsx for which of the brief's six candidate questions
+   actually survived that check. */
+.grid-questions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
+.question-tile {
+  display: block;
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: border-color var(--dur-press) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+
+.question-tile:active { transform: scale(0.995); }
+
+@media (hover: hover) and (pointer: fine) {
+  .question-tile:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+}
+.question-tile:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
+
+.question-tile__question {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.question-tile__answer {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Stat card ------------------------------------------------------ */
+
+.stat {
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--dur-press) var(--ease-out),
+    box-shadow var(--dur-press) var(--ease-out),
+    transform var(--dur-press) var(--ease-out);
+}
+
+/* Hover effect: same lift as .profile-card above (2px, var(--dur-press)
+   var(--ease-out)), fine-pointer gated for the same reason. */
+@media (hover: hover) and (pointer: fine) {
+  .stat:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+  }
+}
+
+.stat__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--secondary);
+}
+
+.stat__icon svg { width: 16px; height: 16px; }
+
+.stat__value {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--figure);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.stat__label {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.stat__note {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Search
+   ========================================================================== */
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--surface-elevated);
+  /* This border IS the control's boundary, so it draws from --control-border
+     (3:1+) rather than the decorative --border-strong (1.45:1) — see
+     tokens.css PART A3. (The audit named `.search__input` for this fix, but
+     that element renders with `border: 0`; `.search` is the box that
+     actually draws the visible border.) */
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  /* Shares this exact focus glow with `.form-field input` (~1628) and
+     `.lang-switch` (layout.css:204) — this was the only one of the three
+     that snapped instead of easing into it. */
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    box-shadow   var(--dur-fast) var(--ease);
+}
+
+.search:hover { border-color: var(--control-border-hover); }
+
+.search:focus-within {
+  border-color: var(--secondary);
+  box-shadow: var(--shadow-md), 0 0 0 3px var(--focus-ring);
+}
+
+/* Icon, input and clear button share this positioning context, kept separate
+   from the submit button so the icon's vertical centring is never computed
+   against a taller multi-row container — see the comment in SearchBar. */
+.search__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.search__icon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search__input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding-left: calc(var(--space-4) + 17px + var(--space-3) - var(--space-2));
+  padding-right: var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: var(--text-md);
+}
+
+.search__input::placeholder { color: var(--text-muted); }
+.search__input:focus { outline: none; }
+.search__input::-webkit-search-cancel-button { display: none; }
+
+/* Always in flow (never `display: none`) so its 28px reserves permanent
+   space in the flex row — the alternative, popping the button in and out of
+   layout, shifted the input's own width (and therefore its typed text)
+   sideways on the single most frequent state change on the page. Hidden via
+   opacity+visibility instead, which can transition and keeps it out of tab
+   order/pointer reach while invisible. `transition-behavior: allow-discrete`
+   is what lets `visibility` — a non-interpolable, on/off property — join a
+   transition at all: without it the browser flips it instantly and ignores
+   the duration. */
+.search__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  /* Keeps the circular button clear of the field's own rounded corner
+     instead of sitting flush against it — flush read as clipped at small
+     container widths, where the field's border-radius and the button's
+     edge are only a couple of pixels apart. */
+  margin-right: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.9);
+  transition:
+    opacity var(--dur-press) var(--ease-out),
+    transform var(--dur-press) var(--ease-out),
+    visibility var(--dur-press) var(--ease-out);
+  transition-behavior: allow-discrete;
+}
+
+.search__clear[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+.search__clear:hover { background: var(--surface-soft); color: var(--text-primary); }
+
+/* Press feedback — matches .icon-btn's scale. Only reachable while visible,
+   so no [data-visible] guard is needed here. */
+.search__clear:active { transform: scale(0.92); }
+
+.search__clear svg { width: 14px; height: 14px; }
+
+.search__submit { flex-shrink: 0; height: 44px; }
+
+@media (max-width: 520px) {
+  .search { flex-wrap: wrap; }
+  .search__field { flex-basis: 100%; }
+  .search__submit { width: 100%; }
+  .search__clear { width: 32px; height: 32px; }
+}
+
+/* ---- Compact search (directory / nav) ------------------------------ */
+
+.search--compact {
+  padding: 0;
+  border-radius: var(--radius);
+  box-shadow: none;
+  background: var(--surface);
+  border-color: var(--control-border);
+}
+
+.search--compact:hover { border-color: var(--control-border-hover); }
+.search--compact:focus-within { box-shadow: 0 0 0 3px var(--focus-ring); }
+
+.search--compact .search__input {
+  height: 38px;
+  font-size: var(--text-base);
+  padding-left: calc(var(--space-3) + 17px + var(--space-2));
+}
+
+.search--compact .search__icon { left: var(--space-3); width: 16px; height: 16px; }
+
+@media (max-width: 640px) {
+  /* The iOS-zoom-guard font-size that used to live here is now the general
+     `input[type=...], .search__input { font-size: max(16px, var(--text-base)); }`
+     rule in base.css PART D, which applies unconditionally rather than only
+     under 640px. */
+  .search--compact .search__input { height: 42px; }
+}
+
+/* ---- Typeahead (autocomplete) --------------------------------------- */
+
+.typeahead {
+  position: relative;
+}
+
+.typeahead__panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: var(--space-2);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  /* Independent of whatever alignment the search sits inside (the home
+     hero centers its own copy) — a result list reads left-to-right. */
+  text-align: left;
+  /* It hangs off the field, not centred, so it scales from the top edge.
+     Default/closed state below; `[data-open="true"]` is the open state, and
+     SearchTypeahead.jsx keeps the panel mounted one render past `open` going
+     false so the exit plays instead of the panel just vanishing — the same
+     `data-open`-transition idiom `Drawer` uses in layout.css. `@starting-style`
+     covers the entrance even though the panel is freshly mounted (not
+     display-toggled) already carrying `data-open="true"`: without it there
+     would be no prior frame to interpolate from, so it would just appear
+     already open. */
+  transform-origin: top center;
+  transform: scale(0.98);
+  opacity: 0;
+  /* Closed/exit duration — same split as .dropdown__panel above: independent
+     of the entrance's var(--dur-fast) on `[data-open="true"]`, not
+     coincidentally sharing its value. */
+  transition: transform var(--dur-exit) var(--ease-out), opacity var(--dur-exit) var(--ease-out);
+}
+
+@starting-style {
+  .typeahead__panel {
+    transform: scale(0.98);
+    opacity: 0;
+  }
+}
+
+.typeahead__panel[data-open="true"] {
+  transform: scale(1);
+  opacity: 1;
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+}
+
+.typeahead__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+
+.typeahead__option:hover,
+.typeahead__option--active {
+  background: var(--surface-soft);
+}
+
+/* Press feedback — a wide row gets the barest scale, ungated for touch. */
+.typeahead__option:active { transform: scale(0.99); }
+
+.typeahead__text {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.typeahead__name {
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.typeahead__meta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.typeahead__empty {
+  padding: var(--space-4) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: left;
+}
+.typeahead__empty p + p { margin-top: var(--space-2); }
+
+.typeahead__didyoumean-name {
+  color: var(--link);
+  text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .typeahead__didyoumean-name:hover { color: var(--link-hover); }
+}
+
+/* ---- Grouped panel content --------------------------------------------
+   The empty-state (Recent/Offices/Try searching) and typing (People/Jump
+   to/Or) panels both use this: `role="group"` wrapping a labelled cluster
+   of `.typeahead__option` rows. `aria-activedescendant` still runs as ONE
+   flat index across every group — grouping here is visual/structural only,
+   never a second index space. */
+.typeahead__group + .typeahead__group {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+}
+
+.typeahead__group-label {
+  margin: var(--space-1) var(--space-3);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---- Mobile search sheet -----------------------------------------------
+   A native <dialog>, promoted to on tap below 640px instead of the inline
+   dropdown — a panel hanging off a hero-photo search field shows about four
+   rows before the fold on a phone, and the keyboard eats two of them.
+   `showModal()`/`close()` (SearchTypeahead.jsx) give the focus trap and
+   Escape handling; nothing here reimplements either. */
+.search-sheet {
+  padding: 0;
+  border: none;
+  margin: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  background: var(--surface);
+}
+.search-sheet::backdrop { background: var(--scrim); }
+
+.search-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-sheet__head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+/* `min-width: 0` is required, not decorative: a flex item's default
+   min-width is `auto` (its content's natural width), so without this the
+   search field refused to shrink below that width and pushed the row wider
+   than the viewport — Cancel ends up partly off-screen and the browser
+   auto-scrolls the sheet sideways to keep the focused input in view. */
+.search-sheet__head .search { flex: 1; min-width: 0; }
+.search-sheet__cancel { flex: 0 0 auto; white-space: nowrap; }
+
+.search-sheet__results {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+@media (min-width: 641px) {
+  /* Never opened above 640px (SearchTypeahead.jsx gates showModal() on the
+     same breakpoint) — this is a defence-in-depth reset only. */
+  .search-sheet[open] { display: none; }
+}
+
+/* ==========================================================================
+   Dropdown — the custom "pick one from a short list" control (Dropdown.jsx).
+   Replaces what were two native <select>s (language switcher, corrections
+   field picker): a native select's open popup is OS-drawn, and on Windows
+   ignores `option` CSS entirely when painting it, regardless of what the
+   computed style says. This is the only way to get a themed, animated,
+   rounded panel. Animation idiom (transform-origin, scale, `@starting-style`,
+   `[data-open]`) matches `.typeahead__panel` above — same reasoning applies.
+   ========================================================================== */
+
+.dropdown { position: relative; }
+
+.dropdown__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font: inherit;
+  cursor: pointer;
+}
+
+/*
+ * The DEFAULT skin for a dropdown trigger, at zero specificity.
+ *
+ * The rule above styles layout and type but no surface, so a trigger that
+ * did not bring a skin of its own fell through to the browser's native
+ * button chrome. `.lang-switch` always brought one; the directory's sort
+ * control never did, and rendered as a grey system button with a 2px white
+ * border — the single loudest control on the directory toolbar, in a
+ * palette belonging to no theme this site defines, and unreadably foreign
+ * beside the search field it sits next to.
+ *
+ * `:where()` is what makes this safe to add after the fact: it contributes
+ * NO specificity, so every existing skin (`.lang-switch`, and anything added
+ * later) still wins on the properties it declares, whatever order the
+ * stylesheets happen to load in — this is a floor, not an override. The
+ * values match `.search--compact`, since a trigger sitting beside a search
+ * field should read as the same class of control.
+ */
+:where(.dropdown__trigger) {
+  padding-inline: var(--space-3);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-primary);
+  transition:
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+
+:where(.dropdown__trigger:hover) { border-color: var(--control-border-hover); }
+:where(.dropdown__trigger[aria-expanded="true"]) { box-shadow: 0 0 0 3px var(--focus-ring); }
+
+.dropdown__value[data-placeholder="true"] { color: var(--text-muted); }
+
+.dropdown__chevron {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  /* var(--dur-fast), not the general-purpose var(--dur) — this needs to
+     land in step with the panel's own open/close transition below, or the
+     chevron reads as a separate event from the content it points at. */
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.dropdown__trigger[aria-expanded="true"] .dropdown__chevron { transform: rotate(180deg); }
+
+.dropdown__panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  /* `[data-placement="top"]`, below, flips this to open upward instead —
+     Dropdown.jsx decides which at open time by measuring space above/below
+     the trigger, so a control near the bottom of a scrolling container
+     (the language switcher inside the mobile nav drawer) doesn't open its
+     list past the visible edge. */
+  z-index: 20;
+  width: max-content;
+  min-width: 100%;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: var(--space-1);
+  /* `--footer-bg` (#EEF3EF light / #0D1517 dark): a visibly recessed tone
+     that reads as "this popped out of the control above it" rather than
+     blending into the same surface as the page body. */
+  background: var(--footer-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  text-align: left;
+  /* `left: 0` above plus `width: max-content` means the panel can be wider
+     than its trigger (the language switcher is) — the trigger sits at the
+     panel's left edge, not its horizontal centre, so the scale must
+     originate from that edge or it visibly scales out of a point nothing
+     was clicked at. */
+  transform-origin: top left;
+  transform: scale(0.98);
+  opacity: 0;
+  /* Closed/exit duration — the reader already made their choice, this is
+     just confirming it landed (see --dur-exit in tokens.css). Split from
+     the entrance's own var(--dur-fast) below on `[data-open="true"]` so
+     the two are independent knobs rather than one shared value; they
+     happen to both be 140ms today, but exit no longer costs whatever
+     entrance costs by coincidence. */
+  transition: transform var(--dur-exit) var(--ease-out), opacity var(--dur-exit) var(--ease-out);
+}
+
+.dropdown__panel[data-placement="top"] {
+  top: auto;
+  bottom: calc(100% + var(--space-2));
+  transform-origin: bottom left;
+}
+
+@starting-style {
+  .dropdown__panel { transform: scale(0.98); opacity: 0; }
+}
+
+.dropdown__panel[data-open="true"] {
+  transform: scale(1);
+  opacity: 1;
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+}
+
+.dropdown__option {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color var(--dur-press) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+
+.dropdown__option:hover,
+.dropdown__option--active {
+  background: var(--surface-soft);
+}
+
+/* Press feedback — matches .typeahead__option:active, the same row-style
+   option list one selector over. Ungated, works on touch. */
+.dropdown__option:active { transform: scale(0.99); }
+
+.dropdown__option[aria-selected="true"] {
+  color: var(--secondary);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Filter sidebar
+   ========================================================================== */
+
+.filters {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.filters__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.filters__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.filters__title svg { width: 15px; height: 15px; color: var(--text-muted); }
+
+.filters__reset {
+  border: 0;
+  background: transparent;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-xs);
+  color: var(--link);
+}
+
+.filters__reset:hover { background: var(--surface-soft); }
+.filters__reset:disabled { color: var(--text-muted); opacity: 0.55; }
+
+.filter-group { border-bottom: 1px solid var(--border); }
+.filter-group:last-child { border-bottom: 0; }
+
+.filter-group > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--text-micro);   /* was 0.6875rem (11px) */
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.filter-group > summary::-webkit-details-marker { display: none; }
+.filter-group > summary:hover { color: var(--text-primary); }
+
+/* Plain 180° rotation tied to the <details> open/closed state — not one of
+   the named effects above, just a rotate on state change. */
+.filter-group__chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  /* var(--dur-fast), not the general-purpose var(--dur) — this needs to
+     land in step with the panel's own open/close transition below, or the
+     chevron reads as a separate event from the content it points at. */
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.filter-group[open] .filter-group__chevron { transform: rotate(180deg); }
+
+/* The panel used to snap open/closed while the chevron above eased —
+   two halves of one state change disagreeing. `::details-content` is a
+   recent pseudo-element with no Firefox support yet; guarded behind
+   @supports, so Firefox keeps today's instant open. That's an accepted
+   degradation, not a bug to route around. */
+@supports selector(::details-content) {
+  :root { interpolate-size: allow-keywords; }
+
+  .filter-group::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size         var(--dur-fast) var(--ease-out),
+      content-visibility  var(--dur-fast) allow-discrete;
+  }
+
+  .filter-group[open]::details-content { block-size: auto; }
+}
+
+.filter-group__list {
+  padding: 0 var(--space-5) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  max-height: 260px;
+  overflow-y: auto;
+  /* The panel above animates `block-size`, a layout property, so every frame
+     of an open/close re-lays out this list. `layout` containment scopes that
+     work to this box. Deliberately NOT `size` (the block-size animation needs
+     the list's real intrinsic height to interpolate to `auto`) and NOT `paint`
+     (it would clip the filter options' focus rings at the edges). */
+  contain: layout;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2);
+  margin-inline: calc(var(--space-2) * -1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.45;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+
+.filter-option:hover { background: var(--surface-soft); color: var(--text-primary); }
+
+/* Press feedback — scale only, ungated for touch. */
+.filter-option:active { transform: scale(0.98); }
+
+.filter-option:has(input:checked) {
+  background: var(--surface-soft);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.filter-option input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  /* A checkbox/radio's border IS the control's boundary, so it draws from
+     --control-border (3:1+) rather than the decorative --border-strong
+     (1.45:1) — see tokens.css PART A3. */
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  display: grid;
+  place-content: center;
+}
+
+/* Scale in: the checkmark grows from 0.6→1 with a fade, 120ms ease — never
+   from scale(0), since nothing should appear to materialise from a point. */
+.filter-option input::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  transform: scale(0.6);
+  opacity: 0;
+  transition: transform 120ms var(--ease), opacity 120ms var(--ease);
+  box-shadow: inset 1em 1em var(--btn-primary-text);
+  clip-path: polygon(14% 44%, 0 65%, 40% 100%, 100% 16%, 84% 0, 39% 62%);
+}
+
+.filter-option input:checked {
+  background: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+}
+
+.filter-option input:checked::before { transform: scale(1); opacity: 1; }
+.filter-option input:focus-visible { outline: 2px solid var(--secondary); outline-offset: 2px; }
+
+.filter-option__count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);   /* was 0.625rem (10px) */
+  letter-spacing: var(--track-label);
+  line-height: var(--lh-snug);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Active filter summary ----------------------------------------- */
+
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.1875rem var(--space-1) 0.1875rem var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+/* Enter only — a chip appears tens of times a day, so this needs to be
+   near-imperceptible, and React unmounts a removed chip on the same render
+   it disappears. Building an exit would mean holding the unmount for one
+   more frame purely for this; not worth the state machinery here. */
+:root[data-hydrated] .filter-tag {
+  transition: opacity 120ms var(--ease-out), transform 120ms var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.filter-tag button {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-muted);
+  transition:
+    background-color var(--dur-press) var(--ease-out),
+    color            var(--dur-press) var(--ease-out),
+    transform        var(--dur-press) var(--ease-out);
+}
+
+.filter-tag button:hover { background: var(--border); color: var(--text-primary); }
+
+/* Press feedback — matches .icon-btn's 0.92. This is the "remove this
+   filter" affordance; it is the one place a reader most needs the click
+   confirmed. */
+.filter-tag button:active { transform: scale(0.92); }
+
+.filter-tag svg { width: 11px; height: 11px; }
+
+/* ==========================================================================
+   Directory layout
+   ========================================================================== */
+
+.directory {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.directory__aside { position: sticky; top: calc(var(--nav-offset) + var(--space-4)); }
+
+.directory__main > * + * { margin-top: var(--space-5); }
+
+.directory__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.directory__toolbar .search { flex: 1 1 260px; min-width: 0; }
+
+.results-count {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.results-count strong {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.filter-drawer-btn { display: none; }
+
+@media (max-width: 980px) {
+  /* A bare `1fr` track keeps the implicit `min-width: auto`, so it won't
+     shrink below the intrinsic width of its widest child (a nowrap chip, a
+     tenure string) — that was pushing the whole page into horizontal
+     scroll on phones. `minmax(0, 1fr)` is what actually allows the column
+     to shrink to the viewport. */
+  .directory { grid-template-columns: minmax(0, 1fr); }
+  .directory__aside { display: none; }
+  .filter-drawer-btn { display: inline-flex; }
+}
+
+/* Filter drawer on small screens reuses the nav drawer shell. */
+.drawer__panel--filters { padding: 0; }
+.drawer__panel--filters .drawer__body { padding: 0; }
+.drawer__panel--filters .filters { border: 0; border-radius: 0; }
+.drawer__foot {
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--border);
+  background: var(--surface-elevated);
+}
+
+/* ==========================================================================
+   Profile page
+   ========================================================================== */
+
+.profile-header {
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  padding-block: var(--space-6) var(--space-10);
+}
+
+.profile-header__nav { margin-bottom: var(--space-8); }
+
+.profile-header__inner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+.profile-header__text { min-width: 0; flex: 1; }
+.profile-header__text > * + * { margin-top: var(--space-3); }
+
+.profile-header h1 {
+  font-size: clamp(1.6rem, 1.2rem + 1.7vw, 2.3rem);
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+.profile-header__role {
+  font-size: var(--text-md);
+  color: var(--secondary);
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .profile-header__inner { flex-direction: column; gap: var(--space-5); }
+}
+
+/* ---- Record sections ------------------------------------------------ */
+
+.record-section + .record-section { margin-top: var(--space-10); }
+
+.record-section__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.record-section__head h2 {
+  font-size: var(--text-xl);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.record-section__head svg {
+  width: 17px;
+  height: 17px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.record-section__note {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* ---- Definition grid (Official Overview) ---------------------------- */
+
+.def-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-5) var(--space-8);
+}
+
+.def-grid > div { min-width: 0; }
+
+.def-grid dt {
+  font-size: var(--text-micro);   /* was 0.6875rem (11px) */
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.def-grid dd {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  line-height: 1.55;
+}
+
+.derived {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.unavailable {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: var(--text-sm);
+}
+
+/* ---- Position / qualification rows ---------------------------------- */
+
+.record-list { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.record-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+
+.record-row:hover { border-color: var(--border-strong); }
+
+.record-row--current {
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  box-shadow: inset 3px 0 0 var(--secondary);
+}
+
+.record-row__main { min-width: 0; }
+.record-row__main > * + * { margin-top: var(--space-1); }
+
+.record-row__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.record-row__institution { font-size: var(--text-sm); color: var(--text-secondary); }
+
+.record-row__aside {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tenure {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tenure svg { width: 12px; height: 12px; color: var(--text-muted); }
+
+@media (max-width: 640px) {
+  .record-row { flex-direction: column; gap: var(--space-3); }
+  .record-row__aside { justify-content: flex-start; }
+}
+
+/* ==========================================================================
+   Timeline
+   ========================================================================== */
+
+.timeline {
+  position: relative;
+  padding-left: var(--space-6);
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+.timeline__item { position: relative; padding-bottom: var(--space-8); }
+.timeline__item:last-child { padding-bottom: 0; }
+
+.timeline__dot {
+  position: absolute;
+  left: calc(var(--space-6) * -1);
+  top: 5px;
+  width: 11px;
+  height: 11px;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  border: 2px solid var(--sage);
+  box-sizing: border-box;
+}
+
+.timeline__item--current .timeline__dot {
+  border-color: var(--secondary);
+  background: var(--secondary);
+  box-shadow: 0 0 0 3px var(--info-bg);
+}
+
+.timeline__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.timeline__date {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.timeline__title {
+  margin-top: var(--space-2);
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.timeline__type {
+  margin-top: var(--space-2);
+  display: inline-block;
+  font-size: var(--text-micro);   /* was 0.625rem (10px) */
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  line-height: var(--lh-snug);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.timeline__desc {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 68ch;
+}
+
+/* ==========================================================================
+   Source cards
+   ========================================================================== */
+
+.source-list { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.source-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+
+.source-card:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-elevated);
+}
+
+.source-card__main { min-width: 0; }
+
+.source-card__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.source-card__id {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);   /* was 0.6875rem (11px) */
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 0.125rem var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface-inset);
+}
+
+.source-card__title h3 {
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.source-card__institution {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.source-card__meta {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+}
+
+.source-card__meta .fact-line { font-size: var(--text-xs); }
+.source-card__meta .fact-line svg { width: 12px; height: 12px; }
+
+@media (max-width: 720px) {
+  .source-card { flex-direction: column; gap: var(--space-4); }
+  .source-card .btn { width: 100%; }
+}
+
+/* ==========================================================================
+   Notices & empty states
+   ========================================================================== */
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.notice svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 0.16em; color: var(--text-muted); }
+.notice strong { color: var(--text-primary); font-weight: 600; }
+.notice__body > * + * { margin-top: var(--space-2); }
+
+.notice--info    { background: var(--info-bg);    border-color: var(--info-border);    color: var(--info-text); }
+.notice--info svg    { color: var(--info); }
+.notice--info strong { color: var(--info-text); }
+
+.notice--warning { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning-text); }
+.notice--warning svg    { color: var(--warning); }
+.notice--warning strong { color: var(--warning-text); }
+
+/* Only the corrections form's filed/failed/validation outcomes get this —
+   a modifier class applied in CorrectionsPage.jsx, not every `.notice` on
+   the site. The directory's permanent dataset notice must not animate on
+   every page load; this one appears once, in direct response to a submit,
+   which is where the (small) delight budget on this site lives. */
+:root[data-hydrated] .notice--result {
+  /* 260ms, not --dur-enter (200ms) — this is the one place on the site
+     where a slightly slower, more deliberate entrance is warranted: it
+     fires once, in direct response to a submit, never on a page load. */
+  transition:
+    opacity   260ms var(--ease-out),
+    transform 260ms var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.empty-state {
+  padding: var(--space-16) var(--space-6);
+  text-align: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+
+.empty-state svg {
+  width: 30px;
+  height: 30px;
+  margin-inline: auto;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.empty-state h3 { margin-top: var(--space-4); font-size: var(--text-lg); }
+
+.empty-state p {
+  margin-top: var(--space-2);
+  margin-inline: auto;
+  max-width: 44ch;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.empty-state__actions { margin-top: var(--space-6); }
+
+/* Gated on :root[data-hydrated] (see src/main.jsx) so the prerendered HTML
+   never ships this in its invisible starting state. Scale from 0.98, never
+   0 — this bridges "the last result got filtered out", not a reveal. */
+:root[data-hydrated] .empty-state {
+  transition:
+    opacity   var(--dur-enter) var(--ease-out),
+    transform var(--dur-enter) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* ==========================================================================
+   Pagination
+   ========================================================================== */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+.pagination__status {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Methodology / trust section
+   ========================================================================== */
+
+.trust {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-10);
+  align-items: start;
+}
+
+.trust__text > * + * { margin-top: var(--space-4); }
+.trust__text h2 { max-width: 16ch; }
+
+.principles { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.principle {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+/* Hover effect: border + shadow only, no lift. Fine-pointer gated. */
+@media (hover: hover) and (pointer: fine) {
+  .principle:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+}
+
+.principle__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin-top: 0.05em;
+  border-radius: var(--radius-full);
+  background: var(--surface-soft);
+}
+
+.principle svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--secondary); }
+
+.principle h3 { font-family: var(--font-sans); font-size: var(--text-base); font-weight: 600; }
+.principle p { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--text-muted); line-height: 1.6; }
+
+@media (max-width: 860px) {
+  .trust { grid-template-columns: 1fr; gap: var(--space-8); }
+}
+
+/* ==========================================================================
+   Methodology policy panel
+   ========================================================================== */
+
+.policy__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+}
+
+/* ==========================================================================
+   Misc
+   ========================================================================== */
+
+.divider-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding-top: var(--space-8);
+  margin-top: var(--space-8);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.divider-note svg { width: 14px; height: 14px; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* ======================================================================
+   Additions for the source-first data model
+   ====================================================================== */
+
+/* ---- Badges: new verification states -------------------------------- */
+
+/* "Source-linked" sits between sample and verified: a real document is
+   referenced, but nobody has confirmed it yet. Uses the info tone so it reads
+   as informative rather than as an endorsement. */
+.badge--linked { background: var(--info-bg); border-color: var(--info-border); color: var(--info-text); }
+.badge--linked svg { color: var(--info); }
+
+/* ---- Evidence pill --------------------------------------------------- */
+
+/* Evidence that names an institution but not a specific document. Muted so it
+   reads as weaker than a real citation, but the distinction is carried by the
+   icon and by visually-hidden text too — never by colour alone. */
+.source-pill--weak { opacity: 0.78; }
+.source-pill--weak svg { color: var(--text-muted); }
+
+/* ---- Forms ----------------------------------------------------------- */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.form-field { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.form-field--wide { grid-column: 1 / -1; }
+
+.form-field label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form-optional { font-weight: 400; color: var(--text-muted); }
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--surface);
+  /* This border IS the control's boundary, so it draws from --control-border
+     (3:1+) rather than the decorative --border-strong (1.45:1) — see
+     tokens.css PART A3. */
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.form-field input:hover,
+.form-field select:hover,
+.form-field textarea:hover {
+  border-color: var(--control-border-hover);
+}
+
+.form-field textarea { resize: vertical; min-height: 96px; }
+
+/* `.form-field select` above stays as generic scaffolding for the form
+   system in case a plain native select ever belongs here again. The
+   corrections page's own field picker isn't one any more — it's a
+   `Dropdown` (see components.css's "Dropdown" section), because a native
+   select's popup ignores CSS entirely on Windows. `.field-select` gives
+   that button the same visual shell `.form-field input`/`select` draw
+   above, since `Dropdown.jsx`'s `<button>` isn't matched by the tag
+   selectors those rules use. */
+.form-field .field-select {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  text-align: left;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.form-field .field-select:hover { border-color: var(--control-border-hover); }
+
+.form-field .field-select:focus-visible,
+.form-field .field-select[aria-expanded="true"] {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 1px;
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.form-field input:focus-visible,
+.form-field select:focus-visible,
+.form-field textarea:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 1px;
+  border-color: var(--secondary);
+  /* Same soft glow `.search:focus-within` uses, animated by the transition
+     above — the outline alone is enough for keyboard-focus accessibility,
+     this is purely the "the control just woke up" polish. */
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* Invalid fields are marked with a border AND an adjacent message, never by
+   colour alone. */
+.form-field [aria-invalid="true"] { border-color: var(--danger); }
+
+/* .form-field's blanket `input` rule resets padding on every input inside a
+   form-grid, including RecordPicker's SearchField — that wiped out
+   .search__input's reserved left padding and put typed text under the
+   search icon. The search field already draws its own border/background via
+   .search__field; only the icon clearance needs restoring here. */
+.form-field .search__input {
+  padding-left: calc(var(--space-4) + 17px + var(--space-3) - var(--space-2));
+  padding-right: var(--space-3);
+  border: 0;
+  background: transparent;
+}
+
+.form-field .search__field { border: 1px solid var(--control-border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+.form-field .search__field:focus-within { outline: 2px solid var(--focus-outline); outline-offset: 1px; border-color: var(--secondary); }
+
+.form-error {
+  font-size: var(--text-sm);
+  color: var(--danger-text);
+  display: flex;
+  gap: var(--space-2);
+}
+
+.form-hint { font-size: var(--text-sm); color: var(--text-muted); }
+
+@media (max-width: 720px) {
+  .form-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- Code block ------------------------------------------------------ */
+
+.code-block {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.code-block code { white-space: pre; }
+
+/* ---- Workflow list --------------------------------------------------- */
+
+/* Numbered steps in the correction workflow. The counter is decorative; the
+   list is an <ol> so the ordering is conveyed semantically too. */
+.workflow-list { counter-reset: workflow; }
+
+.workflow-list > li { counter-increment: workflow; position: relative; }
+
+.workflow-list .record-row__title::before {
+  content: counter(workflow);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ======================================================================
+   Mobile refinement pass
+   ======================================================================
+   Targeted at phone widths (~320–430px). Desktop values above are untouched
+   — every rule here lives inside a max-width query so it can only make the
+   small-screen layout more deliberate, never change anything above 640px. */
+
+@media (max-width: 640px) {
+  /* ---- Touch targets ------------------------------------------------- */
+  /* 34px icon buttons (nav search/theme/burger) sit under the ~40-44px
+     comfortable tap size; widened here without changing the 64px nav bar
+     or the desktop icon size. */
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  .btn { height: 44px; }
+  .btn--sm { height: 38px; }
+
+  /* ---- Cards ----------------------------------------------------------
+     `minmax(288px, 1fr)` forces a 288px-wide track even when the viewport
+     itself is narrower (320–375px content is ~280px after padding), which
+     pushed the grid wider than the screen and caused a horizontal scroll.
+     Below 480px there is only ever room for one column anyway, so drop the
+     minmax — `minmax(0, 1fr)`, not a bare `1fr`, which keeps the implicit
+     `min-width: auto` and reintroduces the same overflow. */
+  .grid-cards { grid-template-columns: minmax(0, 1fr); }
+
+  /* Directory result cards: keep the portrait beside the text down to one
+     column rather than stacking it above, so the row stays compact and the
+     list still reads as a list. */
+  .profile-card--result .profile-card__body { gap: var(--space-3); }
+
+  /* The name and its verification badge were competing for width in one
+     unwrapping row — on a narrow card there isn't room for both a full name
+     and a nowrap "Demonstration" badge on the same line, so it pushed the
+     card wider than the screen. Wrapping lets the badge drop below the name
+     instead of forcing the row's width. */
+  .profile-card__top { flex-wrap: wrap; }
+
+  /* ---- Pagination -------------------------------------------------- */
+  .pagination { flex-direction: column; gap: var(--space-3); }
+  .pagination .btn { width: 100%; }
+
+  /* ---- Filters (mobile filter drawer) --------------------------------- */
+  .filter-option { padding-block: var(--space-3); }
+  .filter-group > summary { padding-block: var(--space-4); }
+
+  /* ---- Footer --------------------------------------------------------- */
+  .footer__links {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  /* ---- Empty state ----------------------------------------------------
+     space-16 (64px) top/bottom reads as a lot of dead air on a phone. */
+  .empty-state { padding: var(--space-10) var(--space-5); }
+
+  .empty-state__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .empty-state__actions .btn { width: 100%; }
+}
+
+/* ======================================================================
+   Profile tabs
+   ======================================================================
+   Two tabs inside the person profile — Education & Career, Political
+   Career. Built from the existing tokens so the strip reads as part of
+   Javora rather than a bolted-on widget. */
+
+.tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 46px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  transition:
+    background-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    transform var(--dur-press) var(--ease-out);
+}
+
+.tabs__tab svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+.tabs__tab:hover { color: var(--text-primary); background: var(--surface-soft); }
+
+/* Press feedback — scale only, ungated so it works on touch too. */
+.tabs__tab:active { transform: scale(0.98); }
+
+/* The selected tab is marked by background, border, weight AND colour —
+   never colour alone, which would vanish for anyone who cannot see it. */
+.tabs__tab--active {
+  background: var(--surface-elevated);
+  border-color: var(--border-strong);
+  color: var(--primary);
+  box-shadow: var(--shadow-xs);
+}
+
+.tabs__tab--active svg { color: var(--secondary); }
+
+.tabs__tab:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: -2px;
+}
+
+/* The panel is focusable so Tab reaches the content; it needs no focus ring
+   of its own, which would read as an error state. */
+[role="tabpanel"]:focus { outline: none; }
+[role="tabpanel"]:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+}
+
+/* Opacity only, and only on the panel that is actually shown: this is dense
+   record text (Education / Political Career), so it must never move sideways
+   while someone is reading, and the outgoing panel must never linger in flow.
+   `display` used to be in this transition with `allow-discrete`; a discrete
+   transition to `display: none` holds the old value for the whole duration,
+   so both panels were `display: block` as flow siblings for 140ms and the
+   page grew by the height of the other panel and snapped back. Dropping
+   `display` costs the fade-out and buys back a stable layout, which on a
+   record page is the better trade. `@starting-style` still fires because the
+   incoming panel is transitioning out of `display: none`. */
+:root[data-hydrated] [role="tabpanel"]:not([hidden]) {
+  transition: opacity var(--dur-fast) var(--ease-out);
+
+  @starting-style { opacity: 0; }
+}
+
+/* ---- Two-column profile body ---------------------------------------- */
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.profile-grid > * { min-width: 0; }
+
+.profile-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+@media (max-width: 900px) {
+  /* One column below 900px: two columns of dense record cards stop being
+     scannable well before the viewport gets narrow. */
+  .profile-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .tabs {
+    /* Stacked rather than side by side: "Education & Career" and "Political
+       Career" cannot both stay legible in half a phone width without
+       shrinking the type below where it should go. */
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+  }
+  .tabs__tab {
+    justify-content: flex-start;
+    font-size: var(--text-base);
+    min-height: 48px;
+  }
+}
+
+/* ---- Entry rows (education, employment, service) --------------------- */
+
+.entry {
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.entry:last-child { border-bottom: 0; padding-bottom: 0; }
+.entry:first-child { padding-top: 0; }
+
+.entry__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.entry__title {
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-primary);
+  min-width: 0;
+  /* Long official titles must wrap, never overflow their card. */
+  overflow-wrap: anywhere;
+}
+
+.entry__org {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.entry__meta {
+  margin-top: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.entry__desc {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 68ch;
+}
+
+/* ---- Subject/grade rows (O/L, A/L) ---------------------------------- */
+
+.grade-list { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.grade-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  border-bottom: 1px dotted var(--border);
+  font-size: var(--text-sm);
+}
+
+.grade-row:last-child { border-bottom: 0; }
+.grade-row__subject { color: var(--text-secondary); overflow-wrap: anywhere; }
+.grade-row__grade {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+/* ---- Section card --------------------------------------------------- */
+
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+
+.section-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.section-card__head h3 {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.section-card__head svg { width: 17px; height: 17px; color: var(--text-muted); flex-shrink: 0; }
+
+/* Sub-grouping inside a card (School / O/L / A/L within Education). */
+.subsection + .subsection {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.subsection__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.subsection__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.subsection__title svg { width: 15px; height: 15px; color: var(--text-muted); }
+
+/* ---- "Not publicly verified" placeholder ----------------------------- */
+
+/* Used where a section is genuinely empty. It states WHY, because a blank
+   space invites the reader to conclude the person has no education. */
+.unverified-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-inset);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.unverified-note svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 0.15em; }
+.unverified-note strong { color: var(--text-secondary); font-weight: 600; }
+
+/* ---- Profile header additions ---------------------------------------- */
+
+.profile-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5) var(--space-8);
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.profile-fact {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.profile-fact svg { width: 16px; height: 16px; color: var(--text-muted); flex-shrink: 0; margin-top: 0.15em; }
+
+.profile-fact__label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.profile-fact__value {
+  margin-top: 0.1rem;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .profile-facts { gap: var(--space-4); flex-direction: column; }
+}
+
+/* ---- Profile status footer ------------------------------------------- */
+
+.profile-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-top: var(--space-8);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.profile-status__item { display: inline-flex; align-items: center; gap: var(--space-2); }
+.profile-status__item svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+/* ---- Profile portrait + credit ---------------------------------------- */
+
+.profile-portrait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* Attribution stays with the image rather than being buried in a sources
+   list — an official portrait shown without credit is the thing to avoid. */
+.profile-portrait__credit {
+  max-width: 116px;
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.profile-portrait__credit a { color: inherit; }
+.profile-portrait__credit a:hover { color: var(--link-hover); }
+
+/* Portraits are photographs of people: cover keeps the aspect ratio and
+   crops rather than squashing a face, and the top-weighted position keeps
+   heads in frame on a square crop. */
+.avatar img { object-position: 50% 20%; }
+
+@media (max-width: 640px) {
+  .profile-portrait { align-items: flex-start; }
+  .profile-portrait__credit { text-align: left; }
+}
+
+/* --------------------------------------------------------------------------
+   Research-derived and legally-contested records
+   --------------------------------------------------------------------------
+   Two states added when Javora began carrying facts that are attested but not
+   attested officially, and facts that are contested but not decided. Both are
+   styled to read as qualified rather than authoritative — a secondary-source
+   credential must not sit on a profile looking exactly like a Tier 1 one.
+   -------------------------------------------------------------------------- */
+
+.badge--secondary {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+.badge--secondary svg { color: var(--text-muted); }
+
+/* A live legal challenge. Bordered and tinted so it cannot be skimmed past,
+   but deliberately not styled as an error or a verdict. */
+.entry--review {
+  border-left: 3px solid var(--warning);
+  padding-left: 0.9rem;
+  background: var(--warning-bg);
+  border-radius: 0 8px 8px 0;
+}
+.entry--review .entry__desc strong { color: var(--text); }
+.entry--review .badge { margin-top: 0.5rem; }
+
+/* The verbatim string a source published, shown under a classified record so
+   the reading and the original stay visible together. */
+.entry__source-text {
+  font-size: var(--text-sm);   /* was 0.82rem, an ad-hoc value off the scale */
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   Compact unavailable state
+   --------------------------------------------------------------------------
+   A profile carries ten or so sections and most people have data for a few.
+   The full explanatory box is right where an absence needs explaining — an
+   unpublished examination grade — but repeated ten times it turned an honest
+   record into a wall of grey. This says the same thing in one line.
+   -------------------------------------------------------------------------- */
+
+.unrecorded {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--text-sm);   /* was 0.86rem, an ad-hoc value off the scale */
+  color: var(--text-muted);
+  margin: 0.35rem 0 0;
+}
+.unrecorded svg { width: 14px; height: 14px; flex: none; opacity: 0.7; }
+
+/* A chip for a state that is factual but not active — "Former office-holder". */
+.chip--muted { opacity: 0.75; }
+
+/* --------------------------------------------------------------------------
+   Current Government
+   --------------------------------------------------------------------------
+   A scannable current-state view, not a table. Cards are whole-card links so
+   the target is large enough on touch, and every one of them goes to the same
+   canonical person profile the Directory links to.
+   -------------------------------------------------------------------------- */
+
+.gov-page { display: flex; flex-direction: column; gap: var(--space-10); }
+
+.gov-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-4);
+}
+.gov-section__head h2 { font-size: var(--text-xl); margin: 0; }
+
+/* The count is a fact about the section, not decoration — it tells the reader
+   how large the Cabinet actually is without them counting cards. */
+.gov-section__count {
+  font-size: var(--text-sm);   /* was 0.78rem, an ad-hoc value off the scale */
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 0.1rem 0.5rem;
+}
+
+.gov-section__desc {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-4);
+  max-width: 62ch;
+}
+
+.gov-grid {
+  display: grid;
+  /* minmax(0,…) not 1fr: a bare 1fr track keeps min-width:auto and a long
+     portfolio title then forces the whole page to scroll sideways. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--space-4);
+}
+.gov-grid--lead { grid-template-columns: minmax(0, 1fr); }
+
+.gov-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: inherit;
+  /* `var(--ease)` is tokens.css's cubic-bezier(0.32, 0.72, 0.29, 1) — an
+     ease-out curve (fast start, slow finish). This used to be the bare
+     keyword `ease`, which is ease-in-out and noticeably eases IN at the
+     start; UI feedback should never do that. `transform` runs at the
+     faster press timing instead (see `:active` below). */
+  transition: border-color var(--dur-fast) var(--ease), transform var(--dur-press) var(--ease-out), box-shadow var(--dur-fast) var(--ease);
+}
+/* Hover effect: border + shadow, plus the trailing arrow going accent-
+   coloured. Fine-pointer gated — .gov-card__go's rule used to sit outside
+   this block, so a tap left the arrow accent-coloured with no way to
+   un-hover on touch. */
+@media (hover: hover) and (pointer: fine) {
+  .gov-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+  .gov-card:hover .gov-card__go { color: var(--accent); }
+}
+
+/* Press feedback: a large surface gets the barest scale. Ungated, so it
+   works on touch too. */
+.gov-card:active { transform: scale(0.995); }
+
+.gov-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.gov-card--lead { padding: var(--space-5); gap: var(--space-5); }
+
+.gov-card__body { flex: 1; min-width: 0; }
+
+.gov-card__name {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-md);
+  /* Long Sri Lankan names must wrap rather than overflow their card. */
+  overflow-wrap: anywhere;
+}
+.gov-card--lead .gov-card__name { font-size: var(--text-lg); }
+
+.gov-card__offices { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+
+.gov-card__office {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-size: var(--text-sm);   /* was 0.86rem, an ad-hoc value off the scale */
+  color: var(--text-secondary);
+  /* Portfolio names run long — "Minister of Public Administration, Provincial
+     Councils and Local Government" — and must wrap, never truncate: a
+     half-shown portfolio is a misstated one. */
+  overflow-wrap: anywhere;
+}
+.gov-card__office svg { width: 14px; height: 14px; flex: none; margin-top: 0.18rem; opacity: 0.65; }
+
+.gov-card__meta { margin: var(--space-2) 0 0; font-size: var(--text-sm); line-height: var(--lh-snug); color: var(--text-muted); }
+
+.gov-card__go { flex: none; align-self: center; color: var(--text-muted); }
+.gov-card__go svg { width: 16px; height: 16px; }
+
+/* ---- Source status ---- */
+
+.gov-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  max-width: 70ch;
+}
+.gov-status__dot {
+  width: 8px; height: 8px; flex: none; margin-top: 0.42rem;
+  border-radius: 50%;
+  background: var(--success, #3f8f5f);
+}
+/* Amber, not red: a source that has not been checked is incomplete, not
+   broken, and the difference matters to a reader deciding whether to trust
+   the page. */
+.gov-status__dot--partial { background: var(--warning, #c08a2e); }
+
+.gov-status__line { margin: 0; font-size: var(--text-sm); line-height: var(--lh-snug); color: var(--text-secondary); }
+.gov-status__sources {
+  margin: 0.35rem 0 0;
+  font-size: var(--text-sm);   /* was 0.78rem, an ad-hoc value off the scale */
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1rem;
+}
+
+.gov-footnote {
+  font-size: var(--text-sm);   /* was 0.82rem, an ad-hoc value off the scale */
+  color: var(--text-muted);
+  max-width: 70ch;
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-4);
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  /* One column, and the lead cards stop being visually special — at this
+     width the extra padding just wastes space. */
+  .gov-grid { grid-template-columns: minmax(0, 1fr); }
+  .gov-card--lead { padding: var(--space-4); gap: var(--space-4); }
+  .gov-status { flex-direction: row; }
+}
+
+/* ---- Toast (Toast.jsx) ------------------------------------------------
+   Mounted once at the app root (App.jsx), never inside a transformed
+   ancestor — see the comment there. z-index sits above the drawer (150,
+   layout.css) and the skip-link (200, base.css) so a toast is never hidden
+   behind either. `pointer-events: none` on the wrapper keeps the empty
+   region (the common case) from intercepting clicks on whatever is under it;
+   each toast opts back in. */
+.toaster {
+  position: fixed;
+  z-index: 300;
+  inset: auto var(--space-4) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: var(--space-2);
+  pointer-events: none;
+  /* Mobile: bottom-centre, clear of the home-indicator / gesture area. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.toaster__region {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+@media (min-width: 641px) {
+  .toaster {
+    inset: auto var(--space-6) var(--space-6) auto;
+    align-items: flex-end;
+  }
+  .toaster__region { align-items: flex-end; width: auto; }
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: min(360px, calc(100vw - var(--space-8)));
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+  /* Entrance/exit — see the `[data-open="true"]` rule and @starting-style
+     below for why this component reads as already-open on mount, the same
+     idiom `.typeahead__panel` uses. Reduced motion is handled globally
+     (base.css strips `transform` from the transition list under
+     prefers-reduced-motion, leaving only the opacity crossfade below) —
+     nothing extra needed here. */
+  transform: translateY(8px);
+  opacity: 0;
+  transition: transform var(--dur-exit) var(--ease-out), opacity var(--dur-exit) var(--ease-out);
+}
+
+@starting-style {
+  .toast { transform: translateY(8px); opacity: 0; }
+}
+
+.toast[data-open="true"] {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform var(--dur-enter) var(--ease-out), opacity var(--dur-enter) var(--ease-out);
+}
+
+/* Re-acknowledgement: toast() replaces an entry with a matching stable id in
+   place, so clicking the same copy button twice produced an identical DOM and
+   no visible response at all. A transition, not a keyframe — this is exactly
+   the rapidly-retriggerable case where a keyframe would restart from `from`
+   and stutter. 1.02 is deliberately below every press-scale tier: this is an
+   acknowledgement, not a press. */
+.toast[data-open="true"][data-bump="true"] {
+  transform: translateY(0) scale(1.02);
+  transition: transform var(--dur-press) var(--ease-out);
+}
+
+.toast--success { border-color: var(--success-border); }
+.toast--success .toast__icon { color: var(--success); }
+.toast--error { border-color: var(--danger-border); background: var(--danger-bg); }
+.toast--error .toast__icon { color: var(--danger); }
+
+.toast__icon { flex: none; width: 20px; height: 20px; margin-top: 0.1rem; }
+
+.toast__body { flex: 1 1 auto; min-width: 0; }
+
+.toast__message {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+}
+
+.toast__description {
+  margin: 0.15rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: var(--lh-snug);
+}
+
+.toast__dismiss {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: -0.2rem -0.2rem 0 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-press) var(--ease-out);
+}
+
+.toast__dismiss svg { width: 14px; height: 14px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .toast__dismiss:hover { background: var(--surface-soft); color: var(--text-primary); }
+}
+
+/* Press feedback — same icon-button tier as .icon-btn/.search__clear. */
+.toast__dismiss:active { transform: scale(0.92); }
+
+.toast__dismiss:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 2px;
+}
+
+/* ======================================================================
+   Hierarchy pass — status vocabulary, card levels, filter disclosure
+   ----------------------------------------------------------------------
+   Appended deliberately rather than edited in place, matching the two
+   sections above: these rules exist to OVERRIDE earlier ones at equal
+   specificity, and the cascade order is the mechanism.
+
+   The problem this section addresses, in one sentence: the palette is calm
+   and every element was equally calm with it, so a card's name, its office,
+   its party, its district and its provenance badge all arrived at the
+   reader's eye at the same moment with the same weight. "Civic calm" is
+   meant to describe the hierarchy, not the absence of one.
+   ====================================================================== */
+
+/* ---- Status tag (Primitives.jsx StatusTag) --------------------------- */
+
+/*
+ * Deliberately NOT a `.chip`. A chip is neutral metadata; this is the answer
+ * to the one question a political register exists to answer, so it gets its
+ * own shape (a dot + a word) that nothing else on a card uses. Colour never
+ * carries it alone — each state's wording differs, and the dot is filled for
+ * current and hollow for everything else.
+ */
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.1875rem var(--space-3) 0.1875rem var(--space-2);
+  border: 1px solid var(--neutral-chip-border);
+  border-radius: var(--radius-full);
+  background: var(--neutral-chip-bg);
+  color: var(--neutral-chip-text);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+  white-space: nowrap;
+}
+
+.status-tag__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  background: transparent;
+}
+
+.status-tag--current {
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
+  font-weight: 600;
+}
+
+.status-tag--current .status-tag__dot { background: var(--info); border-color: var(--info); }
+
+.status-tag--unknown { border-style: dashed; color: var(--text-muted); background: transparent; }
+
+/*
+ * Vital status, not office status — solid border (unlike --unknown's dashed
+ * one) so the two are never mistaken for the same kind of gap: "status not
+ * recorded" is an absence, "deceased" is a stated fact.
+ */
+.status-tag--deceased { border-color: var(--text-muted); color: var(--text-muted); background: var(--neutral-chip-bg); }
+.status-tag--deceased .status-tag__dot { background: var(--text-muted); border-color: var(--text-muted); }
+
+.status-tag--compact { font-size: var(--text-micro); padding-block: 0.125rem; }
+
+/* ---- Verification badge, subordinated but never unlabelled ----------- */
+
+.badge--compact {
+  font-size: var(--text-micro);
+  font-weight: 500;
+  padding: 0.0625rem var(--space-2);
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.badge--compact svg { width: 11px; height: 11px; }
+
+/* ---- Profile cards: four visible levels ------------------------------ */
+
+.profile-card__body { gap: var(--space-2); }
+.profile-card__top { margin-bottom: var(--space-1); align-items: center; }
+.profile-card--result .profile-card__body { gap: var(--space-4); }
+.profile-card__col { gap: var(--space-2); }
+
+.profile-card__name { font-size: var(--text-lg); }
+.profile-card--result .profile-card__name { font-size: var(--text-lg); }
+
+/* Level 2 — the office. The single line most readers are scanning for, and
+   the line that used to render at 14px in the same grey as the district. */
+.profile-card__office {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--lh-snug);
+  color: var(--text-primary);
+  font-weight: 500;
+  /* Ministerial titles run long ("Minister of Public Administration,
+     Provincial Councils and Local Government") — they wrap, they are never
+     clipped and never shrunk to fit. */
+  overflow-wrap: anywhere;
+}
+
+.profile-card__office--muted { color: var(--text-muted); font-weight: 400; font-style: italic; }
+
+/* Level 3 — party · district, one quiet line. */
+.profile-card__context {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--lh-snug);
+  color: var(--text-secondary);
+}
+
+.profile-card__tenure {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.profile-card__tenure svg { width: 13px; height: 13px; flex: none; }
+
+/* Level 4 — provenance. Present on every card, loudest on none. */
+.profile-card__provenance { margin: var(--space-1) 0 0; }
+.profile-card__provenance .badge { margin-left: calc(var(--space-2) * -1); }
+
+/* ---- Filter groups --------------------------------------------------- */
+
+.filter-group__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* How many of this group's filters are on, readable at a glance with the
+   group collapsed — otherwise closing a group hides the fact that it is
+   still filtering the results. */
+.filter-group__active {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 5px;
+  border-radius: var(--radius-full);
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  color: var(--info-text);
+  font-size: var(--text-micro);
+  font-weight: 600;
+}
+
+.filter-group__more {
+  align-self: flex-start;
+  margin-top: var(--space-1);
+  padding: var(--space-2) 0;
+  border: none;
+  background: none;
+  color: var(--link);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.filter-group__more:hover { color: var(--link-hover); }
+
+/* The one group that answers a question about the RECORD rather than about
+   a politician, kept one disclosure away from the four that don't. */
+.filters__more {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-2);
+}
+
+.filters__more > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  list-style: none;
+  min-height: 44px;
+}
+
+.filters__more > summary::-webkit-details-marker { display: none; }
+.filters__more[open] > summary .filter-group__chevron { transform: rotate(180deg); }
+
+/* ---- Active filters -------------------------------------------------- */
+
+.active-filters__label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-right: var(--space-1);
+}
+
+.filter-tag__group { color: var(--text-muted); font-weight: 500; }
+.filter-tag__value { font-weight: 600; }
+
+/* ---- Filter group overrides ------------------------------------------
+   Three fixes, all of them things the reader was paying for:
+
+   1. The group heading was 12px, uppercase, letter-spaced 0.11em and in the
+      secondary text colour — the exact "small + uppercase + muted + wide
+      tracking" stack that reads as sophisticated and scans as noise. It is
+      now a plain 14px sentence-case label at full contrast.
+   2. `max-height: 260px; overflow-y: auto` made every group its own scroll
+      container — a scroll box, inside the sidebar's scroll, inside the
+      page's. "Show all" (FilterGroup in Primitives.jsx) does that job now
+      without a third scroll context, so the cap comes off.
+   3. Filter rows were ~31px tall. 44px is the comfortable-touch floor, and
+      a filter list is exactly the kind of dense control a thumb misses.
+   ---------------------------------------------------------------------- */
+
+.filter-group > summary {
+  font-size: var(--text-sm);
+  letter-spacing: var(--track-body);
+  text-transform: none;
+  color: var(--text-primary);
+  padding-block: var(--space-3);
+  min-height: 44px;
+}
+
+.filter-group__list {
+  max-height: none;
+  overflow-y: visible;
+}
+
+.filter-option {
+  min-height: 40px;
+  padding-block: var(--space-2);
+}
+
+.filter-option__name { min-width: 0; }
+
+/* A count is subordinate to the label it counts, but it is still a number a
+   reader uses to choose — tabular, aligned in its own column, not a 10px
+   afterthought. */
+.filter-option__count {
+  font-size: var(--text-xs);
+  min-width: 2.25em;
+  text-align: right;
+}
+
+@media (pointer: coarse) {
+  .filter-option { min-height: 44px; }
+}
+
+/* ---- Directory: result context line ----------------------------------
+   The toolbar used to carry the search box, the Filters button and the
+   result count on one row, with the count as the last, smallest thing on
+   it. The count is the sentence that explains the whole page, so it now
+   gets its own line directly under the controls that change it, with the
+   search term restated beside it. */
+
+.directory__summary {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.results-count { font-size: var(--text-base); }
+.results-count strong { font-size: var(--text-base); }
+
+.results-count__term {
+  margin-left: var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/*
+   The sort control is a real form control and has to be sized like one.
+
+   It was the only `.dropdown__trigger` on the site with no height of its
+   own — `.lang-switch` sets 44px — so it rendered at whatever a bare
+   `<button>`'s line box came to, 32px, sitting beside a 42px search field
+   it is meant to pair with. Under a coarse pointer that is also below the
+   44px target floor, and it is one of only two controls that change what
+   the directory shows.
+*/
+.directory__sort {
+  min-width: 168px;
+  min-height: 38px;
+  padding-inline: var(--space-3);
+}
+
+@media (pointer: coarse) {
+  /*
+     Touch floors for the directory's own controls. Everything here is a
+     control that CHANGES THE RESULT SET — the two an ordinary visitor
+     actually reaches for on a phone — plus the clear button inside the
+     search field, which is the only way to undo a typed query one-handed.
+     44px is the floor, not the look: the visual box is unchanged on a
+     mouse-driven screen.
+  */
+  .directory__sort { min-height: 44px; }
+  .filter-drawer-btn { min-height: 44px; }
+  /* The clear button lives INSIDE the field, so the field has to grow with
+     it — a 44px control in a 42px box would either overflow or silently
+     stretch the field to a height nothing else was designed against. */
+  .search--compact .search__input { height: 48px; }
+  .search__clear { width: 44px; height: 44px; }
+}
+
+/* Multiple exits from an empty result set need to sit on one row, not stack
+   into a column of equally-weighted buttons. */
+.empty-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.drawer__foot { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.drawer__foot-count {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.directory__sort-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.directory__sort-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Result card: status first on its line, context after it. */
+.profile-card__status-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-1) 0 0;
+}
+
+.profile-card__status-row .profile-card__context { margin: 0; }
+
+/* ---- Home: quick access + trust figures -------------------------------
+   Two rows of editorial destinations rather than four feature cards: the
+   difference is a hairline grid and a real sentence per row, so the page
+   reads as a table of contents for a public record instead of a pricing
+   page. Rows are full-width link targets (48px+ tall at every width), which
+   is also what makes them comfortable on a phone. */
+
+/* Exactly two columns, never four: `auto-fit` would fit all four rows onto
+   one line at container width and turn a table of contents into a row of
+   narrow cards with five-word lines. */
+.quick-access {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 720px) {
+  .quick-access { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.quick-access__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-4) var(--space-5) 0;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    background-color var(--dur) var(--ease),
+    transform var(--dur-press) var(--ease-out);
+}
+
+/* A gutter between the two columns that keeps the hairlines continuous. */
+@media (min-width: 720px) {
+  .quick-access__item:nth-child(odd) { padding-right: var(--space-8); }
+  .quick-access__item:nth-child(even) { padding-left: var(--space-8); border-left: 1px solid var(--border); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quick-access__item:hover { background: var(--surface-soft); }
+  .quick-access__item:hover .quick-access__go { transform: translateX(3px); }
+}
+
+.quick-access__item:active { transform: scale(0.995); }
+
+.quick-access__item:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.quick-access__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  margin-top: 0.1em;
+  border-radius: var(--radius-full);
+  background: var(--surface-soft);
+  color: var(--secondary);
+}
+
+.quick-access__icon svg { width: 16px; height: 16px; }
+
+.quick-access__text { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+
+.quick-access__title {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: var(--lh-heading);
+}
+
+.quick-access__item:hover .quick-access__title { color: var(--link); }
+
+/* 15px: secondary prose, deliberately above the 14px this site used for
+   every supporting sentence — see the typography note in the audit. */
+.quick-access__body {
+  font-size: 0.9375rem;
+  line-height: var(--lh-body);
+  color: var(--text-secondary);
+  max-width: 46ch;
+}
+
+.quick-access__go {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 0.6em;
+  margin-left: auto;
+  color: var(--text-muted);
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.home-trust {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: var(--space-10);
+  align-items: start;
+}
+
+.home-trust__text > * + * { margin-top: var(--space-4); }
+.home-trust__text h2 { max-width: 18ch; }
+
+/* A fixed 2x2, not `auto-fit`: four figures across a half-width column fit
+   three-then-one, which reads as a layout accident rather than a set. */
+.home-trust__figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-8);
+  margin: 0;
+}
+
+@media (max-width: 420px) {
+  .home-trust__figures { grid-template-columns: minmax(0, 1fr); }
+}
+
+.home-trust__figure { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.home-trust__figure dt {
+  order: 2;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.home-trust__figure dd {
+  order: 1;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  line-height: 1.05;
+  color: var(--figure);
+  font-variant-numeric: tabular-nums;
+}
+
+.home-trust__figure p {
+  order: 3;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: var(--lh-snug);
+}
+
+@media (max-width: 860px) {
+  .home-trust { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); }
+}
+
+/* ---- Local section navigation (Government, portfolio profile) ---------
+   A single sticky row of anchors, deliberately small: it exists so a long
+   page can be entered in the middle, not to become a second navbar. It is
+   real `<a href="#…">` markup, so it works with no JavaScript; the
+   `aria-current` marking is the only part that needs the observer.
+   Horizontally scrollable on narrow screens rather than wrapping to three
+   rows and eating a third of a phone screen. */
+
+.section-nav {
+  position: sticky;
+  top: calc(var(--nav-offset) + var(--space-2));
+  z-index: 40;
+  margin-inline: auto;
+  max-width: var(--container);
+  padding-inline: var(--space-6);
+}
+
+.section-nav__list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-1);
+  /* Pinned to the token that anchor clearance is computed from, so the two
+     cannot drift apart silently — see --section-nav-height in tokens.css. */
+  min-height: var(--section-nav-height);
+  box-sizing: border-box;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(10px);
+  -webkit-backdrop-filter: saturate(180%) blur(10px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-xs);
+}
+
+.section-nav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.section-nav__link:hover { background: var(--surface-soft); color: var(--text-primary); }
+
+/* The current section, marked by weight and a surface — never by colour
+   alone, and never so loudly that the row competes with the page. */
+.section-nav__link[aria-current] {
+  background: var(--surface-soft);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.section-nav__count {
+  font-size: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.section-nav__link[aria-current] .section-nav__count { color: var(--text-secondary); }
+
+@media (max-width: 640px) {
+  .section-nav { padding-inline: var(--space-4); }
+  .section-nav__link { min-height: 40px; }
+}
+
+/*
+   Headings must clear BOTH sticky bars when an anchor lands on them.
+
+   This used to sit on `.gov-section__head` — the WRAPPER — while the id, and
+   therefore the scroll target, is on the `<h2>` inside it. A browser applies
+   the scroll-margin of the element actually being scrolled to, so the rule
+   did nothing: every "On this page" jump parked the section's own title
+   behind the bar that had just been clicked, and the reader landed on a list
+   of ministers with no heading above it.
+
+   Scoped by `:has()` to pages carrying the STICKY variant of the bar. The
+   portfolio profile renders the same component with `sticky={false}`, where
+   there is no second bar to clear and this extra offset would just push the
+   heading down the page for no reason.
+
+   `scroll-margin-top` composes with html's `scroll-padding-top` (which
+   already reserves the header), so this value is the bar alone plus a gap —
+   not the whole distance from the top of the viewport.
+*/
+body:has(.section-nav:not(.section-nav--static)) [id]:is(h1, h2, h3) {
+  scroll-margin-top: calc(var(--section-nav-height) + var(--space-3));
+}
+
+/* ---- Government cards ------------------------------------------------- */
+
+.gov-card__office--primary {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.gov-card__also { margin-top: var(--space-3); }
+
+.gov-card__also-label {
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.gov-card__also .gov-card__offices { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.gov-card__also .gov-card__office {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--lh-snug);
+}
+
+/* ---- Profile: trust bar, status, correction link ----------------------
+   The "source-linked, not verified" explanation used to be a four-line
+   `Notice` block opening every profile — honest, and read by nobody, because
+   it stood between the reader and the first fact about the person. The claim
+   is now a single line and the reasoning is a disclosure. `<details>` rather
+   than JS so the text stays in the prerendered HTML either way (the same
+   rule TabPanel follows). */
+
+.trust-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-md);
+}
+
+.trust-bar__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--info-text);
+}
+
+.trust-bar__mark svg { width: 16px; height: 16px; }
+
+.trust-bar__body { min-width: 0; }
+
+.trust-bar__headline {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: var(--lh-body);
+  color: var(--info-text);
+}
+
+.trust-bar__details { margin-top: var(--space-2); }
+
+.trust-bar__details > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  font-size: var(--text-sm);
+  color: var(--info-text);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.trust-bar__details > summary:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.trust-bar__details p {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: var(--lh-body);
+  color: var(--text-secondary);
+  max-width: var(--measure);
+}
+
+.profile-header__status { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+
+.profile-header__actions { margin-top: var(--space-5); }
+
+.profile-header__correct {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.profile-header__correct svg { width: 14px; height: 14px; color: var(--text-muted); }
+
+.profile-header__correct:hover {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The selected tab carried a white-on-off-white surface change and a colour
+   shift — correct in principle, nearly invisible in practice against the
+   inset strip it sits in. An inset accent rule along its lower edge makes
+   the selection unmistakable without raising the strip's volume. */
+.tabs__tab--active {
+  box-shadow: var(--shadow-xs), inset 0 -2px 0 0 var(--secondary);
+}
+
+/* ---- About: definition lists for the record vocabulary ---------------- */
+
+.about-subheading {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-4);
+}
+
+.about-terms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-5) var(--space-8);
+  margin: 0;
+}
+
+.about-terms > div {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.about-terms dt {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.about-terms dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: var(--lh-body);
+  color: var(--text-secondary);
+}
+
+/* Inside the mobile filter drawer the panel already has a titled head, so
+   the sidebar's own "Filters" title restated it directly underneath. The
+   reset control stays — it is the one thing the drawer head does not carry. */
+.drawer__panel--filters .filters__head { justify-content: flex-end; }
+.drawer__panel--filters .filters__head .filters__title { display: none; }
+
+/* ---- A-Z index --------------------------------------------------------
+   One row, scrollable rather than wrapped on narrow screens: 27 letters
+   wrapped to four lines on a phone is a bigger control than the result it
+   filters. A letter with no records is a `<span>`, not a dimmed link — it
+   cannot be clicked because there is nothing there, and that should be
+   visible before the tap, not after. */
+
+.az-index {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: var(--space-1);
+}
+
+.az-index__letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 32px;
+  padding-inline: var(--space-1);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--link);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.az-index__letter:hover { background: var(--surface-soft); color: var(--link-hover); }
+
+.az-index__letter[aria-current] {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  font-weight: 600;
+}
+
+.az-index__letter--empty { color: var(--text-muted); opacity: 0.45; }
+
+@media (pointer: coarse) {
+  /* 44px, not 40 — a 27-target row is exactly where a near-miss costs the
+     reader a wrong letter and a full re-navigation. */
+  .az-index__letter { min-width: 44px; height: 44px; }
+}
+
+/* `.directory__main > * + *` spaces the column's children, and the column's
+   first child is a visually-hidden <h2>. It takes no space itself (it is
+   absolutely positioned) but it still makes the toolbar a "+ *", so the
+   toolbar was carrying 20px of margin under a heading nobody can see —
+   stacked on top of two sections' padding. */
+.directory__main > .visually-hidden + * { margin-top: 0; }

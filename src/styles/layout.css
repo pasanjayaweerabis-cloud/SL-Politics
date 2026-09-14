@@ -1,0 +1,768 @@
+/* ==========================================================================
+   Javora — Layout: navigation, hero, footer
+   ========================================================================== */
+
+/* ==========================================================================
+   Navbar
+   ========================================================================== */
+
+/*
+ * The floating header card — see HOMEPAGE_BUILD_PROMPT.md §3.1.
+ * `--hh-header-bg`/`--hh-header-text`/`--hh-header-rgb` are theme-mapped in
+ * tokens.css (light card in light mode, dark card in dark mode) so the
+ * header follows the reader's chosen palette instead of staying fixed.
+ *
+ * `.nav--overlay` (home route only, set in Chrome.jsx) switches this from
+ * occupying its own row in flow to `position: fixed`, floating on top of the
+ * hero photo, which itself starts at the true top of the viewport on that
+ * route. Every other route keeps the plain sticky-in-flow behaviour this bar
+ * always had, restyled but not repositioned — see the comment on `overlay`
+ * in Chrome.jsx for why that split exists.
+ */
+.nav {
+  position: sticky;
+  top: 16px;
+  z-index: 100;
+  margin-inline: 16px;
+  border-radius: 18px;
+  background: var(--hh-header-bg);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  box-shadow: var(--shadow-md);
+  transition: background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+/*
+ * A sticky element's `top` offset shifts it visually without adding to the
+ * flow space it reserves — so the 16px this bar sticks down by always
+ * overlapped the top 16px of whatever came right after it in the document
+ * (`<main>`'s `.page-head`, on every interior route). That let the darker
+ * page background peek through in a band along the bar's lower edge and its
+ * rounded corners, against the lighter `--background-secondary` of the page
+ * head sitting immediately behind — a seam, not a deliberate two-tone look.
+ * `.nav--overlay` (home) is unaffected: `position: fixed` takes it out of
+ * flow entirely, so it reserves no space to correct here.
+ */
+.nav:not(.nav--overlay) { margin-block-start: 16px; }
+
+.nav--overlay {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  /* `left`/`right` already place the 16px inset — the base rule's
+     `margin-inline: 16px` would otherwise stack on top of it and double the
+     gap on each side (found by measuring: at 320px wide the bar came out
+     256px, not the expected 288px). */
+  margin-inline: 0;
+}
+
+/*
+ * `.nav--hero` is added by Chrome.jsx only while the fixed home header still
+ * overlaps the wallpaper photo (tracked with an IntersectionObserver against
+ * `.home-hero`, since Chrome and HomeHero sit in different branches of the
+ * tree and can't share a ref). It only ever appears alongside `.nav--overlay`
+ * — every other route keeps the plain card.
+ *
+ * This re-points the SAME custom properties the card, its text and its
+ * controls already read (`--hh-header-bg`/`-text`/`-rgb`, consumed by
+ * `.nav__logo-name`, `.nav .icon-btn`, `.nav__tagline`, `.nav__link`, etc.)
+ * rather than restyling each of those selectors separately, so nothing here
+ * can drift out of sync with the base card's look. Once the reader scrolls
+ * the wallpaper out from under the bar, Chrome.jsx drops this class and the
+ * bar falls straight back to `.nav--overlay`'s normal card — unchanged from
+ * before this variant existed.
+ */
+/* Over the wallpaper photo the header text turns white, so the active-page
+   underline takes the hero's own mint accent rather than the page-chrome
+   green, which would disappear into the photo. */
+.nav--overlay.nav--hero { --hh-accent: var(--hh-mint-300); }
+
+.nav--overlay.nav--hero {
+  --hh-header-bg:   var(--hh-header-bg-hero);
+  --hh-header-text: var(--hh-header-text-hero);
+  --hh-header-rgb:  var(--hh-header-rgb-hero);
+  background: var(--hh-header-bg);
+  box-shadow: none;
+  /* The card itself is now too transparent to carry contrast on its own —
+     this reads against the photo directly, not the card, so it needs its
+     own shadow rather than relying on `--hh-header-text`'s colour alone.
+     `text-shadow` inherits, so this one declaration covers the logo name,
+     tagline, nav links and icon buttons below without restating it on each. */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+/* Where backdrop-filter is unsupported the bar must still be opaque. */
+@supports not (backdrop-filter: blur(1px)) {
+  .nav { background: var(--surface); }
+}
+
+.nav__inner {
+  height: 76px;
+  max-width: 1520px;
+  margin-inline: auto;
+  padding-inline: 40px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+@media (max-width: 899px) {
+  .nav__inner { padding-inline: 24px; }
+}
+@media (max-width: 639px) {
+  .nav__inner { padding-inline: 20px; }
+}
+
+/* ---- Logo lockup ------------------------------------------------------
+   Bespoke to this header, not `BrandLockup` (Footer still uses that, with
+   the site's real lion mark) — see the comment on HeaderLogo's markup in
+   Chrome.jsx for why the two must not share a component. */
+
+.nav__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.nav__logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--hh-green-900);
+  color: var(--hh-white);
+}
+
+.nav__logo-mark svg { width: 20px; height: 20px; stroke-width: 1.6; }
+
+.nav__logo-mark img { width: 40px; height: 40px; object-fit: contain; }
+
+/* Unlike .brand__mark below, this circle's own background is the fixed
+   --hh-green-900 (never theme-mapped — see the comment on that token in
+   tokens.css), so it always needs the pale mark for contrast. Never swap
+   this one by site theme, or light mode renders the black mark on a dark
+   green circle and the logo disappears. */
+.nav__logo-mark--light { display: none; }
+.nav__logo-mark--dark { display: block; }
+
+.nav__logo-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Same swap mechanics as `.brand__mark` below: light-mode mark ships black,
+   dark-mode mark ships pale, resolved purely in CSS so it stays hydration-safe
+   (no JS branching on theme state, matching ThemeToggle's approach). */
+.nav__logo-img--dark { display: none; }
+:root[data-theme="dark"] .nav__logo-img--light { display: none; }
+:root[data-theme="dark"] .nav__logo-img--dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .nav__logo-img--light { display: none; }
+  :root:not([data-theme="light"]) .nav__logo-img--dark { display: block; }
+}
+
+.nav__logo-name {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--hh-header-text);
+  line-height: 1;
+}
+
+.nav__hairline {
+  width: 1px;
+  height: 28px;
+  flex: none;
+  background: rgba(var(--hh-header-rgb), 0.18);
+}
+
+.nav__tagline {
+  margin: 0;
+  flex: none;
+  font-size: 0.82rem;
+  color: rgba(var(--hh-header-rgb), 0.62);
+  white-space: nowrap;
+}
+
+@media (max-width: 1399px) {
+  .nav__tagline { display: none; }
+}
+@media (max-width: 899px) {
+  .nav__hairline { display: none; }
+}
+
+/* ---- Brand lockup --------------------------------------------------- */
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brand__mark {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  opacity: var(--logo-opacity);
+  flex-shrink: 0;
+}
+
+/* Light-mode mark ships black, dark-mode mark ships pale — swapped by theme,
+   never filtered, so both stay crisp. Theme is resolved purely in CSS (the
+   dark logo starts hidden by default markup order) to match ThemeToggle's
+   hydration-safe pattern in Chrome.jsx: no JS branching on theme state. */
+.brand__mark--dark { display: none; }
+:root[data-theme="dark"] .brand__mark--light { display: none; }
+:root[data-theme="dark"] .brand__mark--dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand__mark--light { display: none; }
+  :root:not([data-theme="light"]) .brand__mark--dark { display: block; }
+}
+
+.brand__name {
+  font-family: var(--font-serif);
+  font-size: 1.3125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+/* ---- Desktop links -------------------------------------------------- */
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-left: auto;
+}
+
+.nav__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(var(--hh-header-rgb), 0.75);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--dur) var(--ease), transform var(--dur-press) var(--ease-out);
+}
+
+.nav__link:hover { color: var(--hh-header-text); }
+
+/* Press feedback — matches .drawer__link/.tabs__tab's ungated scale-down;
+   this reads as the same kind of chip-style link as those two. */
+.nav__link:active { transform: scale(0.98); }
+
+.nav__link[aria-current="page"] {
+  color: var(--hh-header-text);
+  font-weight: 600;
+}
+
+/* State indication: the underline grows in from the reading start rather
+   than snapping into place, so a route change reads as the active tab
+   moving, not a mark just appearing. English-only chrome (see the note in
+   SearchTypeahead.jsx on what this site does and does not translate), so
+   `left` is a fixed reading-start edge, not a logical property — there is
+   no RTL case to flip it for. The pseudo-element mounts fresh whenever
+   aria-current flips onto a link, which is exactly what `@starting-style`
+   is for. */
+.nav__link[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  /* Full label width, not a 28px tick centred under it. The tick was
+     legible as decoration and easy to miss as STATE — the audit's first
+     navigation finding was that a reader cannot tell at a glance which
+     section they are in. Spanning the label makes it read as "this one",
+     without raising the volume of the colour. */
+  left: 0;
+  right: 0;
+  bottom: -14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--hh-accent);
+  transform: scaleX(1);
+  transform-origin: left center;
+  transition: transform var(--dur) var(--ease-out);
+}
+
+@starting-style {
+  .nav__link[aria-current="page"]::after {
+    transform: scaleX(0);
+  }
+}
+
+.nav__divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin-inline: var(--space-3);
+}
+
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Icon buttons / language pill inside THIS header specifically follow the
+   header's own `--hh-header-*` tokens rather than the site's ordinary
+   theme-aware tokens, so they track the floating card's own light/dark
+   swap. Scoped to `.nav` so the shared `.icon-btn` (filter drawer's close
+   button, etc.) and `.lang-switch--compact` (the mobile drawer's own copy
+   of this control) keep reading the ordinary theme-aware tokens elsewhere. */
+.nav .icon-btn { width: 44px; height: 44px; color: var(--hh-header-text); }
+.nav .icon-btn svg { width: 20px; height: 20px; }
+.nav .icon-btn:hover { background: rgba(var(--hh-header-rgb), 0.08); border-color: transparent; }
+.nav .lang-switch { border-color: rgba(var(--hh-header-rgb), 0.16); color: var(--hh-header-text); height: 44px; }
+.nav .lang-switch:hover { background: rgba(var(--hh-header-rgb), 0.06); color: var(--hh-header-text); }
+
+/* ---- Icon buttons --------------------------------------------------- */
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  /* Colour transitions for ordinary hover/press feedback are restated here
+     (not left to base.css's `.theme-switching`, which only fires during an
+     actual theme flip) so adding `transform` doesn't clobber them. */
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    transform var(--dur-press) var(--ease-out);
+}
+
+/* Hover effect: background/colour/border only, no motion. */
+.icon-btn:hover {
+  background: var(--surface-soft);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+/* Press feedback — var(--dur-press) var(--ease-out) scale-down on click, no hover coupling. */
+.icon-btn:active { transform: scale(0.92); }
+
+.icon-btn svg { width: 17px; height: 17px; }
+
+/* Theme toggle: crossfade + rotate between sun and moon glyphs, covering both
+   dark entry points — explicit choice and system preference — with static end
+   states rather than interpolating a CSS custom property. A custom property
+   cannot be interpolated by the compositor, so animating `--icon-moon-opacity`
+   directly forced a style recalc on every frame, on the main thread, on a
+   control that gets pressed often. Both icons are stacked and crossfade with
+   a small rotation, rather than cutting between `display: none`/`block`,
+   which cannot transition at all. */
+.theme-toggle { position: relative; }
+
+.theme-toggle .icon-moon,
+.theme-toggle .icon-sun {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.theme-toggle .icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+.theme-toggle .icon-sun  { opacity: 0; transform: rotate(-70deg) scale(0.6); }
+
+/* Entry point 1: an explicit reader choice. */
+[data-theme="dark"] .theme-toggle .icon-moon { opacity: 0; transform: rotate(70deg) scale(0.6); }
+[data-theme="dark"] .theme-toggle .icon-sun  { opacity: 1; transform: rotate(0deg) scale(1); }
+
+/* Entry point 2: the system preference, honoured only when the reader has not
+   chosen — mirrors the `:root:not([data-theme="light"])` mapping in
+   tokens.css, which is the other half of this same dual-coverage rule. */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .theme-toggle .icon-moon { opacity: 0; transform: rotate(70deg) scale(0.6); }
+  html:not([data-theme="light"]) .theme-toggle .icon-sun  { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+
+/* ---- Language switcher -------------------------------------------------
+   `.lang-switch` is the visual skin for a `Dropdown` trigger button (see
+   components.css's "Dropdown" section for the shared listbox/panel/option
+   mechanics) — it used to wrap a native <select>, replaced because that
+   select's open popup ignores CSS entirely on Windows. */
+
+.lang-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  /* Was --space-1 (4px) — the globe glyph and the label sat close enough to
+     read as one smudge rather than an icon plus a word. */
+  gap: var(--space-2);
+  height: 34px;
+  padding-inline: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur-press) var(--ease-out);
+}
+
+.lang-switch:hover {
+  background: var(--surface-soft);
+  color: var(--text-primary);
+}
+
+/* Press feedback — matches every other shared trigger's ungated scale. */
+.lang-switch:active { transform: scale(0.97); }
+
+/* Mirrors `.search:focus-within`'s glow so opening this control reads as
+   the same kind of control as the rest of the interface. `[aria-expanded]`
+   keeps it lit while the panel is open, not just while the button itself
+   holds keyboard focus. */
+.lang-switch:focus-visible,
+.lang-switch[aria-expanded="true"] {
+  outline: none;
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.lang-switch__icon { width: 15px; height: 15px; flex: none; }
+
+/* Preventing a jarring change: Chrome.jsx keys this span by `lang`, so
+   picking a new language remounts it — the crossfade is the entrance this
+   rule's `@starting-style` gives that fresh element, not a transition on
+   the text itself (changing text content isn't an animatable property
+   change). --dur-fast is the ceiling asked for; hydration never triggers
+   this, since the server and first client render share the same key. */
+.lang-switch__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 1;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+@starting-style {
+  .lang-switch__label { opacity: 0; }
+}
+
+/* `--short` stays hidden everywhere by default — the nav bar's own trigger
+   swaps to it below, and `--compact` (the drawer's full-width copy, which
+   has plenty of room) never does. */
+.lang-switch__label--short { display: none; }
+
+/* Below phone width the nav bar's globe + full label + chevron, squeezed
+   against the search/theme/menu icon-buttons, was cramped enough to force
+   the trigger into two lines / clip itself. `:not(.lang-switch--compact)`
+   keeps the drawer's centred, full-width copy of this control (plenty of
+   room there) on the full label. */
+@media (max-width: 640px) {
+  .lang-switch:not(.lang-switch--compact) .lang-switch__label--full { display: none; }
+  .lang-switch:not(.lang-switch--compact) .lang-switch__label--short { display: inline; }
+}
+
+.lang-switch .dropdown__chevron { width: 12px; height: 12px; }
+
+/* The pill is narrow and sits at the right edge of the nav bar — anchoring
+   the panel to the trigger's right edge (rather than the shared default's
+   left edge) keeps it growing inward instead of off the viewport. */
+.lang-switch__panel {
+  left: auto;
+  right: 0;
+  white-space: nowrap;
+}
+
+.lang-switch--compact {
+  width: 100%;
+  justify-content: center;
+  height: 40px;
+}
+
+.nav__burger { display: none; }
+
+/* ---- Mobile drawer -------------------------------------------------- */
+
+@media (max-width: 899px) {
+  .nav__links,
+  .nav__divider,
+  .nav__tagline { display: none; }
+  .nav__burger  { display: inline-flex; }
+}
+
+/* Below ~480px the disc + full wordmark + language pill + search/theme/menu
+   icon-buttons no longer fit the inset bar's own width — measured directly
+   (the burger button was rendering off past the right edge, not clipped by
+   anything, just invisible and unreachable). Matches the old lion-mark
+   header's same fix for the same reason, at the width it actually stopped
+   fitting on THIS bar (inset margins leave less row width than the old
+   edge-to-edge one had). */
+@media (max-width: 479px) {
+  .nav__logo-name { display: none; }
+  .nav__inner { gap: var(--space-3); padding-inline: 12px; }
+  .nav__actions { gap: 2px; }
+}
+
+.drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: none;
+}
+
+/* Mounted whenever the Drawer component renders at all — open or mid-close;
+   see Primitives.jsx for why it stays mounted one render past `open` going
+   false. `data-open` (present either way) is what actually drives the
+   open/closed visual state below. */
+.drawer[data-open] { display: block; }
+
+/* Fade in/out — the scrim's own crossfade partner is the page behind it. */
+.drawer__scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.drawer[data-open="true"] .drawer__scrim { opacity: 1; }
+
+/* Slide in / slide out: the panel enters from just off its own right edge
+   (14px, not fully off-screen — a nudge, not a traverse) while fading in. */
+.drawer__panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(320px, 86vw);
+  background: var(--surface-elevated);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(14px);
+  opacity: 0;
+  /* Closed/exit duration: var(--dur-exit), faster than the entrance below —
+     the system is confirming a decision already made, not asking for
+     attention. This still retargets mid-flight like any other interruptible
+     transition here (see the comment below); giving enter and exit their
+     own duration doesn't change that, since what's interpolated is distance
+     travelled, not a shared clock. */
+  transition: transform var(--dur-exit) var(--ease-drawer), opacity var(--dur-exit) var(--ease-drawer);
+}
+
+/* Interruptible animation: open and close are the same interpolation, driven
+   in both directions off one attribute — not a pair of keyframe animations,
+   which always restart from their `from` frame and so cannot retarget an
+   interrupted close from wherever the panel actually is. Entrance gets its
+   own (slower) duration here since it's the destination rule in effect
+   while opening. */
+.drawer[data-open="true"] .drawer__panel {
+  transform: none;
+  opacity: 1;
+  transition: transform var(--dur) var(--ease-drawer), opacity var(--dur) var(--ease-drawer);
+}
+
+.drawer__head {
+  height: var(--nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer__body {
+  /* `flex: 1` + `min-height: 0` make this fill the rest of `.drawer__panel`
+     instead of shrinking to its own content height. Without it the box
+     stopped a few hundred px short of the drawer's actual bottom edge, so
+     `overflow-y: auto` clipped anything that opened past that short box —
+     including the language switcher's dropdown panel, which sits on the
+     last row and opens downward: `Dropdown.jsx` sizes that "downward" choice
+     off `window.innerHeight`, which assumes this box already reaches the
+     window edge. */
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-5);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.drawer__link {
+  display: block;
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  opacity: 0;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+
+.drawer__link:hover { background: var(--surface-soft); color: var(--text-primary); }
+
+/* Press feedback — scale only, works on touch (this is a mobile-drawer link). */
+.drawer__link:active { transform: scale(0.98); }
+
+/* Stagger: a quick cascade rides the panel's own opening transition —
+   entrance only. Capped at each group's first four links (NAV_ITEMS, then
+   the drawer's second section, restart the count) via nth-child, no JS
+   index needed. Closing plays no stagger: outside `[data-open="true"]`
+   there is no opacity transition at all, so a link reverts to invisible
+   instantly, underneath the panel's own still-fading exit — imperceptible,
+   and faster than the entrance by construction. */
+.drawer[data-open="true"] .drawer__link {
+  opacity: 1;
+  transition: opacity var(--dur-enter) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+
+/* transition-delay is a two-value list matching the two transition-property
+   entries above (opacity, transform) positionally: the stagger only ever
+   delays the entrance, never the press-feedback scale, which always fires
+   at 0ms even on a delayed-in link. */
+.drawer[data-open="true"] .drawer__link:nth-child(1) { transition-delay: 0ms, 0ms; }
+.drawer[data-open="true"] .drawer__link:nth-child(2) { transition-delay: 30ms, 0ms; }
+.drawer[data-open="true"] .drawer__link:nth-child(3) { transition-delay: 60ms, 0ms; }
+.drawer[data-open="true"] .drawer__link:nth-child(4) { transition-delay: 90ms, 0ms; }
+
+.drawer__link[aria-current="page"] {
+  background: var(--surface-soft);
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--secondary);
+}
+
+.drawer__section {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+/* The home hero itself (the Sigiriya photo, floating search/figures/stats)
+   now lives in src/components/home/home-hero.css, imported directly by
+   HomeHero.jsx — see CLAUDE.md's convention of a component owning its own
+   stylesheet (PortfolioProfile.css, profile-decision.css). Nothing under
+   `.hero*` remains here: HomePage.jsx no longer renders that markup. */
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+.footer {
+  margin-top: auto;
+  background: var(--footer-bg);
+  border-top: 1px solid var(--border);
+  padding-block: var(--space-16) var(--space-8);
+}
+
+/*
+ * Two columns on desktop, stacked on phones: the brand and what this site is
+ * on the left, the two destination groups on the right.
+ *
+ * The previous centred single row put five links of very different purpose
+ * — three navigational, two about trust — in one undifferentiated line, so
+ * "Report an error" (the site's whole correction channel, and the thing
+ * `Trust / corrections` in the audit asks to make findable) read as the
+ * fifth word in a list. Grouping names the two questions instead. It is
+ * still five links: this is not a sitemap footer.
+ */
+.footer__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: var(--space-10) var(--space-16);
+  align-items: start;
+}
+
+.footer__brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.footer__tagline {
+  max-width: 46ch;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.footer__nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-8);
+}
+
+.footer__group-title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.footer__links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer__links a {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--dur) var(--ease), transform var(--dur-press) var(--ease-out);
+}
+
+.footer__links a:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+/* Press feedback — a barer scale than the boxed controls above, since this
+   is running text, not a chip; still the same ungated recipe. */
+.footer__links a:active { transform: scale(0.98); }
+
+.footer__copyright {
+  grid-column: 1 / -1;
+  margin-top: var(--space-4);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+  width: 100%;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+@media (max-width: 720px) {
+  .footer__inner { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); }
+}
+
+@media (max-width: 520px) {
+  .footer { padding-block: var(--space-10) var(--space-6); }
+  .footer__inner { gap: var(--space-6); }
+  .footer__copyright { margin-top: var(--space-4); }
+}

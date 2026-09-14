@@ -1,0 +1,314 @@
+{
+  "$comment": "Retrieved from the official Cabinet Office of Sri Lanka by scripts/import-cabinet.mjs. Not hand-edited. Names are recorded exactly as the Cabinet Office writes them; identity resolution against Parliament's records happens in the adapter, which can see every source. `headingVerbatim` is the source's own label for this roster, reproduced without correction.",
+  "snapshot": {
+    "sourceId": "S006",
+    "url": "https://www.cabinetoffice.gov.lk/cab/index.php?id=12&lang=en&option=com_content&view=article",
+    "retrievedAt": "2026-08-29T08:03:40.963Z",
+    "contentHash": "fnv1a32:23fd7407",
+    "rawContentHash": "fnv1a32:e558f117",
+    "rawHashIsStable": true,
+    "parserVersion": "cabinet-office-roster@1",
+    "bytes": 33155
+  },
+  "headingVerbatim": "Cabinet of the 9th Parliament of Democratic Socialist Republic of Sri Lanka",
+  "headingNote": "Source labels this the 9th Parliament's Cabinet; these ministers were appointed after the November 2024 election, which seated the 10th. Reproduced as published, not corrected.",
+  "counts": {
+    "members": 22,
+    "offices": 27,
+    "president": 1,
+    "primeMinister": 1,
+    "cabinetMinisters": 20,
+    "multiPortfolio": 3
+  },
+  "members": [
+    {
+      "rawName": "Hon. Anura Kumara Dissanayake",
+      "name": "Anura Kumara Dissanayake",
+      "role": "president",
+      "offices": [
+        {
+          "title": "President",
+          "ministry": null,
+          "verbatim": "President and Head of the Cabinet of Ministers"
+        },
+        {
+          "title": "Minister of Defence",
+          "ministry": "Defence",
+          "verbatim": "Minister of Defence"
+        },
+        {
+          "title": "Minister of Finance, Planning and Economic Development",
+          "ministry": "Finance, Planning and Economic Development",
+          "verbatim": "Minister of Finance, Planning and Economic Development"
+        },
+        {
+          "title": "Minister of Digital Economy",
+          "ministry": "Digital Economy",
+          "verbatim": "Minister of Digital Economy"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. (Dr.) Harini Amarasuriya",
+      "name": "Harini Amarasuriya",
+      "role": "prime-minister",
+      "offices": [
+        {
+          "title": "Prime Minister",
+          "ministry": null,
+          "verbatim": "Prime Minister"
+        },
+        {
+          "title": "Minister of Education, Higher Education and Vocational Education",
+          "ministry": "Education, Higher Education and Vocational Education",
+          "verbatim": "Minister of Education, Higher Education and Vocational Education"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. Vijitha Herath",
+      "name": "Vijitha Herath",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Foreign Affairs, Foreign Employment and Tourism",
+          "ministry": "Foreign Affairs, Foreign Employment and Tourism",
+          "verbatim": "Minister of Foreign Affairs, Foreign Employment and Tourism"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. K.D. Lal Kantha",
+      "name": "K.D. Lal Kantha",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Agriculture, Livestock, Land and Irrigation",
+          "ministry": "Agriculture, Livestock, Land and Irrigation",
+          "verbatim": "Minister of Agriculture, Livestock, Land and Irrigation"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. Bimal Rathnayaka",
+      "name": "Bimal Rathnayaka",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Transport, Highways and Urban Development",
+          "ministry": "Transport, Highways and Urban Development",
+          "verbatim": "Minister of Transport, Highways and Urban Development"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. Sunil Handunneththi",
+      "name": "Sunil Handunneththi",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Industry and Entrepreneurship Development",
+          "ministry": "Industry and Entrepreneurship Development",
+          "verbatim": "Minister of Industry and Entrepreneurship Development"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. Ramalingam Chandrasekar",
+      "name": "Ramalingam Chandrasekar",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Fisheries, Aquatic and Ocean Resources",
+          "ministry": "Fisheries, Aquatic and Ocean Resources",
+          "verbatim": "Minister of Fisheries, Aquatic and Ocean Resources"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon (Prof). Anil Jayantha Fernando",
+      "name": "Anil Jayantha Fernando",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Labour",
+          "ministry": "Labour",
+          "verbatim": "Minister of Labour"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. Samantha Viddyarathna",
+      "name": "Samantha Viddyarathna",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Plantation and Community Infrastructure",
+          "ministry": "Plantation and Community Infrastructure",
+          "verbatim": "Minister of Plantation and Community Infrastructure"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. Anura Karunathilaka",
+      "name": "Anura Karunathilaka",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Ports and Civil Aviation",
+          "ministry": "Ports and Civil Aviation",
+          "verbatim": "Minister of Ports and Civil Aviation"
+        },
+        {
+          "title": "Minister of Energy",
+          "ministry": "Energy",
+          "verbatim": "Minister of Energy"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. (Dr). Nalinda Jayatissa",
+      "name": "Nalinda Jayatissa",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Health and Mass Media",
+          "ministry": "Health and Mass Media",
+          "verbatim": "Minister of Health and Mass Media"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. (Prof.) A.H.M.H. Abayarathna",
+      "name": "A.H.M.H. Abayarathna",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Public Administration, Provincial Councils and Local Government",
+          "ministry": "Public Administration, Provincial Councils and Local Government",
+          "verbatim": "Minister of Public Administration, Provincial Councils and Local Government"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. Wasantha Samarasinghe",
+      "name": "Wasantha Samarasinghe",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Trade, Commerce, Food Security and Cooperative Development",
+          "ministry": "Trade, Commerce, Food Security and Cooperative Development",
+          "verbatim": "Minister of Trade, Commerce, Food Security and Cooperative Development"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. Harshana Nanayakkara (Attorney-at-law)",
+      "name": "Harshana Nanayakkara",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Justice and National Integration",
+          "ministry": "Justice and National Integration",
+          "verbatim": "Minister of Justice and National Integration"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. (Mrs.) Saroja Savithri Paulraj",
+      "name": "Saroja Savithri Paulraj",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Women and Child Affairs",
+          "ministry": "Women and Child Affairs",
+          "verbatim": "Minister of Women and Child Affairs"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. (Dr.) Upali Pannilage",
+      "name": "Upali Pannilage",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Rural Development, Social Security and Community Empowerment",
+          "ministry": "Rural Development, Social Security and Community Empowerment",
+          "verbatim": "Minister of Rural Development, Social Security and Community Empowerment"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. K.M. Ananda Wijepala",
+      "name": "K.M. Ananda Wijepala",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Public Security and Parliamentary Affairs",
+          "ministry": "Public Security and Parliamentary Affairs",
+          "verbatim": "Minister of Public Security and Parliamentary Affairs"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. (Dr.) Hiniduma Sunil Senevi",
+      "name": "Hiniduma Sunil Senevi",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Buddhasasana, Religious and Cultural Affairs",
+          "ministry": "Buddhasasana, Religious and Cultural Affairs",
+          "verbatim": "Minister of Buddhasasana, Religious and Cultural Affairs"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. Sunil Kumara Gamage",
+      "name": "Sunil Kumara Gamage",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Youth Affairs and Sports",
+          "ministry": "Youth Affairs and Sports",
+          "verbatim": "Minister of Youth Affairs and Sports"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. (Dr.) Chrishantha Abeysena",
+      "name": "Chrishantha Abeysena",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Science and Technology",
+          "ministry": "Science and Technology",
+          "verbatim": "Minister of Science and Technology"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. (Dr.) Dammika Patabendi",
+      "name": "Dammika Patabendi",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Environment",
+          "ministry": "Environment",
+          "verbatim": "Minister of Environment"
+        }
+      ]
+    },
+    {
+      "rawName": "Hon. (Dr.) Susil Ranasinghe",
+      "name": "Susil Ranasinghe",
+      "role": "cabinet-minister",
+      "offices": [
+        {
+          "title": "Minister of Housing, Construction and Water Supply",
+          "ministry": "Housing, Construction and Water Supply",
+          "verbatim": "Minister of Housing, Construction and Water Supply"
+        }
+      ]
+    }
+  ]
+}

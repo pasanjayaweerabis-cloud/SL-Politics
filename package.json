@@ -1,0 +1,53 @@
+{
+  "name": "javora-react",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && vite build --ssr src/entry-server.jsx --outDir dist-ssr --logLevel error && node scripts/prerender.mjs",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "coverage": "node scripts/coverage-report.mjs",
+    "db:migrate": "node server/cli.ts migrate",
+    "db:seed": "node server/cli.ts seed",
+    "db:status": "node server/cli.ts status",
+    "sync": "node server/cli.ts sync",
+    "sync:parliament": "node server/cli.ts sync S001 --profiles",
+    "api": "node server/api/server.ts",
+    "worker": "node server/scheduler/worker.ts",
+    "worker:once": "node server/scheduler/worker.ts --once",
+    "db:migrate:postgres": "node scripts/migrate-to-postgres.mjs",
+    "db:validate:postgres": "node scripts/validate-postgres-migration.mjs",
+    "db:backup": "node scripts/backup-db.mjs",
+    "build:spa": "vite build",
+    "serve:dist": "node scripts/serve-dist.mjs",
+    "validate:crawlability": "node scripts/validate-crawlability.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.23.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.4.0",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^5.0.2",
+    "eslint": "^10.9.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.5",
+    "globals": "^17.11.0",
+    "typescript": "^7.0.2",
+    "vite": "^7.1.3",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

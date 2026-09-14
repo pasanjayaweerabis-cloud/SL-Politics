@@ -1,0 +1,23 @@
+# Javora — automated dependency updates (M-4, §20).
+#
+# Two ecosystems, matching what this repository actually has: npm
+# dependencies (package.json/package-lock.json — CLAUDE.md's "add no
+# dependencies" rule means these should mostly be security/patch bumps to the
+# existing 16, not new packages) and the GitHub Actions used in
+# .github/workflows/ci.yml, which are pinned to commit SHAs specifically so a
+# Dependabot bump is a reviewable diff rather than a floating tag silently
+# moving underneath the workflow.
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10

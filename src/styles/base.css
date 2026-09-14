@@ -1,0 +1,615 @@
+/* ==========================================================================
+   Javora — Base: reset, typography, accessibility primitives
+   ========================================================================== */
+
+/* ==========================================================================
+   Self-hosted fonts (L-10, docs/security-audit-followup-2026-09-04.md)
+   ========================================================================== */
+/*
+ * Files in public/fonts/ were fetched once from the exact URLs the site's
+ * own former Google Fonts request resolved to —
+ *   https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500
+ *     &family=IBM+Plex+Sans:wght@400;500;600
+ *     &family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap
+ * — so this is a faithful copy of what the site already rendered, not a
+ * different font substituted by feel. `font-display: swap` and every
+ * `unicode-range` below are copied from that same response.
+ *
+ * LATIN + LATIN EXTENDED ONLY, not the cyrillic/greek/vietnamese subsets
+ * Google also offers. Every canonical name and every UI string on this site
+ * is English/Latin script (José-style accented Latin is the one real edge
+ * case — see src/lib/identity.test.ts — and latin-ext covers it). Sinhala
+ * and Tamil name variants (person.names.si/.ta) are UNAFFECTED by this
+ * subsetting: none of these three families ship Sinhala or Tamil glyphs in
+ * ANY subset Google publishes, including the ones dropped here, so that text
+ * already renders in the reader's system font today and continues to.
+ *
+ * THE ACTUAL SECURITY MOTIVATION: self-hosting removes fonts.googleapis.com
+ * and fonts.gstatic.com from the CSP entirely (see deploy/security-
+ * headers.conf and scripts/prerender.mjs) — every visitor's browser used to
+ * contact Google directly, on every page load, before this.
+ */
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-400-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-400-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-500-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-500-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* IBM Plex Sans 400/500/600 share one file per subset — the exact same
+   de-duplication Google's own API response returned for this site's font
+   request; not a corner cut here. */
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Source Serif 4: the site's link tag requested opsz,wght@8..60,400;8..60,600
+   — a variable-axis request — but Google's css2 API answers it with static
+   400/600 instances rather than a variable file (confirmed by fetching the
+   exact URL live), and 400/600 each already share one file per subset the
+   same way IBM Plex Sans's weights do above. */
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/source-serif-4-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/source-serif-4-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/source-serif-4-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/source-serif-4-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Sinhala / Tamil name variants (person.names.si / .ta, LocalizedNames in
+   src/types/models.ts): the comment above already explains that none of the
+   three self-hosted families ship Sinhala or Tamil glyphs in any subset, so
+   this text falls back to the reader's system font regardless of the
+   subsetting decision. What was missing is styling for that fallback:
+   Sinhala and Tamil need noticeably more leading than Latin at the same
+   size, and with no declared stack the result varied across Windows/macOS/
+   Android. Requires lang="si" / lang="ta" on the element for :lang() to
+   bind — see the "Names in Sinhala / Tamil" field in PersonPage.jsx. */
+:lang(si), :lang(ta), .name-si, .name-ta {
+  font-family: "Noto Sans Sinhala", "Iskoola Pota", "Nirmala UI",
+               "Noto Sans Tamil", "Latha", var(--font-sans), sans-serif;
+  line-height: 1.85;
+  letter-spacing: 0;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+/* `scroll-behavior: smooth` has to live on the scrolling box itself — for
+   document-level navigation that's `html`, not the fragment's target
+   element. `:target { scroll-behavior: smooth }` was tried here instead, to
+   scope smooth scrolling to in-page anchor jumps without a global default —
+   but #main is a plain flex child, not its own scroll container, so the
+   viewport-level scroll into view is governed by `html`'s scroll-behavior
+   regardless of what's set on the target. That rule was a no-op: kept the
+   global default here instead, and useRouteTransition in src/lib/router.tsx
+   passes an explicit behavior: "auto" to window.scrollTo on route change
+   for exactly this reason — it has to opt out, because this is the one
+   scroll that should never inherit the smooth default. */
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-offset) + var(--space-4));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  /* Reduced motion: honours prefers-reduced-motion by dropping transform
+     (hover/press lifts, icon rotation, the drawer's slide in/out) from the
+     transition list outright, rather than merely speeding it up — it never
+     plays at all. Colour and opacity crossfades are kept as real state
+     feedback, just faster. The duration here is a genuine 100ms, not a
+     near-zero one, so anything still waiting on `transitionend` (the
+     drawer's exit, in Primitives.jsx) keeps firing reliably instead of
+     racing an interruptible-in-theory but practically-instant transition. */
+  *, *::before, *::after {
+    transition-property: opacity, color, background-color, border-color, box-shadow !important;
+    transition-duration: 100ms !important;
+  }
+
+  /* `::details-content` isn't reached by the `*::before, *::after` rule
+     above (it's a distinct pseudo-element), so the filter-group's block-size
+     transition needs its own opt-out here. */
+  .filter-group::details-content { transition: none; }
+
+  /* The travelling tier-tab indicator (PortfolioProfile.css) animates
+     `translate`, not `transform` — the global override above only strips
+     `transform` from transition lists, so this needs its own opt-out. */
+  .hds-profile .tabs::after { transition: none; }
+}
+
+/* The route change itself is already gated on prefers-reduced-motion in
+   src/lib/router.tsx's useRouteTransition (no view transition is started at
+   all — see docs/motion-audit.md); this is defence in depth for the
+   pseudo-elements directly. Opacity only, no slide — useRouteTransition
+   already moves focus and scrolls to top on every navigation. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 160ms;
+    animation-timing-function: var(--ease-out);
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);        /* 16px */
+  line-height: var(--lh-body);        /* 1.6 */
+  letter-spacing: var(--track-body);
+  font-feature-settings: "kern" 1;
+  /* Real weights only: 400/500/600 are what /fonts actually ships. Without
+     this a browser fakes any other weight requested, and the smeared result
+     is exactly the "hard to read" feeling the readability audit flags. */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark-mode stroke weight: light-on-dark text blooms optically and reads
+   heavier than the same weight on white. The usual lever is a variable
+   font's GRAD axis, but /fonts ships static 400/500/600 files, so that's
+   unavailable — the honest fix is pinning body copy at 400 so nothing
+   inherits a heavier default. Same two-entry-point pattern as tokens.css,
+   for the same reason: written once so the explicit choice and the system
+   preference cannot drift apart. See docs/typography-audit-2026-09-04.md #7. */
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] p,
+:root[data-theme="dark"] li {
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body,
+  :root:not([data-theme="light"]) p,
+  :root:not([data-theme="light"]) li {
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Theme flip: crossfades background/border/colour, 220ms. Applied only for
+   the ~260ms of an actual flip (see the click handler in Chrome.jsx), not
+   permanently — a persistent version of this rule put the same 220ms
+   transition on nearly every element in the product, and by frequency of
+   use a hover effect fires far more often than a theme change, so it needs
+   to be far shorter; a rare, whole-page recolour can afford 220ms in a way
+   an everyday hover cannot. Scoping it to a momentary class also means the
+   initial render can never animate up from the user-agent default: the
+   class is never present at first paint, so there is nothing left to guard
+   against. `box-shadow` used to be in this list too; it's the only one of
+   the four that isn't compositable, so it forced a repaint on every matched
+   element for the full 220ms — on a selector this wide, most of the
+   document. background-color/border-color/color carry the flip fine on
+   their own. */
+.theme-switching,
+.theme-switching :where(a, button, input, .card, .panel, .chip, .badge, header, footer, section, aside, article) {
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+
+main { flex: 1 0 auto; }
+
+/* ---- Headings ------------------------------------------------------ */
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.011em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2rem, 1.35rem + 2.6vw, 3.05rem);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track-display);
+}
+h2 {
+  font-size: clamp(1.5rem, 1.24rem + 0.9vw, 1.95rem);
+  line-height: var(--lh-heading);
+  letter-spacing: -0.014em;
+}
+h3 {
+  font-size: var(--text-lg);          /* 19px, clear of 16px body */
+  line-height: 1.3;
+  letter-spacing: -0.008em;
+}
+h4 {
+  font-size: var(--text-md);          /* 17px */
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+h1, h2, h3 { max-width: 26ch; }
+h4         { max-width: 40ch; }
+
+p { margin: 0; }
+
+/* Measure: applied to flowing text, never to a layout container — capping a
+   container's width breaks grids; capping the paragraph inside it does not.
+   Full-width prose isn't merely harder to read, it gets skipped outright
+   (Baymard's e-commerce testing). See docs/typography-audit-2026-09-04.md #2. */
+p,
+li,
+.lede,
+.meta,
+dd,
+blockquote {
+  max-width: var(--measure-wide);
+}
+
+/* Opt-out for text that is genuinely tabular / chrome, not prose. */
+.u-nomeasure,
+.chip, .badge, .btn, .tab, th, td,
+.card__title, .card__meta,
+nav p, footer p, .search *, .typeahead * {
+  max-width: none;
+}
+
+/* Vertical rhythm. Body is 16px x 1.6 = 25.6px per line, so the >= 1.5x
+   line-height guidance puts the paragraph gap at ~38px, not the 16px
+   --space-4 that .stack gives general layout stacks. Prose gets its own,
+   roomier rule so ordinary stacks are untouched. See audit #3. */
+p + p,
+.prose > * + *,
+.stack--prose > * + * {
+  margin-top: 1.5em;
+}
+
+/* Space belongs ABOVE a heading, not below — proximity is what tells the
+   reader the heading owns the text under it. */
+.prose h2, .prose h3, .prose h4 { margin-top: 2em; margin-bottom: 0.5em; }
+.prose > :first-child { margin-top: 0; }
+
+/* Ragged-right, never justified: justified text opens rivers of white space
+   that measurably hurt dyslexic and low-vision readers. */
+p, li, .lede, .meta, dd { text-align: left; text-wrap: pretty; }
+
+/* ---- Links --------------------------------------------------------- */
+
+a {
+  color: var(--link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in srgb, var(--link) 42%, transparent);
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration-color: currentColor;
+}
+
+/* Structural links (nav, cards, buttons) opt out of the underline. */
+a.u-plain,
+a.u-plain:hover { text-decoration: none; }
+
+/* ---- Focus --------------------------------------------------------- */
+
+/* Tokenised, so the focus colour follows the system preference too — an
+   earlier :root[data-theme="dark"] rule only fired on an explicit choice.
+   --focus-outline measures 5.67:1 light / 6.48:1 dark, clear of the 3:1
+   WCAG 1.4.11 floor for a focus indicator; offset thickened to 3px purely
+   for visibility, not because 2px failed anything. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
+/* ---- Controls -------------------------------------------------------
+   16px on every text input, not just the compact one — anything smaller
+   makes iOS Safari zoom the viewport on focus. */
+input[type="text"], input[type="search"], input[type="email"],
+input[type="url"], input[type="tel"], select, textarea,
+.search__input, .search--compact .search__input {
+  font-size: max(16px, var(--text-base));
+  line-height: var(--lh-snug);
+}
+
+/* ---- Forms & media ------------------------------------------------- */
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+
+img, svg, picture { display: block; max-width: 100%; }
+img { height: auto; }
+
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* ---- Accessibility utilities --------------------------------------- */
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 200;
+  transform: translateY(-160%);
+  opacity: 0;
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  /* Seen once per keyboard session at most — a transform pair with no
+     transition at all was a flat teleport. */
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    opacity   var(--dur-fast) var(--ease-out);
+}
+
+.skip-link:focus-visible { transform: translateY(0); opacity: 1; }
+
+/* ---- Layout utilities ---------------------------------------------- */
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .container { padding-inline: var(--space-5); }
+}
+
+.section        { padding-block: var(--space-16); }
+.section--tight { padding-block: var(--space-12); }
+.section--alt   { background: var(--background-secondary); }
+
+/*
+ * A section that sits directly under a page header sharing its background.
+ *
+ * Two stacked `.section--tight`s put 80px of nothing between a page's lede
+ * and the first control under it — on a phone that is a tenth of the screen
+ * spent separating two things that are not separate. It is only ever the
+ * JUNCTION that collapses: the section keeps its normal bottom padding, and
+ * a section with its own background (`.section--alt`) must never use this,
+ * since there the padding is what keeps text off the edge of a coloured
+ * band.
+ */
+.section--joined { padding-block-start: var(--space-5); }
+
+@media (max-width: 768px) {
+  .section        { padding-block: var(--space-12); }
+  .section--tight { padding-block: var(--space-10); }
+  .section--joined { padding-block-start: var(--space-4); }
+}
+
+.stack > * + * { margin-top: var(--space-4); }
+
+/* Spacing utilities. Deliberately few — anything needed in more than a couple
+   of places earns a component class instead. */
+.u-mt-2  { margin-top: var(--space-2); }
+.u-mt-3  { margin-top: var(--space-3); }
+.u-mt-4  { margin-top: var(--space-4); }
+.u-mt-5  { margin-top: var(--space-5); }
+.u-mt-8  { margin-top: var(--space-8); }
+.u-mt-10 { margin-top: var(--space-10); }
+.u-mb-4  { margin-bottom: var(--space-4); }
+.u-mb-6  { margin-bottom: var(--space-6); }
+.u-mb-8  { margin-bottom: var(--space-8); }
+
+/* Caps a line length without imposing a block width. */
+.u-measure { max-width: 70ch; }
+
+/* Grow to fill a flex row, but stay shrinkable inside it. */
+.u-grow { flex: 1 1 260px; min-width: 0; }
+
+/* ---- Type utilities ------------------------------------------------ */
+
+/* ALL CAPS destroys word-shape cues, so it is allowed only on a short label
+   like this one, and only with tracking to compensate. */
+.eyebrow {
+  font-size: var(--text-micro);   /* was 0.6875rem (11px) */
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: var(--lh-snug);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.lede {
+  font-size: var(--text-md);
+  line-height: var(--lh-relaxed);
+  color: var(--text-secondary);
+  max-width: var(--measure-lede);
+}
+
+.meta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: var(--lh-snug);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);   /* was 0.6875rem (11px) */
+  letter-spacing: var(--track-label);
+  line-height: var(--lh-snug);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Any number a reader compares column-to-column gets tabular figures. */
+.numeric, table, .stat, .figure, time { font-variant-numeric: tabular-nums; }
+
+/* ---- Section headers ----------------------------------------------- */
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.section-head__text > * + * { margin-top: var(--space-2); }
+.section-head__text p { color: var(--text-muted); font-size: var(--text-base); }
+
+@media (max-width: 640px) {
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+}
+
+/* ---- Page header (interior pages) ---------------------------------- */
+
+.page-head {
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--border);
+  padding-block: var(--space-16) var(--space-10);
+}
+
+.page-head__inner > * + * { margin-top: var(--space-3); }
+.page-head h1 { font-size: clamp(1.8rem, 1.35rem + 1.9vw, 2.5rem); }
+.page-head .lede { margin-top: var(--space-4); }
+
+.page-head--centered .page-head__inner {
+  max-width: 640px;
+  margin-inline: auto;
+  text-align: center;
+}
+.page-head--centered .lede { margin-inline: auto; }

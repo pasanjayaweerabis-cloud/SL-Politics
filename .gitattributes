@@ -1,0 +1,30 @@
+# Line endings.
+#
+# Every text file is stored LF in the repository and checked out LF. Without
+# this file the working tree's line endings depend on each machine's
+# core.autocrlf setting: on a Windows clone with autocrlf unset, 53 files
+# present as modified when nothing in them has changed, and no diff in the
+# repository is readable. What the working tree holds is git's business; the
+# committed content is LF and stays LF.
+
+* text=auto eol=lf
+
+# --- Exceptions. Nothing below may be normalised. ---
+
+# Deliberate attack-string test data: this file carries a literal NUL byte at
+# offset 1914, inside the array of URL schemes safeExternalHref must reject
+# ("\x00javascript:alert(1)"). Git already auto-detects it as binary; saying
+# so explicitly means no future normalisation pass can rewrite the NUL and
+# silently stop the security test from testing the thing it is named after.
+src/lib/externalUrl.test.ts -text
+
+# Images.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.ico binary
+
+# SQLite, should one ever land on a tracked path. .data/ is gitignored today.
+*.db binary

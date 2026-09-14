@@ -1,0 +1,1944 @@
+/*
+ * Portfolio profile layout — one hand-built design, reused by every profile
+ * src/data/profileContent.ts maps to it. A hero and an unnumbered "at a
+ * glance" strip lead into four TIER tabs (Performance / Record / Policies /
+ * Profile), each holding a slice of ten continuously-numbered sections; an
+ * Evidence & sources utility and a record-status line close the page outside
+ * the tabs. Six of the ten sections are real tables; the rest are the card
+ * system defined below.
+ *
+ * Scoped entirely under .hds-profile (no :root writes, no shared class
+ * names except a scoped override of the sitewide .tabs/.tabs__tab, see the
+ * "Tabs" block below) so nothing here can leak into the rest of the site's
+ * styling.
+ *
+ * Every value below is a project token from src/styles/tokens.css — no local
+ * font stack, no local colour, no invented spacing scale. Aliased to short
+ * names for readability within this file only; the values themselves are
+ * exactly the site's, so this page follows the reader's light/dark choice
+ * and typography automatically, with nothing here to keep in sync.
+ */
+
+/* ==========================================================================
+   Shape system — one rule, followed everywhere below:
+     - Containers (the portrait, a card, the table wrap, the hero's boxed
+       focus-role panel, a mobile stacked-table row card) get --radius-lg.
+     - Inline notes and controls (the disclosure's revealed answer, a closing
+       note, a source row's :target highlight) get --radius.
+     - Pills and micro-chips (the evidence-status tag, the source "Visit"
+       link) get --radius-sm.
+     - The institution-list bullet marker keeps --radius-full — it is a
+       list marker, not a container.
+   One exception: this page's local :focus-visible override uses
+   --radius-xs purely to stay byte-identical with the sitewide default in
+   base.css. It is not part of the containers/notes/pills system above.
+   ========================================================================== */
+
+.hds-profile {
+  --bg: var(--background);
+  --panel: var(--surface);
+  --panel-soft: var(--surface-soft);
+  --portrait-bg: var(--surface-inset);
+  --line: var(--border);
+  --line-strong: var(--border-strong);
+  /* Distinct from --line/--line-strong on purpose: those are the decorative-
+     only pair (tokens.css documents they stay under 3:1 deliberately). The
+     source link below is a real control boundary, which tokens.css carves
+     out --control-border/-hover specifically to meet WCAG 1.4.11's 3:1. */
+  --control: var(--control-border);
+  --control-hover: var(--control-border-hover);
+  --ink: var(--text-primary);
+  --muted: var(--text-muted);
+  --absent: var(--text-muted);
+  /* The page's one accent, outside the evidence-status pills below (which
+     are real semantic state and keep their own five colours). */
+  --amber: var(--accent-gold-text);
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: var(--lh-body);
+}
+
+.hds-profile *,
+.hds-profile *::before,
+.hds-profile *::after {
+  box-sizing: border-box;
+}
+
+/* Avoids orphaned single words at the end of a paragraph; a no-op where
+   unsupported. Headings get the balance variant near their own rules. */
+.hds-profile p {
+  text-wrap: pretty;
+}
+
+/* Same alignment grid as the site's shared .container (same tokens, same
+   max-width) so the hero, sections and table share left/right edges with
+   the "Back to Directory" nav above this component's own root. */
+.hds-profile__container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .hds-profile__container { padding-inline: var(--space-5); }
+}
+
+/* Visible focus ring, matching the site-wide focus style. */
+.hds-profile a:focus-visible,
+.hds-profile button:focus-visible,
+.hds-profile summary:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
+/* The site-wide .profile-header (components.css) sizes its bottom gap for
+   the TABBED layout, which nests a full hero — portrait, name, chips — inside
+   it. PersonPage's portfolio wrapper renders .profile-header with only the
+   "Back to Directory" link, nothing else, so that same --space-8 nav margin
+   plus the header's own --space-10 bottom padding land as two stacked,
+   unintended gaps before this page's hero even starts its own top padding —
+   roughly 150px of dead space above the fold. Closing them here, scoped with
+   :has() to exactly this composition, so every other profile page's header
+   (which does need that room) is untouched — no components.css edit, no new
+   prop threaded through PersonPage.jsx for one page. */
+.profile-header:has(+ .hds-profile) {
+  padding-bottom: var(--space-4);
+}
+
+.profile-header:has(+ .hds-profile) .profile-header__nav {
+  margin-bottom: 0;
+}
+
+.hds-profile__divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+
+.hds-profile__heading {
+  /* Overrides base.css's global `h1, h2, h3 { max-width: 26ch }` — that
+     rule assumes a heading should wrap, but these section titles read as
+     one line each (the numbered kicker makes a wrap read like two
+     headings stacked), so every one of them gets the full row instead.
+     No `white-space: nowrap` though: a hard nowrap here doesn't make short
+     headings any more one-line than they already are (they fit regardless),
+     but it does force an unfittable one off the edge of the viewport
+     instead of wrapping — found by testing the longest real heading (the
+     major-programmes one) at 900px, where a `max-width: 720px`
+     nowrap-lifting breakpoint left a real gap. flex-wrap + text-wrap:
+     balance let a heading that doesn't fit break onto a second, evenly-split
+     line at any width instead of overflowing. */
+  max-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-5);
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: var(--text-2xl);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--track-display);
+  text-wrap: balance;
+  color: var(--ink);
+  /* Lands a hash-linked section (e.g. #hds-votes) below the top of the
+     viewport instead of flush against its edge. */
+  scroll-margin-top: var(--space-6);
+}
+
+/* ---- Copy affordances ("Copy link" on a heading or source record, "Copy
+   citation" on a source record) --------------------------------------------
+   Icon-only, matching .hds-profile__details-link's hover treatment (border
+   + amber) rather than inventing a second button language on this page.
+   Hidden until hover/focus on a fine pointer, so a row of small icon buttons
+   doesn't visually compete with the record content next to it; on touch
+   (no hover to reveal them) they stay always visible, since there is no
+   other way to discover them. Focus ring comes from the sitewide
+   `.hds-profile button:focus-visible` rule above — no separate one needed. */
+.hds-profile__copy-btn {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease), opacity var(--dur-fast) var(--ease), transform var(--dur-press) var(--ease-out);
+}
+
+.hds-profile__copy-btn svg { width: 14px; height: 14px; }
+
+/*
+ * Visible at rest, not revealed by hover.
+ *
+ * These were `opacity: 0` on any fine pointer: the only way to discover that
+ * a section could be linked, or a citation copied, was to happen to move the
+ * mouse over the right 26 pixels. An affordance nobody can see is not a
+ * quiet affordance, it is a missing one. They are quiet instead — dimmed
+ * until the row is hovered or focused — which keeps a column of small icon
+ * buttons from competing with the record beside it while still being there.
+ */
+.hds-profile__copy-btn { opacity: 0.55; }
+
+.hds-profile__heading:hover .hds-profile__copy-btn,
+.hds-profile__heading:focus-within .hds-profile__copy-btn,
+.hds-profile__source:hover .hds-profile__copy-btn,
+.hds-profile__source:focus-within .hds-profile__copy-btn,
+.hds-profile__copy-btn:hover,
+.hds-profile__copy-btn:focus-visible {
+  opacity: 1;
+}
+
+/* A 26px target is under any comfortable-touch floor; on touch the button
+   grows rather than the icon inside it. */
+@media (pointer: coarse) {
+  .hds-profile__copy-btn { width: 44px; height: 44px; opacity: 1; }
+}
+
+.hds-profile__copy-btn:hover,
+.hds-profile__copy-btn:focus-visible {
+  border-color: var(--control-hover);
+  color: var(--amber);
+}
+
+/* Press feedback — matches .icon-btn's tier (small, square, icon-only
+   controls take the deepest scale in this codebase's press-scale system;
+   see the motion audit's resolution on press-scale rationalisation). */
+.hds-profile__copy-btn:active { transform: scale(0.92); }
+
+/* Feedback at the point of action: the copy's only confirmation used to be a
+   toast in the opposite corner of a page this long. Both glyphs are always in
+   the DOM, stacked in the button's single grid cell, so this is a crossfade —
+   the theme toggle's idiom (layout.css:198) minus the rotate — not a swap.
+   Opacity only: the glyph must not move inside a 26px box. */
+.hds-profile__copy-glyph {
+  grid-area: 1 / 1;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.hds-profile__copy-glyph--done { opacity: 0; }
+
+.hds-profile__copy-btn[data-copied="true"] .hds-profile__copy-glyph--idle { opacity: 0; }
+.hds-profile__copy-btn[data-copied="true"] .hds-profile__copy-glyph--done { opacity: 1; }
+
+/* Beside the "Visit" / "URL unavailable" control on a source row — same row,
+   same small-control scale, kept as its own flex group so the two copy
+   buttons don't get separated by the flex-wrap the row already allows. */
+.hds-profile__source-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* ==========================================================================
+   Hero
+   ========================================================================== */
+
+.hds-profile__hero {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: var(--space-6);
+  align-items: start;
+  padding: var(--space-8) 0 var(--space-10);
+}
+
+.hds-profile__portrait {
+  width: 180px;
+  height: 180px;
+  background: var(--portrait-bg);
+  border-radius: var(--radius-lg);
+  /* A visible ring plus a soft cast shadow, not just a bigger box — makes
+     the portrait read as the hero's anchor rather than a bigger thumbnail.
+     The ring is tinted with the page's own amber accent (at low opacity,
+     not the flat neutral --line-strong) so the frame reads warm rather
+     than clinical, without introducing a colour this page doesn't already
+     use elsewhere. */
+  border: 3px solid color-mix(in srgb, var(--amber) 45%, var(--line-strong));
+  box-shadow: 0 10px 28px -10px rgb(0 0 0 / 0.5);
+  object-fit: cover;
+}
+
+/* Gated on data-hydrated for the same reason .avatar img is
+   (components.css:428): without it a prerendered page, or a JS failure,
+   leaves the portrait permanently invisible behind this fade. `data-instant`
+   covers the cached/already-decoded case — this image is at or near the LCP
+   element, and fading it up from 0 would push the LCP out by the fade's own
+   duration for no benefit. */
+:root[data-hydrated] .hds-profile__portrait:not([data-instant="true"]) {
+  opacity: 0;
+  transition: opacity var(--dur-enter) var(--ease-out);
+}
+
+:root[data-hydrated] .hds-profile__portrait[data-loaded="true"] { opacity: 1; }
+
+.hds-profile__eyebrow {
+  margin: 0 0 var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.hds-profile__name {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(var(--text-3xl), 1.45rem + 1.5vw, 2.5rem);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track-display);
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+.hds-profile__focus-note {
+  /* Follows the bordered focus-role box below, not the bare h1 — needs a
+     clearer break than the space-2 used elsewhere in this hero. Capped at
+     the prose measure and left to wrap. */
+  margin: var(--space-4) 0 0;
+  max-width: var(--measure);
+  color: var(--muted);
+  font-size: var(--text-base);
+  line-height: var(--lh-body);
+}
+
+.hds-profile__disclosure {
+  /* No trailing margin — it's the last element in the hero now; the hero's
+     own bottom padding provides the space after it. */
+  margin: var(--space-2) 0 0;
+}
+
+.hds-profile__disclosure summary {
+  cursor: pointer;
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-button);
+  /* Amber, not --secondary: the page's one accent (see the colour comment
+     on --amber above) rather than a second, competing teal. 5.51:1 on
+     --background in light mode, 6.70:1 on --d-background in dark. */
+  color: var(--amber);
+  transition: color var(--dur) var(--ease);
+}
+
+.hds-profile__disclosure summary:hover,
+.hds-profile__disclosure summary:focus-visible {
+  color: var(--ink);
+}
+
+.hds-profile__disclosure p {
+  /* A dashed-panel callout in its own right — the revealed answer reads as
+     its own callout, not as a stray line of body text. Capped at the prose
+     measure like every other read-this paragraph on the page — a callout
+     box doesn't exempt its text from the line-length rule that makes it
+     readable in the first place. */
+  margin: var(--space-2) 0 0;
+  max-width: var(--measure);
+  padding: var(--space-4) var(--space-5);
+  background: var(--panel-soft);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: var(--text-base);
+  line-height: var(--lh-body);
+}
+
+/* State indication: an interruptible expand/collapse — a <details> can be
+   double-clicked, and a transition retargets mid-flight where a keyframe
+   would restart from zero. block-size is the one property here that is
+   neither transform, opacity nor a colour channel: there is no other way to
+   animate a native disclosure's reveal. Same recipe as components.css's
+   .filter-group::details-content (interpolate-size is switched on there,
+   sitewide, so it isn't repeated here); degrades to the native instant open
+   where ::details-content isn't supported (Firefox, at time of writing). */
+@supports selector(::details-content) {
+  .hds-profile__disclosure::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size          var(--dur-fast) var(--ease-out),
+      content-visibility  var(--dur-fast) allow-discrete;
+  }
+
+  .hds-profile__disclosure[open]::details-content { block-size: auto; }
+}
+
+/* ::details-content is a distinct pseudo-element the sitewide
+   `*, *::before, *::after` reduced-motion rule in base.css cannot reach —
+   the same gap that rule's own comment notes for .filter-group, which needs
+   this identical opt-out for the same reason. */
+@media (prefers-reduced-motion: reduce) {
+  .hds-profile__disclosure::details-content { transition: none; }
+}
+
+.hds-profile__focus-role {
+  /* Leads the hero body (name -> this), so it needs its own top margin
+     instead of inheriting spacing from whatever used to precede it. */
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--panel-soft);
+  padding: var(--space-4) var(--space-5);
+}
+
+.hds-profile__focus-role-label {
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.hds-profile__focus-role-value {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  line-height: var(--lh-heading);
+  color: var(--ink);
+}
+
+.hds-profile__focus-role-tenure {
+  margin-top: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   Section spacing
+   ========================================================================== */
+
+.hds-profile__section {
+  padding: var(--space-10) 0;
+}
+
+/* ==========================================================================
+   Collapsible sections — the Sources utility and the Profile tab's
+   research-notes disclosure. Native <details>/<summary>, not a JS toggle:
+   the collapsed content stays in the DOM and the prerendered HTML, same as
+   TabPanel's `hidden` (see the invariant in CLAUDE.md and the comment on
+   CollapsibleSection in PortfolioProfile.jsx).
+   ========================================================================== */
+
+.hds-profile__section--collapsible {
+  /* The heading's own bottom margin (--space-5) already spaces the summary
+     from the content below it while open; collapsed, that margin would be
+     trailing whitespace under a summary with nothing following it. */
+  padding-bottom: 0;
+}
+
+.hds-profile__section--collapsible[open] {
+  padding-bottom: var(--space-10);
+}
+
+.hds-profile__collapsible-summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.hds-profile__collapsible-summary::-webkit-details-marker {
+  display: none;
+}
+
+.hds-profile__collapsible-summary::marker {
+  content: '';
+}
+
+.hds-profile__collapsible-summary .hds-profile__heading {
+  transition: color var(--dur) var(--ease);
+}
+
+/* Collapsed, the summary is the last visible thing in the section — the
+   heading's own bottom margin (sized to lead into the content below it)
+   would otherwise read as dead space under a title with nothing following. */
+.hds-profile__section--collapsible:not([open]) .hds-profile__heading {
+  margin-bottom: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hds-profile__collapsible-summary:hover .hds-profile__heading {
+    color: var(--amber);
+  }
+}
+
+.hds-profile__collapse-icon {
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  align-self: center;
+  flex: 0 0 auto;
+  color: var(--muted);
+  transition: transform var(--dur) var(--ease);
+}
+
+.hds-profile__section--collapsible[open] > .hds-profile__collapsible-summary .hds-profile__collapse-icon {
+  transform: rotate(180deg);
+}
+
+.hds-profile__collapsible-body {
+  padding-top: var(--space-5);
+}
+
+.hds-profile__section-intro {
+  margin: 0 0 var(--space-4);
+  max-width: var(--measure);
+  color: var(--muted);
+  font-size: var(--text-base);
+  line-height: var(--lh-body);
+}
+
+/* Two intro paragraphs sometimes run back to back (methodology, then a
+   sourcing caveat) before the content below — margin-bottom alone would
+   leave less than the 1.5x line-height paragraph-gap rule between them.
+   Margins collapse, so this is what actually sets the gap. */
+.hds-profile__section-intro + .hds-profile__section-intro {
+  margin-top: var(--space-10);
+}
+
+/* ==========================================================================
+   Portfolio at a glance — a quiet metadata strip, not a card or a table.
+   Sits between the hero and the tabs; always visible (unlike Sources and
+   the research-notes disclosure below, this is load-bearing context a
+   reader shouldn't have to click to reveal).
+   ========================================================================== */
+
+.hds-profile__meta-strip {
+  padding: var(--space-8) 0;
+}
+
+/* Replaces the numbered <h2> this strip used to carry — quiet framing text,
+   not a section competing with the numbered record below it. Same visual
+   treatment as the hero eyebrow, reused rather than restated. */
+.hds-profile__glance-label {
+  margin: 0 0 var(--space-4);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.hds-profile__meta-grid {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6) var(--space-10);
+}
+
+.hds-profile__meta-item {
+  min-width: 180px;
+  flex: 1 1 200px;
+}
+
+.hds-profile__meta-item dt {
+  margin: 0 0 var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.hds-profile__meta-item dd {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  line-height: var(--lh-heading);
+  color: var(--ink);
+}
+
+/* Institutions/sources counts, folded into one closing line rather than a
+   fourth dt/dd item — a hairline separates it from the Role/Term/Portfolio
+   facts above. */
+.hds-profile__meta-footer {
+  margin: var(--space-5) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   Tabs — Tier A Performance / Tier B Record / Tier C Policies / Tier D
+   Profile.
+
+   Reuses the sitewide Tabs/TabPanel components (src/components/Tabs.jsx) for
+   their accessibility behaviour (roving tabindex, manual activation, real
+   role="tablist"/"tab"/"tabpanel"), but overrides their visual treatment
+   entirely for this page: four equal-width columns, each a small uppercase
+   "Tier X" eyebrow stacked over a larger serif label — a calm, editorial
+   strip with a thin gold underline on the active tab, never colour alone
+   (weight and the underline both change too). Below ~360px the four columns
+   no longer fit their comfortable minimum width, so the strip scrolls
+   horizontally as a single row rather than wrapping into a 2x2 grid — the
+   same overflow-x:auto fallback the sitewide `.tabs` already relies on
+   elsewhere, keeping one reading order instead of two. Scoped under
+   .hds-profile so no other page's tabs (the default Education/Political
+   pair) are affected.
+   ========================================================================== */
+
+.hds-profile__tabs-wrap { display: contents; }
+
+.hds-profile .tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  overflow-x: hidden;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+/* Travelling tier-tab indicator: the active tier's underline used to only
+   crossfade its border-color, which reads as two separate things lighting
+   up rather than one indicator moving. Four equal grid columns mean the
+   position is arithmetic (25% per index), not measurement — no JS, no
+   ResizeObserver. Hydration-gated: the per-tab border-bottom below is the
+   no-JS baseline and must keep working in the prerendered HTML.
+
+   Driven by a `data-active-index` attribute, not an inline custom-property
+   style: this site's CSP ships `style-src 'self'` with no `unsafe-inline`
+   (scripts/prerender.mjs — "this app has no inline style anywhere to
+   accommodate"), and confirmed against the real prerendered build, setting
+   an inline `style` from React does trigger and get blocked by that policy.
+   Four fixed columns means four fixed offsets, so a discrete attribute
+   selector per index costs nothing over a computed custom property.
+
+   Uses the `translate` property, not `transform`, so it needs its own
+   explicit reduced-motion opt-out in base.css (base.css's global override
+   strips `transform` from transition lists, not `translate`). */
+:root[data-hydrated] .hds-profile .tabs {
+  position: relative;
+}
+
+:root[data-hydrated] .hds-profile .tabs::after {
+  content: "";
+  position: absolute;
+  inset-block-end: -1px;
+  inset-inline-start: 0;
+  inline-size: 25%;
+  block-size: 2px;
+  background: var(--amber);
+  translate: 0 0;
+  transition: translate var(--dur) var(--ease-out);
+  pointer-events: none;
+}
+
+:root[data-hydrated] .hds-profile__tabs-wrap[data-active-index="1"] .tabs::after { translate: 100% 0; }
+:root[data-hydrated] .hds-profile__tabs-wrap[data-active-index="2"] .tabs::after { translate: 200% 0; }
+:root[data-hydrated] .hds-profile__tabs-wrap[data-active-index="3"] .tabs::after { translate: 300% 0; }
+
+/* With the travelling indicator present, the per-tab underline would double it. */
+:root[data-hydrated] .hds-profile .tabs__tab--active {
+  border-bottom-color: transparent;
+}
+
+.hds-profile .tabs__tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: auto;
+  padding: var(--space-3) var(--space-2);
+  margin-bottom: -1px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: none;
+  transition: border-color var(--dur) var(--ease);
+}
+
+/* One line, not two: the "Tier A" eyebrow that used to sit above each label
+   is gone (see PROFILE_TABS in PortfolioProfile.jsx), so the label itself is
+   the tab. */
+.hds-profile .tabs__tab > span {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--muted);
+  transition: color var(--dur) var(--ease);
+}
+
+.hds-profile .tabs__tab:hover > span { color: var(--ink); }
+
+/* The selected tab is marked by weight, colour AND the underline — never
+   colour alone, which would vanish for anyone who cannot see it. */
+.hds-profile .tabs__tab--active {
+  background: transparent;
+  border-bottom-color: var(--amber);
+  box-shadow: none;
+}
+
+.hds-profile .tabs__tab--active > span {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.hds-profile .tabs__tab:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.hds-profile [role="tabpanel"]:focus {
+  outline: none;
+}
+
+/*
+   Below ~405px the four labels no longer fit four equal columns: the grid's
+   content measures 365px against a 320-350px box. `overflow-x: hidden` was
+   clipping the difference, which meant "Role & career" — a quarter of this
+   profile — could not be reached at all with a finger or a mouse on a
+   360/390px phone. (Keyboard users could still get there: focus scrolls a
+   clipped box into view even when a pointer cannot.) The comment at the top
+   of this section always described `overflow-x: auto`; only the value was
+   wrong.
+
+   420px is measured, not chosen: the strip overflows at 390 and fits at 430.
+
+   The travelling indicator has to stand down here. Its position is
+   arithmetic — 25% of the box per tab index — which is only correct while
+   four columns really are a quarter of the visible width each. Once the
+   strip scrolls, 25% is no longer a tab, so the indicator would sit under
+   the wrong one. The per-tab `border-bottom` it replaces is still in the
+   stylesheet as the no-JS baseline, so standing down means falling back to
+   a marker that is always right rather than losing the marking entirely.
+*/
+@media (max-width: 420px) {
+  .hds-profile .tabs {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  :root[data-hydrated] .hds-profile .tabs::after { content: none; }
+
+  :root[data-hydrated] .hds-profile .tabs__tab--active {
+    border-bottom-color: var(--amber);
+  }
+}
+
+/* ==========================================================================
+   Card system — the shared container every tab's compact records use
+   (outcome indicators, programmes, promises, policy positions, attribution
+   levels, research notes) in place of the dense multi-column tables the
+   pre-tab layout used for the same data. One container, one grid, one
+   label/value pair — reused rather than duplicated per tab.
+   ========================================================================== */
+
+.hds-profile__card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.hds-profile__card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  padding: var(--space-6);
+}
+
+.hds-profile__card > p {
+  margin: 0;
+  max-width: var(--measure);
+  color: var(--muted);
+  font-size: var(--text-base);
+  line-height: var(--lh-relaxed);
+}
+
+.hds-profile__card--scope {
+  /* Spans naturally via the grid; text still stays capped at the prose
+     measure by `.hds-profile__card > p` above — a wide box with a narrow
+     reading column inside it, not a wide line. */
+  max-width: none;
+}
+
+.hds-profile__card--scope > p + p {
+  margin-top: var(--space-3);
+}
+
+/* A card that follows a .hds-profile__card-grid as its own full-width row
+   (08's Scope card, under Role summary / Portfolio institutions) needs its
+   own top gap — it isn't the grid's first child. */
+.hds-profile__card--full {
+  margin-top: var(--space-4);
+}
+
+.hds-profile__card-title {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: var(--text-lg);
+  line-height: var(--lh-heading);
+  color: var(--ink);
+}
+
+.hds-profile__field-label {
+  margin: var(--space-4) 0 var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.hds-profile__card-title + .hds-profile__field-label,
+.hds-profile__verify-tag + .hds-profile__field-label {
+  margin-top: var(--space-3);
+}
+
+.hds-profile__field-value {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--lh-relaxed);
+  color: var(--muted);
+}
+
+/* "Status: <value>" reads as one sentence, not a label/value block like the
+   pairs above it — plain-case, not the uppercase micro-label treatment, so
+   it doesn't get mistaken for one more Date/Expected-outcome field. */
+.hds-profile__card-status {
+  margin: var(--space-4) 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hds-profile__card-status-label {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* A short meta line (period; type + financial-evidence; date + evidence
+   type) sitting under a card title — same treatment as the source list's
+   own meta line, reused generically here. */
+.hds-profile__card-meta {
+  margin: var(--space-1) 0 var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.hds-profile__card .hds-profile__status-tag,
+.hds-profile__card .hds-profile__verify-tag {
+  margin-top: var(--space-1);
+}
+
+.hds-profile__card .hds-profile__details-link {
+  margin-top: var(--space-4);
+}
+
+/* ==========================================================================
+   Shared sub-heading + institution/education lists
+   ========================================================================== */
+
+.hds-profile__sub-heading {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-sans);
+  /* One step up from --text-micro: this is a semantic h3, not a label like
+     the dt/eyebrow kickers that share its uppercase treatment, and the
+     skill's 12px floor is reserved for genuine labels. */
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* A sub-heading introducing a second group further down a tab (e.g. the
+   full-career programme interventions below the tenure-scoped ones) needs
+   its own top margin — it isn't the first thing in its section. */
+.hds-profile__sub-heading--spaced {
+  margin-top: var(--space-8);
+}
+
+.hds-profile__institutions,
+.hds-profile__education-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hds-profile__institutions {
+  columns: 2;
+  column-gap: var(--space-5);
+}
+
+.hds-profile__institutions--single {
+  columns: 1;
+}
+
+.hds-profile__institutions li,
+.hds-profile__education-list li {
+  break-inside: avoid;
+  position: relative;
+  padding: var(--space-1) 0 var(--space-1) var(--space-4);
+  font-size: var(--text-sm);
+  line-height: var(--lh-snug);
+  color: var(--muted);
+}
+
+.hds-profile__institutions li::before,
+.hds-profile__education-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.65em;
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--line-strong);
+}
+
+/* ==========================================================================
+   Records that stay a table — the voting/decision record, which reads
+   naturally as one (Date / Matter / Documented action / Result / Evidence)
+   and already carries the responsive stacked-card fallback below.
+   ========================================================================== */
+
+.hds-profile__table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+}
+
+.hds-profile__table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.hds-profile__col--vdate     { width: 12%; }
+.hds-profile__col--vmatter   { width: 20%; }
+.hds-profile__col--vaction   { width: 28%; }
+.hds-profile__col--vresult   { width: 24%; }
+.hds-profile__col--vevidence { width: 16%; }
+
+/* 01 — Performance / outcome indicators */
+.hds-profile__col--oi-indicator { width: 22%; }
+.hds-profile__col--oi-baseline  { width: 16%; }
+.hds-profile__col--oi-later     { width: 20%; }
+.hds-profile__col--oi-voter     { width: 26%; }
+.hds-profile__col--oi-caution   { width: 16%; }
+
+/* 03 — Major programmes ... tenure. Seven columns need more room than the
+   generic 900px min-width gives them, so this table scrolls horizontally
+   between 900-1150px instead of cramming — same mechanism the voting table
+   already uses, just a wider threshold. */
+.hds-profile__table--programmes { min-width: 1150px; }
+.hds-profile__col--prog-title     { width: 18%; }
+.hds-profile__col--prog-type      { width: 10%; }
+.hds-profile__col--prog-purpose   { width: 16%; }
+.hds-profile__col--prog-outcome   { width: 16%; }
+.hds-profile__col--prog-evidence  { width: 10%; }
+.hds-profile__col--prog-financial { width: 12%; }
+.hds-profile__col--prog-people    { width: 18%; }
+
+/* 02 — Promises & outcomes. Seven columns, same horizontal-scroll mechanism
+   as the programmes table above. */
+.hds-profile__table--promises { min-width: 1150px; }
+.hds-profile__col--promise-title      { width: 16%; }
+.hds-profile__col--promise-date       { width: 10%; }
+.hds-profile__col--promise-expected   { width: 18%; }
+.hds-profile__col--promise-action     { width: 18%; }
+.hds-profile__col--promise-status     { width: 10%; }
+.hds-profile__col--promise-documented { width: 20%; }
+.hds-profile__col--promise-source     { width: 8%; }
+
+/* 04 — Programmes & interventions */
+.hds-profile__col--intv-title    { width: 22%; }
+.hds-profile__col--intv-period   { width: 14%; }
+.hds-profile__col--intv-role     { width: 26%; }
+.hds-profile__col--intv-status   { width: 22%; }
+.hds-profile__col--intv-evidence { width: 12%; }
+.hds-profile__col--intv-details  { width: 4%; }
+
+/* 07 — Policies & public positions */
+.hds-profile__col--pol-issue    { width: 20%; }
+.hds-profile__col--pol-position { width: 32%; }
+.hds-profile__col--pol-date     { width: 12%; }
+.hds-profile__col--pol-type     { width: 16%; }
+.hds-profile__col--pol-evidence { width: 20%; }
+
+/* 09 — Current & historical positions */
+.hds-profile__col--pos-title       { width: 34%; }
+.hds-profile__col--pos-institution { width: 30%; }
+.hds-profile__col--pos-period      { width: 16%; }
+.hds-profile__col--pos-source      { width: 20%; }
+
+.hds-profile__table thead th {
+  text-align: left;
+  vertical-align: top;
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--panel-soft);
+  border-bottom: 1px solid var(--line-strong);
+  padding: var(--space-3) var(--space-4);
+}
+
+.hds-profile__table tbody th,
+.hds-profile__table tbody td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  line-height: var(--lh-body);
+  transition: background-color var(--dur) var(--ease);
+}
+
+.hds-profile__table tbody tr:last-child th,
+.hds-profile__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.hds-profile__cell--title {
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--panel);
+}
+
+/* State indication: a tint across the whole row helps cross-read a
+   multi-column table. Desktop only — min-width matches the 1150px breakpoint
+   the table itself switches on (see "Table -> stacked accessible records"
+   below), where rows become stacked cards and a hover tint no longer reads
+   as "one row". Targets the cells, not the <tr>, so it overrides
+   .hds-profile__cell--title's own background too instead of being painted
+   over by it. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1151px) {
+  .hds-profile__table tbody tr:hover th,
+  .hds-profile__table tbody tr:hover td {
+    background: var(--panel-soft);
+  }
+}
+
+/* Preventing a jarring change: useHashNavigation lands on an outcome
+   indicator (01) or intervention (04) row the same way it can land on a
+   source record — `:target` is native CSS here (the landed id IS the URL
+   fragment), so this reuses the source list's own tint rather than a
+   second, separately-authored confirmation effect. The transition is
+   already declared above on every cell; this only adds the target state. */
+.hds-profile__table tbody tr:target th,
+.hds-profile__table tbody tr:target td {
+  background: var(--panel-soft);
+}
+
+.hds-profile__cell--muted {
+  font-style: italic;
+  color: var(--absent);
+}
+
+.hds-profile__row-sources {
+  margin: var(--space-2) 0 0;
+  font-weight: 400;
+  font-size: var(--text-xs);
+}
+
+.hds-profile__row-sources-label {
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  color: var(--muted);
+  margin-right: var(--space-1);
+}
+
+.hds-profile__row-sources a {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  letter-spacing: var(--track-label);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--dur) var(--ease);
+}
+
+.hds-profile__row-sources a:hover,
+.hds-profile__row-sources a:focus-visible {
+  color: var(--amber);
+}
+
+/* Evidence-status pill, reused by every programme card. Colour is the only
+   variable — the shape and type scale stay identical across states. */
+.hds-profile__status-tag {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.hds-profile__status-tag--source-linked   { background: var(--info-bg);    border-color: var(--info-border);    color: var(--info-text); }
+.hds-profile__status-tag--established     { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
+.hds-profile__status-tag--not-established { background: var(--neutral-chip-bg); border-color: var(--neutral-chip-border); color: var(--neutral-chip-text); }
+.hds-profile__status-tag--conflicting     { background: var(--danger-bg);  border-color: var(--danger-border);  color: var(--danger-text); }
+.hds-profile__status-tag--intended-only   { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning-text); }
+
+/* A closing qualifier under a table or card grid (the voting-record scope
+   note, the "Not established" definition above the programme cards) — a
+   hairline rather than a bordered callout, since neither is a term this
+   page defines with its own boxed panel. */
+.hds-profile__note {
+  margin: var(--space-6) 0 0;
+  padding-top: var(--space-4);
+  max-width: var(--measure);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-base);
+  line-height: var(--lh-body);
+  color: var(--muted);
+}
+
+/* 08's closing caveat — a dashed rule rather than .hds-profile__note's solid
+   one, since it isn't qualifying the table above it but pointing sideways to
+   a different evidence vocabulary entirely (Evidence & sources). */
+.hds-profile__footnote {
+  margin: var(--space-6) 0 0;
+  padding-top: var(--space-4);
+  max-width: var(--measure);
+  border-top: 1px dashed var(--line);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+/* Quiet label above the Research notes disclosure (10), marking it as
+   background research rather than the record itself. Dashed border and
+   transparent fill match .hds-profile__verify-tag--muted's "reads as an
+   absence" treatment, reused here for the same reason. */
+.hds-profile__tier-pill {
+  display: inline-block;
+  margin: 0 0 var(--space-3);
+  padding: 2px var(--space-2);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Verification pill for outcome/voting/policy/career content — same pill
+   shape as .hds-profile__status-tag above (shared shape system), a
+   different colour vocabulary (see the comment on VERIFICATION_STATUS in
+   PortfolioProfile.jsx). display:flex + width:fit-content (not inline-flex)
+   so it drops to its own line under the preceding title/text rather than
+   running on beside it. */
+.hds-profile__verify-tag {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--space-2);
+  padding: 2px var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.hds-profile__verify-tag svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+
+/* The career summary's Σ/? glyph tags carry no svg — same box, a plain
+   character in its place. */
+.hds-profile__verify-tag-glyph {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.hds-profile__verify-tag--neutral { background: var(--neutral-chip-bg); border-color: var(--neutral-chip-border); color: var(--neutral-chip-text); }
+.hds-profile__verify-tag--warning { background: var(--warning-bg);      border-color: var(--warning-border);      color: var(--warning-text); }
+.hds-profile__verify-tag--info    { background: var(--info-bg);         border-color: var(--info-border);         color: var(--info-text); }
+/* "Unverified" reads as an absence, not a state — a dashed outline on
+   transparent rather than another filled pill, so it doesn't compete
+   visually with the tags beside it that DO have evidence behind them. */
+.hds-profile__verify-tag--muted   { background: transparent; border-style: dashed; border-color: var(--line-strong); color: var(--muted); }
+
+/* Placeholder citations (S1..S22) — see the comment on PendingCitations in
+   PortfolioProfile.jsx for why these are plain text, never a link. Dotted,
+   not solid, underline distinguishes them at a glance from
+   .hds-profile__row-sources' real, resolved links elsewhere on the page. */
+.hds-profile__pending-cite {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.hds-profile__pending-cite-token {
+  font-family: var(--font-mono);
+  letter-spacing: var(--track-label);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  cursor: help;
+}
+
+/* The italic caveat under a "claim" row's documented action in the voting
+   record (e.g. "Public-position evidence; individual roll-call not
+   independently established...") — same treatment as .hds-profile__cell--muted
+   elsewhere on the page, reused as its own block rather than a whole muted
+   cell. */
+.hds-profile__row-caveat {
+  display: block;
+  margin-top: var(--space-2);
+  font-style: italic;
+  color: var(--absent);
+  font-size: var(--text-xs);
+}
+
+/* Prefixes a programme card's "what the evidence shows" value with which
+   kind of claim it is — see the comment at its call site in
+   PortfolioProfile.jsx. Same micro-label treatment as
+   .hds-profile__source-type, so it reads as "the same kind of thing"
+   wherever it appears on this page. */
+.hds-profile__outcome-kind {
+  display: block;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--amber);
+}
+
+.hds-profile__details-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--control);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  background: transparent;
+  font-size: var(--text-xs);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-press) var(--ease-out);
+}
+
+.hds-profile__details-link:hover,
+.hds-profile__details-link:focus-visible {
+  border-color: var(--control-hover);
+  color: var(--amber);
+}
+
+/* Press feedback — matches .action-link/.tabs__tab's tier (small text/pill
+   buttons; see the motion audit's press-scale resolution). */
+.hds-profile__details-link:active { transform: scale(0.98); }
+
+.hds-profile__details-link[aria-expanded="true"] {
+  border-color: var(--control-hover);
+  color: var(--amber);
+}
+
+/* State indication: rotates with the row it discloses — same duration as
+   the row's own fade (--dur-fast) so the two read as one event, not two. */
+.hds-profile__details-chevron {
+  width: 12px;
+  height: 12px;
+  margin-left: var(--space-1);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.hds-profile__details-link[aria-expanded="true"] .hds-profile__details-chevron {
+  transform: rotate(180deg);
+}
+
+/* 04's expand row — always rendered, hidden via the `hidden` attribute only
+   (never conditional rendering, the TabPanel invariant). One cell spanning
+   the whole row rather than one column per linked indicator, since the
+   indicator facts read as a list, not a grid.
+
+   State indication: an opacity-only fade plays when the row is un-hidden —
+   no height animation on a table row. `display` rides along via
+   `allow-discrete` so removal is staged instead of instant, and a
+   transition (not a keyframe) retargets correctly if Details is
+   double-clicked. `@starting-style` covers the entrance the same way it
+   already covers the typeahead/dropdown panels elsewhere in this codebase,
+   since going from `[hidden]`'s `display: none` to displayed is exactly
+   what it's for. */
+.hds-profile__details-row {
+  display: table-row;
+  opacity: 1;
+  transition: opacity var(--dur-fast) var(--ease-out), display var(--dur-fast) allow-discrete;
+}
+
+.hds-profile__details-row[hidden] {
+  display: none;
+  opacity: 0;
+}
+
+@starting-style {
+  .hds-profile__details-row:not([hidden]) {
+    opacity: 0;
+  }
+}
+
+.hds-profile__details-row td {
+  background: var(--panel-soft);
+  border-bottom: 1px solid var(--line);
+}
+
+.hds-profile__details-cell {
+  padding: var(--space-4) var(--space-4) var(--space-2);
+}
+
+.hds-profile__details-indicator {
+  padding-bottom: var(--space-4);
+}
+
+.hds-profile__details-indicator:not(:last-child) {
+  margin-bottom: var(--space-4);
+  border-bottom: 1px dashed var(--line);
+}
+
+.hds-profile__details-indicator a {
+  display: inline-block;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.hds-profile__details-indicator a:hover,
+.hds-profile__details-indicator a:focus-visible {
+  color: var(--amber);
+}
+
+/* ==========================================================================
+   Voting controls (Record tab)
+   ========================================================================== */
+
+.hds-profile__voting-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  margin: 0 0 var(--space-5);
+}
+
+.hds-profile__filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.hds-profile__filter select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--control);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  transition: border-color var(--dur) var(--ease);
+}
+
+.hds-profile__filter select:hover,
+.hds-profile__filter select:focus-visible {
+  border-color: var(--control-hover);
+}
+
+/* These two are the only controls in the voting record that CHANGE what the
+   table shows, and at their intrinsic 30px they were the smallest targets on
+   the page — below the 44px floor the rest of the site's filter controls
+   already meet on touch. Untouched on a fine pointer, where 30px is a
+   deliberate density choice next to a dense table. */
+@media (pointer: coarse) {
+  .hds-profile__filter select { min-height: 44px; }
+}
+
+/* Pushed to the row's far end on desktop (auto left-margin); wraps onto its
+   own line under the two filters on narrow viewports, where the row's own
+   flex-wrap already applies. */
+.hds-profile__voting-count {
+  margin: 0 0 0 auto;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   Career summary grid (Profile tab)
+   ========================================================================== */
+
+/* Each item carries its own border/background rather than the container
+   painting a shared line colour behind a 1px gap: with `auto-fit`, the
+   number of columns tracks viewport width, not item count, so a partially
+   filled last row (9 facts rarely divide evenly) left empty trailing cells
+   showing the container's --line colour as a solid block. Bordering items
+   individually — the same recipe .hds-profile__card-grid already uses —
+   means an empty grid track shows nothing but the section's own background,
+   whatever the column count. */
+.hds-profile__career-grid {
+  margin: var(--space-5) 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+
+.hds-profile__career-item {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  padding: var(--space-4) var(--space-5);
+}
+
+.hds-profile__career-item dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Inline in this grid (unlike the pill's usual block placement) — dt is
+   already a flex row, so the tag's own display:flex just governs its
+   icon+label layout, not whether it drops to a new line. */
+.hds-profile__career-item dt .hds-profile__verify-tag {
+  margin-top: 0;
+}
+
+.hds-profile__career-item dd {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  line-height: var(--lh-heading);
+  color: var(--ink);
+}
+
+.hds-profile__glance-list {
+  margin: 0 0 var(--space-1);
+  padding: 0 0 0 var(--space-4);
+  font-size: var(--text-base);
+  line-height: var(--lh-relaxed);
+}
+
+.hds-profile__inline-cite {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   Current & historical positions table (09) — a real <table>, reusing the
+   shared .hds-profile__table system rather than the div-based row list this
+   replaced. A "Current" row is highlighted by meaning, not position: which
+   rows are current changes over time, so the highlight is keyed off the
+   period text itself, never an nth-child zebra that would highlight
+   whichever row happens to land on an odd index.
+   ========================================================================== */
+
+.hds-profile__cell--mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.hds-profile__position-row--current th,
+.hds-profile__position-row--current td {
+  background: var(--panel-soft);
+}
+
+/* ==========================================================================
+   Attribution levels / research notes (Performance + Profile tabs) — three
+   short cards side by side, same grid either place.
+   ========================================================================== */
+
+.hds-profile__triple-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* ==========================================================================
+   Sources utility
+   ========================================================================== */
+
+.hds-profile__sources {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.hds-profile__source {
+  /* Overrides base.css's global `li { max-width: var(--measure-wide) }` prose
+     reset — that rule targets flowing text, but this li is a layout row (a
+     number, a body and a Visit control), not a paragraph, so capping it left
+     the Visit link stranded mid-row instead of at the container's edge. */
+  max-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  /* Reserved on all four edges (not just the bottom divider) so :target below
+     can crossfade border-color in without shifting layout — the same
+     "transparent border reserves the space" idiom .hds-profile__status-tag
+     uses above. */
+  border: 1px solid transparent;
+  border-bottom-color: var(--line);
+  scroll-margin-top: var(--space-6);
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.hds-profile__source:last-child {
+  border-bottom-color: transparent;
+}
+
+/* Preventing a jarring change: confirms which record a "Sources NN" click
+   landed on, so the scroll jump doesn't end in an unexplained instant recolour.
+   border-radius/margin-inline/padding-inline stay instant (not transform,
+   opacity, or a colour channel) — only the two colour channels above ease. */
+.hds-profile__source:target {
+  background: var(--panel-soft);
+  border-color: var(--line-strong);
+  border-radius: var(--radius);
+  margin-inline: calc(-1 * var(--space-4));
+  padding-inline: var(--space-4);
+}
+
+.hds-profile__source-no {
+  flex: 0 0 auto;
+  width: 2ch;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: var(--track-label);
+  color: var(--amber);
+}
+
+.hds-profile__source-body {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.hds-profile__source-org {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hds-profile__source-meta {
+  margin: 2px 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.hds-profile__source-type {
+  margin: 2px 0 0;
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  color: var(--muted);
+}
+
+.hds-profile__source-link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+/* The real, clickable link gets the control-boundary pair (>=3:1, WCAG
+   1.4.11) instead of the decorative --line it inherits above — its border
+   IS the click target's edge. The non-interactive "URL unavailable" span
+   below keeps the softer decorative border, which now also reads as a
+   secondary signal that it isn't actionable. */
+a.hds-profile__source-link {
+  border-color: var(--control);
+  letter-spacing: var(--track-button);
+}
+
+.hds-profile__source-link svg {
+  width: 12px;
+  height: 12px;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+
+/* `a.`-qualified so this can only ever match the real, href-carrying link —
+   .hds-profile__source-link--unavailable below shares this class on a plain
+   non-interactive <span>, which :hover can still paint even though nothing
+   there is clickable. */
+a.hds-profile__source-link:hover,
+a.hds-profile__source-link:focus-visible {
+  border-color: var(--control-hover);
+  color: var(--amber);
+}
+
+/* Icon nudge matches .action-link:hover svg in components.css: var(--dur-press)
+   var(--ease-out), i.e. 120ms — the value that rule's own transition actually
+   carries. Hover stays fine-pointer gated (a tap's synthetic :hover never
+   clears); focus-visible is ungated since keyboard focus has no such
+   sticking risk. */
+a.hds-profile__source-link:focus-visible svg {
+  transform: translateX(2px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a.hds-profile__source-link:hover svg { transform: translateX(2px); }
+}
+
+.hds-profile__source-link--unavailable {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   Record status
+   ========================================================================== */
+
+.hds-profile__record-status {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-6) 0 var(--space-12);
+}
+
+.hds-profile__record-status-label {
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: var(--text-micro);
+  color: var(--muted);
+}
+
+.hds-profile__record-status-value {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ==========================================================================
+   Responsive — table, below 1150px
+
+   Split from the general 720px breakpoint below: everything else on this
+   page reflows fine via grid auto-fit well into tablet widths, but a
+   multi-column table forces horizontal scroll on any viewport under ~1150px
+   (an iPad-portrait width included, and the programmes/promises tables'
+   own 1150px min-width) unless it switches to stacked cards earlier than
+   the rest of the layout does. One breakpoint for every table variant on
+   this page keeps them consistent instead of some scrolling while others
+   have already stacked.
+   ========================================================================== */
+
+@media (max-width: 1150px) {
+  /*
+    Table -> stacked accessible records. The markup stays one real <table>
+    (thead/th/scope unchanged) — only the visual presentation is remapped, so
+    a screen reader or crawler still sees the same structured data DirectoryPage
+    and TabPanel already depend on elsewhere: everything in the DOM, nothing
+    swapped in by JS. The heading row is clipped rather than removed, and
+    each cell grows its own visible label via `data-label`, so both a sighted
+    reader and a linear screen-reader pass still get every value labelled.
+  */
+  .hds-profile__table-wrap {
+    overflow-x: visible;
+    border: none;
+    border-radius: 0;
+  }
+
+  .hds-profile__table {
+    min-width: 0;
+  }
+
+  .hds-profile__table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .hds-profile__table,
+  .hds-profile__table tbody,
+  .hds-profile__table tr,
+  .hds-profile__table th,
+  .hds-profile__table td {
+    display: block;
+    width: 100%;
+  }
+
+  .hds-profile__table tbody tr {
+    margin-bottom: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .hds-profile__table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .hds-profile__table tbody th,
+  .hds-profile__table tbody td {
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .hds-profile__table tbody tr td:last-child {
+    border-bottom: none;
+  }
+
+  .hds-profile__cell--title {
+    font-size: var(--text-md);
+    background: var(--panel-soft);
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .hds-profile__table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: var(--space-1);
+    text-transform: uppercase;
+    letter-spacing: var(--track-label);
+    font-size: var(--text-micro);
+    font-weight: 600;
+    color: var(--muted);
+  }
+}
+
+/* ==========================================================================
+   Responsive — below 720px
+   ========================================================================== */
+
+@media (max-width: 720px) {
+  .hds-profile__hero {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    padding: var(--space-6) 0 var(--space-8);
+  }
+
+  .hds-profile__portrait {
+    width: 128px;
+    height: 128px;
+  }
+
+  .hds-profile__meta-strip {
+    padding: var(--space-6) 0;
+  }
+
+  .hds-profile__meta-grid {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  /* `flex: 1 1 200px` sets flex-basis on the main axis, which the rule above
+     just switched from horizontal to vertical — unreset, each item would
+     demand 200px of HEIGHT instead of width, opening a large empty gap under
+     every short value. */
+  .hds-profile__meta-item {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+
+  .hds-profile__section {
+    padding: var(--space-8) 0;
+  }
+
+  .hds-profile__card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hds-profile__institutions,
+  .hds-profile__education-list {
+    columns: 1;
+  }
+}
+
+/* ==========================================================================
+   Restructure pass — label legend, section jump row, heading count
+   --------------------------------------------------------------------------
+   Appended after the rules above so these override them at equal specificity,
+   the same convention components.css already uses.
+   ========================================================================== */
+
+/* ---- "How to read the labels on this page" ---------------------------- */
+
+.hds-profile__legend {
+  margin-top: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel-soft);
+}
+
+.hds-profile__legend > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-3) var(--space-5);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hds-profile__legend > summary::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  margin-left: var(--space-1);
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.hds-profile__legend[open] > summary::after { transform: translateY(1px) rotate(-135deg); }
+
+.hds-profile__legend-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-6);
+  padding: 0 var(--space-5) var(--space-5);
+}
+
+.hds-profile__legend-list { margin: var(--space-3) 0 0; }
+
+.hds-profile__legend-list > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-block: var(--space-2);
+  border-top: 1px dashed var(--line);
+}
+
+.hds-profile__legend-list dt { margin: 0; }
+
+.hds-profile__legend-list dd {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--lh-body);
+  color: var(--muted);
+}
+
+.hds-profile__legend-note {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: var(--lh-body);
+  color: var(--muted);
+}
+
+/* ---- Pending citations ------------------------------------------------ */
+
+.hds-profile__pending-cite-label {
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---- Section jump row inside a tab panel ------------------------------ */
+
+.section-nav--static {
+  position: static;
+  max-width: none;
+  padding-inline: 0;
+  margin-block: var(--space-5) 0;
+}
+
+.hds-profile__heading-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding-inline: 6px;
+  border-radius: var(--radius-full);
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--muted);
+  vertical-align: middle;
+}
+
+/* ---- Mobile row disclosure -------------------------------------------- */
+
+/* The column exists only in the stacked layout; on a wide screen the cells
+   it reveals are already visible, so both the header cell and the control
+   are removed from the table entirely. */
+.hds-profile__row-more,
+.hds-profile__row-more-head { display: none; }
+
+@media (max-width: 1150px) {
+  .hds-profile__table tbody tr:not([data-expanded="true"]) td[data-secondary] { display: none; }
+
+  .hds-profile__row-more {
+    display: block;
+    padding: 0;
+    border-bottom: none;
+    background: var(--panel-soft);
+  }
+
+  .hds-profile__row-more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .hds-profile__row-more-btn .hds-profile__details-chevron {
+    width: 14px;
+    height: 14px;
+    transition: transform var(--dur-fast) var(--ease);
+  }
+
+  .hds-profile__row-more-btn[aria-expanded="true"] .hds-profile__details-chevron {
+    transform: rotate(180deg);
+  }
+}

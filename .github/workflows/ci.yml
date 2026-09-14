@@ -1,0 +1,141 @@
+# Javora — continuous integration.
+#
+# M-3/M-4 (docs/security-audit-followup-2026-09-04.md). Two things changed
+# from the three-step workflow this file used to be:
+#
+#   1. `check` now runs `npm run build` (with VITE_SITE_ORIGIN set) BEFORE
+#      `npm test`, so the three dist/-dependent security regression suites
+#      (scripts/distSecretScan.test.mjs, deploy/nginxCsp.test.mjs,
+#      scripts/prerenderOutput.test.mjs — plus scripts/serve-dist.test.mjs)
+#      actually run instead of skipping silently on every push and pull
+#      request. Those four files now also THROW when `process.env.CI` is set
+#      and dist/ is still missing, so a future change to this step cannot
+#      quietly reintroduce the gap.
+#   2. Three new jobs treat the pipeline itself as part of the security
+#      perimeter (SECURITY--SL Politics.md §20): `npm audit` as a failing
+#      step, secret scanning (gitleaks), SAST (CodeQL), and dependency review
+#      on pull requests. `.github/dependabot.yml` covers automated updates.
+#
+# Every action below is pinned to a commit SHA (not a floating tag) — the
+# trailing comment names the version that SHA was, at the time of pinning,
+# so bumping it later is a one-line, reviewable diff rather than trusting
+# whatever a tag currently points to.
+#
+# Still no deploy step here: the site is a build artefact and the API/worker
+# are containers, all three released deliberately rather than on push (see
+# deploy/README.md).
+#
+# Node 24 is not a preference. package.json's engines field requires >=24.0.0
+# because the server runs TypeScript through bare `node` and uses node:sqlite's
+# DatabaseSync; on 22 the db and api scripts do not start at all.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# Least-privilege default (§20): everything below reads only, unless a job
+# below explicitly escalates for the one thing it needs (CodeQL's
+# security-events: write, to upload its results).
+permissions:
+  contents: read
+
+# A new push to the same branch/PR cancels whatever this workflow was already
+# running for it — no reason to finish auditing a commit that is no longer
+# the tip of the branch.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: "24"
+          cache: npm
+
+      # ci, not install: package-lock.json is tracked and the build must be
+      # reproducible from it.
+      - run: npm ci
+
+      # Runs BEFORE the test step on purpose — see the file header above.
+      # VITE_SITE_ORIGIN is required (prerender.mjs refuses to build without
+      # it); the real production origin is already public throughout this
+      # repository's own docs and prerendered output, so there is nothing to
+      # protect by using a placeholder instead.
+      - name: Build
+        run: npm run build
+        env:
+          VITE_SITE_ORIGIN: https://javora.lk
+
+      - name: Tests
+        run: npm run test
+
+      - name: Types
+        run: npm run typecheck
+
+      # ESLint covers the .js/.jsx surface only; tsc above owns .ts/.tsx.
+      # eslint.config.js explains why typescript-eslint is not wired in yet.
+      - name: Lint
+        run: npm run lint
+
+      # A failing step, not merely a reviewed one (§21): high/critical
+      # vulnerabilities in a dependency block the build rather than being
+      # something a human has to remember to check for.
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+
+  # Secret scanning (§20). Runs on the full history of the push/PR, not just
+  # the tip commit, so a secret introduced and later "removed" in the same
+  # branch is still caught.
+  gitleaks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Required only for an Organization-owned repository, per gitleaks-
+          # action's own docs — unset (a personal account) is fine and the
+          # action still runs. Configure this secret only if this repository
+          # is ever transferred to an organization.
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  # SAST for the JS/TS surface (§20, free for public repositories).
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - uses: github/codeql-action/init@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+        with:
+          languages: javascript-typescript
+
+      - uses: github/codeql-action/analyze@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+
+  # Flags newly-introduced dependencies with known vulnerabilities or
+  # disallowed licenses, scoped to what a PR actually changes. Only
+  # meaningful with something to diff against, hence PR-only.
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0

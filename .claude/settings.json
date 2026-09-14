@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(npm run db:migrate)",
+      "Bash(npm run db:migrate:*)",
+      "Bash(npm run db:seed)",
+      "Bash(npm run db:validate:postgres)",
+      "Bash(npm run sync)",
+      "Bash(npm run sync:*)",
+      "Bash(npm run worker)",
+      "Bash(npm run worker:*)",
+      "Bash(node server/cli.ts:*)"
+    ]
+  }
+}

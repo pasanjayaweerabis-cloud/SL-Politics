@@ -1,0 +1,206 @@
+{
+  "$comment": "Records promoted from research compilations by scripts/import-research.mjs. NOT authoritative data. Every row carries the file, line and verbatim text it came from, and renders as secondary-corroborated unless its cited source is Tier 1. Kept separate from parliamentMembers.json so institutional facts and research claims are never confused for one another.",
+  "generatedAt": "2026-08-29T07:17:04.775Z",
+  "sourceFiles": [
+    "ChatGPT research.txt",
+    "Gemini Research.txt"
+  ],
+  "counts": {
+    "education": 3,
+    "employment": 3,
+    "publicService": 5
+  },
+  "education": [
+    {
+      "personId": "parliament:3560",
+      "educationType": "university",
+      "institution": null,
+      "qualification": "Bachelor of Arts (Honours)",
+      "field": null,
+      "sourceText": "According to one profile (secondary source), he earned a Bachelor of Arts (Honours) and a Ph.D. in philosophy.",
+      "provenance": {
+        "tier": 3,
+        "citedSource": "Parliament profile; Ministry of Public Administration; Verité/Manthri profile (secondary); news reports.",
+        "sourceUrl": null,
+        "selfReportedStatus": null,
+        "file": "ChatGPT research.txt",
+        "line": 7,
+        "rawText": "**Education:** No school-level data found.  According to one profile (secondary source), he earned a Bachelor of Arts (Honours) and a Ph.D. in philosophy. These credentials are not documented on the official site (Qualifications blank in Parliament profile)."
+      }
+    },
+    {
+      "personId": "parliament:3560",
+      "educationType": "postgraduate",
+      "institution": null,
+      "qualification": "Ph.D",
+      "field": "philosophy",
+      "sourceText": "According to one profile (secondary source), he earned a Bachelor of Arts (Honours) and a Ph.D. in philosophy.",
+      "provenance": {
+        "tier": 3,
+        "citedSource": "Parliament profile; Ministry of Public Administration; Verité/Manthri profile (secondary); news reports.",
+        "sourceUrl": null,
+        "selfReportedStatus": null,
+        "file": "ChatGPT research.txt",
+        "line": 7,
+        "rawText": "**Education:** No school-level data found.  According to one profile (secondary source), he earned a Bachelor of Arts (Honours) and a Ph.D. in philosophy. These credentials are not documented on the official site (Qualifications blank in Parliament profile)."
+      }
+    },
+    {
+      "personId": "parliament:3618",
+      "educationType": "postgraduate",
+      "institution": null,
+      "qualification": "PG Diploma",
+      "field": "Education",
+      "sourceText": "According to secondary sources, Athambawa earned a B.Sc. (Eastern University) and two MSc degrees (Disaster Management at Peradeniya, Science Education at Eastern University), plus a PG Diploma in Education (Open University).",
+      "provenance": {
+        "tier": 3,
+        "citedSource": "Manthri/Verité profile (for DOB, education, profession). (No official Parliament bio accessible.)",
+        "sourceUrl": null,
+        "selfReportedStatus": null,
+        "file": "ChatGPT research.txt",
+        "line": 91,
+        "rawText": "**Education:** According to secondary sources, Athambawa earned a B.Sc. (Eastern University) and two MSc degrees (Disaster Management at Peradeniya, Science Education at Eastern University), plus a PG Diploma in Education (Open University). These are reported on the Manthri site. Not confirmed by primary sources."
+      }
+    }
+  ],
+  "employment": [
+    {
+      "personId": "parliament:3449",
+      "organisation": "Open University of Sri Lanka",
+      "role": "Senior Lecturer in Sociology",
+      "startDate": "2011",
+      "endDate": "2020",
+      "description": "Served as a Senior Lecturer and later Head of the Department of Social Sciences. Conducted extensive research into youth issues, human rights, and social development, publishing treatises on elite politics, dissent, and social justice.",
+      "provenance": {
+        "tier": 4,
+        "citedSource": "Secondary Corroborated",
+        "sourceUrl": null,
+        "selfReportedStatus": "SECONDARY-CORROBORATED",
+        "file": "Gemini Research.txt",
+        "line": 45,
+        "rawText": "Organization: Open University of Sri Lanka"
+      }
+    },
+    {
+      "personId": "parliament:3449",
+      "organisation": "Nest Sri Lanka",
+      "role": "Community Health Worker",
+      "startDate": "1994",
+      "endDate": null,
+      "description": "Engaged in grassroots social activism working specifically with tsunami-affected children.",
+      "provenance": {
+        "tier": 4,
+        "citedSource": "Secondary Corroborated",
+        "sourceUrl": null,
+        "selfReportedStatus": "SECONDARY-CORROBORATED",
+        "file": "Gemini Research.txt",
+        "line": 51,
+        "rawText": "Organization: Nest Sri Lanka"
+      }
+    },
+    {
+      "personId": "parliament:3535",
+      "organisation": "Ministry of Health, Government of Sri Lanka",
+      "role": "Acting Medical Superintendent, Chavakachcheri Base Hospital",
+      "startDate": null,
+      "endDate": "2024-09",
+      "description": "Served as Medical Superintendent. In July 2024, exposed alleged irregularities and malpractices at the hospital via social media, which catapulted him to regional prominence. Subsequently interdicted pending a disciplinary inquiry by the Secretary to the Ministry of Health.",
+      "provenance": {
+        "tier": 4,
+        "citedSource": "Secondary Corroborated / Court Filings",
+        "sourceUrl": null,
+        "selfReportedStatus": "CONFLICTING (Employment status is currently the subject of a Court of Appeal Quo Warranto petition determining if he remained a contracted public officer during the election).",
+        "file": "Gemini Research.txt",
+        "line": 46,
+        "rawText": "Organization: Ministry of Health, Government of Sri Lanka"
+      }
+    }
+  ],
+  "publicService": [
+    {
+      "personId": "parliament:3449",
+      "organisation": "University Grants Commission (UGC)",
+      "role": "Member, Standing Committee on Gender Equality and Social Equity",
+      "startDate": "2016",
+      "endDate": null,
+      "description": null,
+      "provenance": {
+        "tier": 4,
+        "citedSource": "Secondary Corroborated",
+        "sourceUrl": null,
+        "selfReportedStatus": "Secondary Corroborated",
+        "file": "Gemini Research.txt",
+        "line": 57,
+        "rawText": "Organization: University Grants Commission (UGC)"
+      }
+    },
+    {
+      "personId": "parliament:3449",
+      "organisation": "Open University Teachers' Association",
+      "role": "Secretary (2012–2013, 2016), Assistant Secretary (2014–2015)",
+      "startDate": "2012",
+      "endDate": "2016",
+      "description": null,
+      "provenance": {
+        "tier": 4,
+        "citedSource": "Secondary Corroborated",
+        "sourceUrl": null,
+        "selfReportedStatus": "Secondary Corroborated",
+        "file": "Gemini Research.txt",
+        "line": 61,
+        "rawText": "Organization: Open University Teachers' Association"
+      }
+    },
+    {
+      "personId": "parliament:140",
+      "organisation": "Constitutional Council of Sri Lanka",
+      "role": "Member",
+      "startDate": "2020-01-03",
+      "endDate": null,
+      "description": "Holds a seat on the Constitutional Council automatically as an ex-officio requirement of serving as the Leader of the Opposition.",
+      "provenance": {
+        "tier": 4,
+        "citedSource": "Secondary Corroborated",
+        "sourceUrl": null,
+        "selfReportedStatus": "Secondary Corroborated",
+        "file": "Gemini Research.txt",
+        "line": 40,
+        "rawText": "Organization: Constitutional Council of Sri Lanka"
+      }
+    },
+    {
+      "personId": "parliament:3522",
+      "organisation": "Women Parliamentarians' Caucus, Parliament of Sri Lanka",
+      "role": "Chairperson",
+      "startDate": "2024-12-03",
+      "endDate": null,
+      "description": "Leads the caucus consisting of 22 women parliamentarians. Tasked with advancing the Parliamentary Development Action Plan 2024/2027 in coordination with the UNDP to foster gender-responsive governance.",
+      "provenance": {
+        "tier": 1,
+        "citedSource": "Parliament of Sri Lanka",
+        "sourceUrl": null,
+        "selfReportedStatus": null,
+        "file": "Gemini Research.txt",
+        "line": 46,
+        "rawText": "Organization: Women Parliamentarians' Caucus, Parliament of Sri Lanka"
+      }
+    },
+    {
+      "personId": "parliament:3617",
+      "organisation": "Parliamentary Caucus for Persons with Disabilities",
+      "role": "Chair",
+      "startDate": "2025-03-11",
+      "endDate": null,
+      "description": "Leading legislative efforts to advance the Rights of Persons with Disabilities Bill. Coordinated extensively with the UN Resident Coordinator, UNICEF, and multiple state ministries to ensure budget allocations for inclusive transport and education in the 2026 budget.",
+      "provenance": {
+        "tier": 1,
+        "citedSource": "Parliament of Sri Lanka",
+        "sourceUrl": null,
+        "selfReportedStatus": null,
+        "file": "Gemini Research.txt",
+        "line": 15,
+        "rawText": "Organization: Parliamentary Caucus for Persons with Disabilities"
+      }
+    }
+  ]
+}

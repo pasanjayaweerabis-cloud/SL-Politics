@@ -1,0 +1,236 @@
+# SL Politics — backend services: API, sync worker, PostgreSQL.
+#
+# Does NOT include the frontend. The static site is a build artefact (dist/),
+# not a running service — see deploy/nginx.conf for serving it, and
+# deploy/README.md for why the two are deployed separately.
+#
+# Run from the repo root:
+#   docker compose -f deploy/docker-compose.yml --env-file .env up -d
+#
+# THE ONE-WORKER RULE. `worker` has no `deploy.replicas` and none should be
+# added — server/scheduler/lock.ts's in-process overlap guard is built for
+# exactly one worker process; running two against the same JAVORA_DB is the
+# untested, unsupported configuration its own header comment names.
+#
+# M-5 (docs/security-audit-followup-2026-09-04.md, SECURITY--SL Politics.md
+# §16). Every service below now runs with a read-only root filesystem (a
+# tmpfs mount for whatever it still needs to write to), every Linux
+# capability dropped, no privilege escalation, and an explicit CPU/memory
+# ceiling. `api` and `worker` no longer receive the whole shared `.env` file
+# — each gets only the specific variables its own code reads (cross-checked
+# against .env.example, the canonical list), so neither ever holds
+# POSTGRES_PASSWORD or any other credential it has no use for. Postgres sits
+# on its own `data` network, reachable only by `api` and `worker` — nothing
+# else in this compose project, and nothing added to it later that is not
+# explicitly attached to `data`, can reach port 5432 at all.
+
+services:
+  postgres:
+    # Pinned by digest, not just the "16-alpine" tag — see deploy/Dockerfile's
+    # matching comment on node:24-slim for why. Re-pin deliberately when
+    # there is a reason to (a security patch), not on a schedule.
+    image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      # Postgres's default unix-socket directory and scratch space — both
+      # need to be writable even though the rest of the image's filesystem
+      # does not. The actual data directory is the named volume below, which
+      # stays writable under read_only: true regardless.
+      - /tmp
+      - /var/run/postgresql
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-javora}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env — no default, on purpose}
+      POSTGRES_DB: ${POSTGRES_DB:-javora}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    networks:
+      - data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-javora}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # No `ports:` block at all, by default — Postgres is for api's connection
+    # pool, reached over the private `data` network above, never a port an
+    # operator needs published to the host. For local debugging only (e.g. a
+    # one-off `psql` session against a dev compose stack), uncomment:
+    #     ports:
+    #       - "127.0.0.1:5432:5432"
+    # and remove it again afterwards; a real production compose file should
+    # not publish this at all.
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: ["node", "server/api/server.ts"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    # Only what server/api/server.ts (and the modules it imports —
+    # server/db/database.ts, server/api/trustedProxies.ts,
+    # server/scheduler/schedule.ts for the automaticSyncOperational status
+    # field) actually reads from process.env — never the whole .env file, and
+    # specifically never POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB, which
+    # this process has no use for even when DATABASE_URL (below) points it at
+    # Postgres: that connection string already carries its own credential.
+    # Keep this list in step with .env.example when either changes.
+    environment:
+      JAVORA_DB: ${JAVORA_DB:?set JAVORA_DB in .env}
+      DATABASE_URL: ${DATABASE_URL:-}
+      JAVORA_ALLOW_WRITE_CAPABLE_DB: ${JAVORA_ALLOW_WRITE_CAPABLE_DB:-}
+      JAVORA_API_PORT: ${JAVORA_API_PORT:-4000}
+      JAVORA_CORS_ORIGINS: ${JAVORA_CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      JAVORA_TRUSTED_PROXIES: ${JAVORA_TRUSTED_PROXIES:-}
+      API_QUERY_TIMEOUT_MS: ${API_QUERY_TIMEOUT_MS:-8000}
+      API_RATE_LIMIT_WINDOW_MS: ${API_RATE_LIMIT_WINDOW_MS:-60000}
+      API_RATE_LIMIT_MAX: ${API_RATE_LIMIT_MAX:-120}
+      API_RATE_BUCKET_CAP: ${API_RATE_BUCKET_CAP:-50000}
+      API_GOVERNMENT_CACHE_TTL_MS: ${API_GOVERNMENT_CACHE_TTL_MS:-15000}
+      API_FACETS_CACHE_TTL_MS: ${API_FACETS_CACHE_TTL_MS:-300000}
+      # POST /api/corrections — the one write endpoint (server/api/
+      # corrections.ts). Its budgets are separate from, and far tighter
+      # than, the read API's: five reports per IP per hour and 200
+      # site-wide per hour. JAVORA_CORRECTIONS=off disables the endpoint
+      # outright, which makes it answer 503 rather than accept reports it
+      # would not store. The salt is what keeps submitter_ip_hash from
+      # being a reversible record of who reported what; set it to a
+      # long random string and keep it stable, or reports from before a
+      # restart stop comparing to reports after one.
+      JAVORA_CORRECTIONS: ${JAVORA_CORRECTIONS:-}
+      JAVORA_CORRECTION_HASH_SALT: ${JAVORA_CORRECTION_HASH_SALT:-}
+      API_CORRECTION_RATE_LIMIT_WINDOW_MS: ${API_CORRECTION_RATE_LIMIT_WINDOW_MS:-3600000}
+      API_CORRECTION_RATE_LIMIT_MAX: ${API_CORRECTION_RATE_LIMIT_MAX:-5}
+      API_CORRECTION_GLOBAL_RATE_LIMIT_MAX: ${API_CORRECTION_GLOBAL_RATE_LIMIT_MAX:-200}
+      API_CORRECTION_MAX_BODY_BYTES: ${API_CORRECTION_MAX_BODY_BYTES:-8192}
+      # Read only to answer /api/status's automaticSyncOperational field
+      # (server/scheduler/schedule.ts) — this process never acts on a
+      # schedule itself, only reports whether one is configured.
+      PARLIAMENT_SYNC_INTERVAL: ${PARLIAMENT_SYNC_INTERVAL:-0}
+      CABINET_SYNC_INTERVAL: ${CABINET_SYNC_INTERVAL:-0}
+      ELECTION_SYNC_INTERVAL: ${ELECTION_SYNC_INTERVAL:-0}
+      GAZETTE_SYNC_INTERVAL: ${GAZETTE_SYNC_INTERVAL:-0}
+      PRESIDENTIAL_SYNC_INTERVAL: ${PRESIDENTIAL_SYNC_INTERVAL:-0}
+      PM_SYNC_INTERVAL: ${PM_SYNC_INTERVAL:-0}
+    #
+    # POSTGRES IS OPT-IN. Uncomment DATABASE_URL above (point it at the
+    # SELECT-only javora_api role — scripts/provision-postgres-roles.mjs
+    # creates it; server/api/server.ts refuses to start against a
+    # write-capable credential) only alongside a deliberate mechanism that
+    # re-runs `npm run db:migrate:postgres` after syncs. Without one those
+    # five endpoints go stale — see deploy/README.md §4 for the full
+    # reasoning this compose file used to get wrong by setting it
+    # unconditionally.
+    volumes:
+      # Shared with `worker` below: both processes read/write the SAME
+      # SQLite file (WAL mode supports concurrent readers and one writer
+      # across processes on a shared filesystem — this is what makes sharing
+      # the volume correct rather than a race).
+      - javora-data:/var/lib/javora
+    networks:
+      - data
+      - app
+    ports:
+      - "127.0.0.1:${JAVORA_API_PORT:-4000}:4000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: ["node", "server/scheduler/worker.ts"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    # Only what server/scheduler/worker.ts and server/scheduler/schedule.ts
+    # actually read — never DATABASE_URL/POSTGRES_*: the worker writes SQLite
+    # only and never touches Postgres at all (deploy/README.md §3).
+    environment:
+      JAVORA_DB: ${JAVORA_DB:?set JAVORA_DB in .env}
+      PARLIAMENT_SYNC_INTERVAL: ${PARLIAMENT_SYNC_INTERVAL:-0}
+      PARLIAMENT_REQUEST_DELAY_MS: ${PARLIAMENT_REQUEST_DELAY_MS:-500}
+      PARLIAMENT_SYNC_PROFILES: ${PARLIAMENT_SYNC_PROFILES:-false}
+      CABINET_SYNC_INTERVAL: ${CABINET_SYNC_INTERVAL:-0}
+      CABINET_REQUEST_DELAY_MS: ${CABINET_REQUEST_DELAY_MS:-1000}
+      ELECTION_SYNC_INTERVAL: ${ELECTION_SYNC_INTERVAL:-0}
+      ELECTION_REQUEST_DELAY_MS: ${ELECTION_REQUEST_DELAY_MS:-1000}
+      GAZETTE_SYNC_INTERVAL: ${GAZETTE_SYNC_INTERVAL:-0}
+      GAZETTE_REQUEST_DELAY_MS: ${GAZETTE_REQUEST_DELAY_MS:-1000}
+      PRESIDENTIAL_SYNC_INTERVAL: ${PRESIDENTIAL_SYNC_INTERVAL:-0}
+      PRESIDENTIAL_REQUEST_DELAY_MS: ${PRESIDENTIAL_REQUEST_DELAY_MS:-1000}
+      PM_SYNC_INTERVAL: ${PM_SYNC_INTERVAL:-0}
+      PM_REQUEST_DELAY_MS: ${PM_REQUEST_DELAY_MS:-1000}
+      SYNC_FETCH_TIMEOUT_MS: ${SYNC_FETCH_TIMEOUT_MS:-30000}
+      SYNC_RETRY_ATTEMPTS: ${SYNC_RETRY_ATTEMPTS:-3}
+      SYNC_RETRY_BACKOFF_MS: ${SYNC_RETRY_BACKOFF_MS:-2000}
+      SYNC_MAX_RUN_MINUTES: ${SYNC_MAX_RUN_MINUTES:-30}
+    volumes:
+      - javora-data:/var/lib/javora
+    networks:
+      - data
+      - app
+    # `--status` opens JAVORA_DB (idempotent migration, read-only from there)
+    # and exits 0/1 — the same check `node server/scheduler/worker.ts --status`
+    # gives an operator by hand, run automatically. This does NOT confirm the
+    # running process's own schedule timers are still firing (that instance is
+    # not what a HEALTHCHECK invokes; Docker execs a fresh, separate one), and
+    # it does not catch JAVORA_DB pointing at the wrong path — openMigrated()
+    # creates a missing file rather than failing (verified). It DOES catch the
+    # database file existing but unreadable — corrupted, wrong permissions, a
+    # broken volume mount (verified: a non-SQLite file at JAVORA_DB exits 1) —
+    # which today gives no visible symptom at all: nothing in the worker
+    # throws in a way that exits the process, so it keeps running, silently
+    # failing every sync, invisible to `docker ps`.
+    healthcheck:
+      test: ["CMD", "node", "server/scheduler/worker.ts", "--status"]
+      interval: 5m
+      timeout: 30s
+      retries: 3
+
+networks:
+  # Postgres lives here and nowhere else. `api` and `worker` are the only
+  # other members, so they are the only containers in this compose project
+  # that can reach port 5432 — a future service added to `app` only (below)
+  # gets no network path to the database merely by joining this project.
+  data: {}
+  # General service network — kept separate from `data` on purpose (see
+  # above). Neither `api` nor `worker` currently needs to reach the other
+  # over it; it exists so a future addition that DOES need inter-service
+  # reachability is not tempted to reuse the database's own network for it.
+  app: {}
+
+volumes:
+  pg-data:
+  javora-data:
