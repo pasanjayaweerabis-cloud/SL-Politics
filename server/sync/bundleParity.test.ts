@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { existsSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { join, resolve, dirname } from "node:path";
@@ -79,14 +79,25 @@ const FIXED_DAY = new Date("2026-08-31T00:00:00Z");
 const DB_POSITIONS_WITHOUT_EVIDENCE_BASELINE = 353;
 
 describe.skipIf(!HAVE_DB)("bundled dataset and database agree where they overlap", () => {
-  const db = new DatabaseSync(DB_PATH, { readOnly: true });
+  let db: DatabaseSync;
+  beforeAll(() => {
+    db = new DatabaseSync(DB_PATH, { readOnly: true });
+  });
+  afterAll(() => {
+    db.close();
+  });
   const rows = <T,>(sql: string): T[] => db.prepare(sql).all() as T[];
+  let dbPeople: Array<{ id: string; slug: string; canonical_name: string }>;
+  let bundle: ReturnType<typeof allPeople>;
+  let bundleById: Map<string, (typeof bundle)[number]>;
 
-  const dbPeople = rows<{ id: string; slug: string; canonical_name: string }>(
-    "SELECT id, slug, canonical_name FROM person",
-  );
-  const bundle = allPeople(FIXED_DAY);
-  const bundleById = new Map(bundle.map((v) => [v.person.id, v]));
+  beforeAll(() => {
+    dbPeople = rows<{ id: string; slug: string; canonical_name: string }>(
+      "SELECT id, slug, canonical_name FROM person",
+    );
+    bundle = allPeople(FIXED_DAY);
+    bundleById = new Map(bundle.map((v) => [v.person.id, v]));
+  });
 
   it("has people in both stores to compare", () => {
     expect(dbPeople.length).toBeGreaterThan(0);
