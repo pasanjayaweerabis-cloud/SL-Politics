@@ -107,6 +107,35 @@ export default function DirectoryPage({ route }) {
   }, [state.initial]);
 
   /**
+   * Whether the strip has more letters hidden past either edge.
+   *
+   * Each flag drives its own floating "scroll for more" affordance: shown
+   * while there is somewhere in that direction to take the reader, hidden
+   * once they have scrolled it away — `azMoreRight` at the far right, and
+   * symmetrically `azMoreLeft` once they have scrolled past the start — or
+   * the viewport is wide enough to lay out all 28 entries without scrolling
+   * at all, in which case neither ever appears. A `ResizeObserver` rather
+   * than a `window` resize listener because the strip's own width changes
+   * with the sidebar/filter layout, not only the viewport.
+   */
+  const [azMoreRight, setAzMoreRight] = React.useState(false);
+  const [azMoreLeft, setAzMoreLeft] = React.useState(false);
+  React.useEffect(() => {
+    const el = azRef.current;
+    if (!el) return undefined;
+    const update = () => {
+      setAzMoreRight(el.scrollWidth - el.clientWidth - el.scrollLeft > 2);
+      setAzMoreLeft(el.scrollLeft > 2);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    el.addEventListener('scroll', update, { passive: true });
+    return () => { ro.disconnect(); el.removeEventListener('scroll', update); };
+  }, []);
+  const scrollAzBy = factor => azRef.current?.scrollBy({ left: Math.round(azRef.current.clientWidth * factor), behavior: 'smooth' });
+
+  /**
    * How many records are revealed, reset whenever the query changes.
    *
    * Stored alongside the search string it belongs to and RESET during render
@@ -367,28 +396,46 @@ export default function DirectoryPage({ route }) {
               letter with no records behind it is rendered as plain text, not
               as a link to an empty page.
             */}
-            <nav className="az-index" aria-label={t('directory.azLabel')} ref={azRef}>
-              <a
-                className="az-index__letter"
-                href={`?${toSearchString({ ...state, initial: '' })}`}
-                aria-current={state.initial ? undefined : 'true'}
-                onClick={event => { event.preventDefault(); setInitial(''); }}
-              >{t('directory.azAll')}</a>
-              {[...ALPHABET, '#'].map(letter => {
-                const count = letterCounts.get(letter) ?? 0;
-                if (!count) {
-                  return <span className="az-index__letter az-index__letter--empty" key={letter} aria-disabled="true">{letter}</span>;
-                }
-                return <a
+            <div className={`az-index-wrap${azMoreRight ? ' az-index-wrap--more' : ''}${azMoreLeft ? ' az-index-wrap--more-left' : ''}`}>
+              {azMoreLeft
+                ? <button
+                    type="button"
+                    className="az-index__more az-index__more--prev"
+                    aria-label={t('directory.azScrollPrev')}
+                    onClick={() => scrollAzBy(-0.7)}
+                  ><Icon name="chevronRight" className="az-index__more-icon"/></button>
+                : null}
+              <nav className="az-index" aria-label={t('directory.azLabel')} ref={azRef}>
+                <a
                   className="az-index__letter"
-                  key={letter}
-                  href={`?${toSearchString({ ...state, initial: letter })}`}
-                  aria-current={state.initial === letter ? 'true' : undefined}
-                  title={t('directory.azCount', { count, letter })}
-                  onClick={event => { event.preventDefault(); setInitial(letter); }}
-                >{letter}</a>;
-              })}
-            </nav>
+                  href={`?${toSearchString({ ...state, initial: '' })}`}
+                  aria-current={state.initial ? undefined : 'true'}
+                  onClick={event => { event.preventDefault(); setInitial(''); }}
+                >{t('directory.azAll')}</a>
+                {[...ALPHABET, '#'].map(letter => {
+                  const count = letterCounts.get(letter) ?? 0;
+                  if (!count) {
+                    return <span className="az-index__letter az-index__letter--empty" key={letter} aria-disabled="true">{letter}</span>;
+                  }
+                  return <a
+                    className="az-index__letter"
+                    key={letter}
+                    href={`?${toSearchString({ ...state, initial: letter })}`}
+                    aria-current={state.initial === letter ? 'true' : undefined}
+                    title={t('directory.azCount', { count, letter })}
+                    onClick={event => { event.preventDefault(); setInitial(letter); }}
+                  >{letter}</a>;
+                })}
+              </nav>
+              {azMoreRight
+                ? <button
+                    type="button"
+                    className="az-index__more az-index__more--next"
+                    aria-label={t('directory.azScrollNext')}
+                    onClick={() => scrollAzBy(0.7)}
+                  ><Icon name="chevronRight"/></button>
+                : null}
+            </div>
 
             {/*
               One line that explains the result set before the reader has to

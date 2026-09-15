@@ -305,6 +305,8 @@ export default {
     azLabel: 'Jump to a letter',
     azAll: 'All',
     azCount: '{{count}} records starting with {{letter}}',
+    azScrollNext: 'Show more letters',
+    azScrollPrev: 'Show earlier letters',
     startingWith: 'Starting with {{letter}}',
   },
 

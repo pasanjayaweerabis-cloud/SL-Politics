@@ -374,6 +374,15 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  /* `.nav__links` normally carries the `margin-left: auto` that pushes
+     everything after it to the bar's right edge. Below 899px `.nav__links`
+     is `display: none` (see the mobile-drawer media query), which removes
+     that push along with it — without a margin of its own here, `.nav__actions`
+     stops being pushed and drifts left to sit flush against the logo/tagline
+     instead of staying pinned to the right edge. Redundant, not conflicting,
+     while `.nav__links` is visible: its own auto margin already claims all
+     the free space, so this one has none left to act on. */
+  margin-left: auto;
 }
 
 /* Icon buttons / language pill inside THIS header specifically follow the

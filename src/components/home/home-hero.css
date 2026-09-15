@@ -479,7 +479,12 @@
    collapse to hamburger lives in site-header.css at the matching
    breakpoint. */
 @media (max-width: 899px) {
-  .home-hero__search-submit { width: 58px; padding-inline: 0; border-radius: 50%; justify-content: center; }
+  /* `aspect-ratio: 1`, not a fixed width — the pill's own height is fluid
+     (`clamp(58px, 8vw, 74px)` above), so this button's `height: calc(100% -
+     16px)` shrinks with it below the clamp's upper bound. A fixed 58px width
+     held its shape only at the widest point of that range; anywhere narrower
+     it went oval. Matching width to height keeps it a circle everywhere. */
+  .home-hero__search-submit { aspect-ratio: 1; padding-inline: 0; border-radius: 50%; justify-content: center; }
   .home-hero__search-submit span { display: none; }
 
   /* Tablet portrait crops the panorama hardest (scaling to cover a

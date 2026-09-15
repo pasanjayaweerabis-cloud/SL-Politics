@@ -3675,13 +3675,86 @@ body:has(.section-nav:not(.section-nav--static)) [id]:is(h1, h2, h3) {
    cannot be clicked because there is nothing there, and that should be
    visible before the tap, not after. */
 
+.az-index-wrap { position: relative; }
+
 .az-index {
   display: flex;
   align-items: center;
   gap: 2px;
   overflow-x: auto;
-  scrollbar-width: thin;
   padding-bottom: var(--space-1);
+  /* The strip is the scroller; `.az-index__more` below is the only affordance
+     that should read as "more content" — a native scrollbar under it as well
+     is visual noise the strip's own fade-and-arrow already covers. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.az-index::-webkit-scrollbar { display: none; }
+
+/* Fades the letters under whichever floating arrow is showing, instead of
+   letting the strip crop the edge letter flush against it, so a hidden
+   letter reads as "more to scroll to" rather than as a rendering glitch.
+   Each modifier fades only the edge that actually has an arrow over it —
+   scrolled to the start, the left edge stays crisp; scrolled to the end,
+   the right edge does. */
+.az-index-wrap--more .az-index {
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+}
+
+.az-index-wrap--more-left .az-index {
+  mask-image: linear-gradient(to right, transparent 0%, #000 28px);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 28px);
+}
+
+.az-index-wrap--more.az-index-wrap--more-left .az-index {
+  mask-image: linear-gradient(to right, transparent 0%, #000 28px, #000 calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 28px, #000 calc(100% - 28px), transparent 100%);
+}
+
+/* Floating "more letters" affordance — only mounted while the strip has
+   overflow past that edge (see the ResizeObserver in DirectoryPage.jsx), so
+   a screen wide enough to lay out all 28 entries never shows either one,
+   and the leading arrow only appears once the reader has scrolled past the
+   start. */
+.az-index__more {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: var(--space-1);
+  margin: auto 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    transform var(--dur-press) var(--ease-out);
+}
+
+.az-index__more--next { right: 0; }
+.az-index__more--prev { left: 0; }
+.az-index__more--prev svg { transform: rotate(180deg); }
+
+.az-index__more svg { width: 14px; height: 14px; }
+
+.az-index__more:hover { background: var(--surface-soft); border-color: var(--link); color: var(--link); }
+.az-index__more:active { transform: scale(0.92); }
+.az-index__more--prev:active { transform: scale(0.92) rotate(180deg); }
+
+@media (pointer: coarse) {
+  .az-index__more { width: 30px; height: 30px; }
+  .az-index__more svg { width: 16px; height: 16px; }
 }
 
 .az-index__letter {
