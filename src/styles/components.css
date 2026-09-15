@@ -311,6 +311,11 @@
   line-height: 1.28;
   letter-spacing: -0.005em;
   margin: 0;
+  /* A person's name is the card's label, not a line of prose, so base.css's
+     26ch heading measure does not apply: it capped the name at 259px inside a
+     316px column, wrapping the longer names in the register one word earlier
+     than the card actually required. */
+  max-width: none;
 }
 
 .profile-card__name a { color: var(--text-primary); text-decoration: none; }
@@ -1762,7 +1767,19 @@
   opacity: 0.7;
 }
 
-.empty-state h3 { margin-top: var(--space-4); font-size: var(--text-lg); }
+/* `margin-inline: auto` is the load-bearing part, not the sizing. The block
+   is `text-align: center`, but base.css's 26ch cap on h1-h3 makes this h3 a
+   259px-wide BOX, and without an auto inline margin that box sits flush
+   against the left edge of a centred panel with its text centred inside
+   itself — measured at x=173 while the paragraph below it started at x=531
+   on /404. The paragraph underneath already had `margin-inline: auto`; the
+   heading was the one that missed it. The cap itself is kept: 26ch is a good
+   wrap width for a two-line empty-state title. */
+.empty-state h3 {
+  margin-top: var(--space-4);
+  margin-inline: auto;
+  font-size: var(--text-lg);
+}
 
 .empty-state p {
   margin-top: var(--space-2);
@@ -2162,6 +2179,17 @@
   background: var(--surface-inset);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  /* A segmented control is sized by its labels, not by its container. Left
+     at the default `stretch`, a two-tab profile spread one control across the
+     full 1152px column: two 563px slabs holding a 140px label each, centred
+     in all that emptiness. `fit-content` keeps every tab equal to the widest
+     one (`1fr` still does that work, and the travelling indicator's maths is
+     unchanged) while the control as a whole hugs its content and starts on
+     the page's left edge like everything else in the column. `max-width`
+     keeps it honest when the labels outgrow a narrow viewport, where the
+     per-page rules that make the strip scroll take over. */
+  width: fit-content;
+  max-width: 100%;
 }
 
 .tabs__tab {
@@ -2265,6 +2293,12 @@
        shrinking the type below where it should go. */
     grid-auto-flow: row;
     grid-auto-columns: auto;
+    /* `fit-content` is the right width for a horizontal segmented control
+       (it should not stretch across a wide column for two short labels), but
+       once the tabs stack it sizes the whole control to the widest LABEL:
+       measured at 227px of a 375px screen, a half-width stack of full-width
+       rows. Stacked, the control is a list and takes the column. */
+    width: auto;
   }
   .tabs__tab {
     justify-content: flex-start;
@@ -2396,6 +2430,15 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
+  /* base.css caps h1-h3 at 26ch, which is a reading measure for a heading
+     sitting in prose. This one is a CARD TITLE: it labels the panel it sits
+     on and has the whole card width available. Measured on the profile page,
+     the cap was 259px inside a 524px card head, so "Certifications &
+     Professional Qualifications" broke over THREE lines and "Public &
+     Institutional Service" over two, on every one of the 1,623 records.
+     Released here rather than raised globally — the 26ch measure is still
+     right for the page and section headings it was written for. */
+  max-width: none;
 }
 
 .section-card__head svg { width: 17px; height: 17px; color: var(--text-muted); flex-shrink: 0; }
@@ -2558,10 +2601,34 @@
 /* A live legal challenge. Bordered and tinted so it cannot be skimmed past,
    but deliberately not styled as an error or a verdict. */
 .entry--review {
-  border-left: 3px solid var(--warning);
-  padding-left: 0.9rem;
+  /* Was a 3px `--warning` bar down the left edge with the radius squared off
+     against it. That is the bookmark-tab treatment, and the site already owns
+     a shared way of saying "this block is qualified": `.notice--warning`
+     directly above pairs `--warning-bg` with a 1px `--warning-border` on all
+     four sides. Matching it makes the flag read as a property of the whole
+     entry instead of a tab stuck to its side, and it is no less impossible to
+     skim past — the tint, not the bar, was always doing that work. */
+  border: 1px solid var(--warning-border);
+  padding: 0.9rem;
   background: var(--warning-bg);
-  border-radius: 0 8px 8px 0;
+  border-radius: var(--radius);
+  /* `.entry` separates siblings with a bottom hairline and zeroes the outer
+     padding on the first and last of them. A boxed entry wants neither: it
+     needs its own padding on all four sides wherever it lands in the list,
+     and breathing room from the hairlines above and below it. These two
+     rules match the specificity of `.entry:first-child` / `:last-child` and
+     come later in the file, so they win without `!important`. */
+  margin-block: var(--space-2);
+}
+
+.entry--review:first-child { padding-top: 0.9rem; }
+.entry--review:last-child  {
+  padding-bottom: 0.9rem;
+  /* `.entry:last-child` drops the bottom hairline because the last row of a
+     list needs no separator under it. On a boxed entry that rule removes one
+     side of the box instead, leaving a three-sided outline — measured as
+     `border-width: 1px 1px 0`. Restored explicitly. */
+  border-bottom: 1px solid var(--warning-border);
 }
 .entry--review .entry__desc strong { color: var(--text); }
 .entry--review .badge { margin-top: 0.5rem; }
@@ -2683,7 +2750,11 @@
 .gov-card__name {
   margin: 0 0 var(--space-2);
   font-size: var(--text-md);
-  /* Long Sri Lankan names must wrap rather than overflow their card. */
+  /* Long Sri Lankan names must wrap rather than overflow their card. They
+     should use the card's full width first, though — base.css's 26ch heading
+     measure was capping this at 259px inside a 938px card body, so the wrap
+     happened for a reason that had nothing to do with the space available. */
+  max-width: none;
   overflow-wrap: anywhere;
 }
 .gov-card--lead .gov-card__name { font-size: var(--text-lg); }
@@ -3431,7 +3502,15 @@
   box-sizing: border-box;
   list-style: none;
   overflow-x: auto;
-  scrollbar-width: thin;
+  /* border-radius below is --radius-full (a true pill): a native scrollbar
+     is drawn as a flat rectangle regardless, so even coloured-in it pokes
+     out past the curve at both ends instead of following it. Same fix as
+     `.az-index` above for the same reason — hidden outright rather than
+     styled, since the row is short enough (a handful of section names) that
+     a partially-cut-off label at the edge already signals "more here"
+     without a separate affordance. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: saturate(180%) blur(10px);
   -webkit-backdrop-filter: saturate(180%) blur(10px);
@@ -3439,6 +3518,8 @@
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-xs);
 }
+
+.section-nav__list::-webkit-scrollbar { display: none; }
 
 .section-nav__link {
   display: inline-flex;

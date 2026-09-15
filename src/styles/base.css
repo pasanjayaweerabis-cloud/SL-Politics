@@ -414,6 +414,20 @@ a.u-plain:hover { text-decoration: none; }
   border-radius: var(--radius-xs);
 }
 
+/* ---- Selection ------------------------------------------------------
+   Left at the browser default, this is blue in both themes — the one UI
+   colour on the whole site that ignores "Civic Calm" entirely. Reuses
+   --focus-ring rather than a new token: same accent the interface already
+   uses to mark "the system is pointing at this", composited here over
+   --background/--d-background at each theme's own alpha (0.45 / 0.55) —
+   text-primary on top measures well clear of legible in both directions,
+   light teal-grey against near-black text, muted dark teal against
+   near-white. Not gated on prefers-reduced-motion: nothing here animates. */
+::selection {
+  background: var(--focus-ring);
+  color: var(--text-primary);
+}
+
 /* ---- Controls -------------------------------------------------------
    16px on every text input, not just the compact one — anything smaller
    makes iOS Safari zoom the viewport on focus. */

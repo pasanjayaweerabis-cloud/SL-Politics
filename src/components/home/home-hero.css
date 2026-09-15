@@ -487,6 +487,14 @@
   .home-hero__search-submit { aspect-ratio: 1; padding-inline: 0; border-radius: 50%; justify-content: center; }
   .home-hero__search-submit span { display: none; }
 
+  /* Once the submit button is a circle the pill loses the visual weight that
+     the 28px leading inset was balancing, and the inset is now just taking
+     room from the field. At 375px the input measured 185px of a 335px pill,
+     so the placeholder was cut mid-word. Tightening the inset and the
+     icon-to-text gap hands that space back to the text. */
+  .home-hero__search .search__field { padding-inline: 18px 8px; gap: 10px; }
+  .home-hero__search .search__icon { width: 20px; height: 20px; }
+
   /* Tablet portrait crops the panorama hardest (scaling to cover a
      roughly 3:4 viewport leaves well under half the width visible) —
      centre on Sigiriya rock rather than the gap between the two
@@ -498,6 +506,28 @@
 @media (max-width: 639px) {
   .home-hero__bottom { flex-direction: column; align-items: flex-start; gap: 16px; }
   .home-hero__bottom-tagline { display: none; }
+
+  /*
+     "Popular searches:" is a label for the four pills, but in a single wrap
+     row it becomes a fifth item competing with them for space. Measured at
+     375px, the label took the first row together with "President", and the
+     remaining three pills then staggered across two more rows starting from
+     different x positions each time — a five-item zigzag where the design is
+     one label and one block of four.
+
+     The fix stays inside the flex row already there. `width: 100%` on the
+     label fills its line, so the first pill has to wrap past it: the label
+     ends up on a line of its own and the four pills then wrap among
+     themselves against one left edge, two and two. No markup change, no
+     change of layout mechanism, and nothing here reaches the >=640px layout
+     where the row fits on one line as intended.
+  */
+  .home-hero__popular { gap: 10px; }
+
+  .home-hero__popular-label {
+    width: 100%;
+    margin-right: 0;
+  }
 
   /*
      The scrim is directional — strongest at the left, clearing by ~72% of

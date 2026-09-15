@@ -600,6 +600,15 @@
   border: none;
   border-radius: 0;
   border-bottom: 1px solid var(--line);
+  /* This block already strips the segmented-control look (background, border,
+     radius, padding) down to a bare underlined tab strip, and the width
+     belongs with them: `.tabs` now hugs its labels so a two-tab control does
+     not stretch across a whole column, but THIS variant is a full-width rule
+     with a travelling indicator positioned in percentages of it. Hugging the
+     labels would shorten the rule and leave the indicator's 25%-per-tab
+     arithmetic measuring the wrong box. */
+  width: auto;
+  max-width: none;
 }
 
 /* Travelling tier-tab indicator: the active tier's underline used to only
@@ -723,6 +732,7 @@
   .hds-profile .tabs {
     overflow-x: auto;
     scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
   }
 
   :root[data-hydrated] .hds-profile .tabs::after { content: none; }
