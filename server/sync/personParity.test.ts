@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { existsSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { join, resolve, dirname } from "node:path";
@@ -88,7 +88,7 @@ function assertSameMultiset(actual: string[], expected: string[], label: string)
 const norm = (v: unknown): string => (v === null || v === undefined || v === "" ? "∅" : String(v));
 
 describe.skipIf(!HAVE_DB)("PersonPage acceptance set: bundle vs database/API parity", () => {
-  const rawDb = new DatabaseSync(DB_PATH, { readOnly: true });
+  let rawDb: DatabaseSync;
   const queryable: Queryable = {
     get: (sql, params) => (rawDb.prepare(sql).get(...((params as never[] | undefined) ?? [])) ?? null) as never,
     all: (sql, params) => rawDb.prepare(sql).all(...((params as never[] | undefined) ?? [])) as never,
@@ -98,6 +98,7 @@ describe.skipIf(!HAVE_DB)("PersonPage acceptance set: bundle vs database/API par
   const dbResults = new Map<string, DbPersonResult>();
 
   beforeAll(async () => {
+    rawDb = new DatabaseSync(DB_PATH, { readOnly: true });
     for (const name of ACCEPTANCE_NAMES) {
       const [top] = suggestPeople(name, { limit: 1, today: FIXED_DAY });
       if (!top) throw new Error(`Acceptance person not found in the bundle by search: "${name}"`);
@@ -107,6 +108,10 @@ describe.skipIf(!HAVE_DB)("PersonPage acceptance set: bundle vs database/API par
       if (!dbResult) throw new Error(`"${name}" resolves to bundle id ${top.person.id}, absent from the database`);
       dbResults.set(name, dbResult);
     }
+  });
+
+  afterAll(() => {
+    rawDb.close();
   });
 
   it("finds all five acceptance people by the site's own search, in both stores", () => {
