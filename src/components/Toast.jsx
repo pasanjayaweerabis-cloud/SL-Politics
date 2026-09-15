@@ -171,8 +171,12 @@ function useVisibleToasts(list) {
   // (a copy button re-clicked right away) can come back alive before its own
   // exit timer above fires. Once that happens the live entry is what should
   // render — never a live copy and a still-fading ghost of the same id.
-  const liveIds = new Set(list.map(entry => entry.id));
-  return closing.filter(entry => !liveIds.has(entry.id));
+  // Memoised so the returned array keeps its identity between renders where
+  // neither input changed — Toaster's FLIP layout effect depends on it.
+  return React.useMemo(() => {
+    const liveIds = new Set(list.map(entry => entry.id));
+    return closing.filter(entry => !liveIds.has(entry.id));
+  }, [list, closing]);
 }
 
 function ToastItem({ entry, exiting, nodeRefCallback }) {
@@ -251,7 +255,7 @@ export function Toaster() {
   // their exit transition (already defined on `.toast`'s base rule) has
   // something on screen to play against — see useVisibleToasts above.
   const closing = useVisibleToasts(list);
-  const combined = [...list, ...closing];
+  const combined = React.useMemo(() => [...list, ...closing], [list, closing]);
   const statusToasts = combined.filter(entry => entry.variant !== 'error');
   const alertToasts = combined.filter(entry => entry.variant === 'error');
   const isExiting = entry => closing.includes(entry);

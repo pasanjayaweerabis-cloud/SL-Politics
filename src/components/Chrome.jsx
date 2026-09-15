@@ -186,28 +186,51 @@ function LanguageSwitcher({ compact = false }) {
  * `ThemeToggle` above: the value is correct on first paint for the case that
  * matters (a fresh load) and the observer only has to correct it for scroll
  * restoration, after mount.
+ *
+ * Read through `useSyncExternalStore` rather than `useState` + an effect: the
+ * hero's position is external DOM state, and the missing-hero fallback used
+ * to call setState synchronously in the effect body
+ * (react-hooks/set-state-in-effect). `subscribe` runs after mount, exactly
+ * where that effect did, and notifies React from there, so the same
+ * `true` -> corrected-after-mount sequence holds.
+ * The server snapshot is `true`, so prerendered HTML and hydration agree.
  */
 function useOverHero(active) {
-  const [overHero, setOverHero] = React.useState(true);
-  React.useEffect(() => {
-    if (!active) return undefined;
-    const hero = document.querySelector('.home-hero');
-    if (!hero) {
-      setOverHero(false);
-      return undefined;
-    }
-    // Flips once the hero's bottom edge scrolls above the fixed bar itself
-    // (16px top offset + its own height), not merely when the hero leaves
-    // the viewport entirely — matching "passes the wallpaper section", not
-    // "scrolls the whole page".
-    const observer = new IntersectionObserver(
-      ([entry]) => setOverHero(entry.isIntersecting),
-      { rootMargin: '-108px 0px 0px 0px', threshold: 0 }
-    );
-    observer.observe(hero);
-    return () => observer.disconnect();
-  }, [active]);
+  const store = React.useMemo(() => createOverHeroStore(active), [active]);
+  const overHero = React.useSyncExternalStore(store.subscribe, store.getSnapshot, getOverHeroServerSnapshot);
   return active && overHero;
+}
+
+const getOverHeroServerSnapshot = () => true;
+
+/** One store per `active` value; `useOverHero` above is its only reader. */
+function createOverHeroStore(active) {
+  let overHero = true;
+  return {
+    subscribe(onChange) {
+      if (!active) return () => {};
+      const hero = document.querySelector('.home-hero');
+      if (!hero) {
+        overHero = false;
+        onChange();
+        return () => {};
+      }
+      // Flips once the hero's bottom edge scrolls above the fixed bar itself
+      // (16px top offset + its own height), not merely when the hero leaves
+      // the viewport entirely — matching "passes the wallpaper section", not
+      // "scrolls the whole page".
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          overHero = entry.isIntersecting;
+          onChange();
+        },
+        { rootMargin: '-108px 0px 0px 0px', threshold: 0 }
+      );
+      observer.observe(hero);
+      return () => observer.disconnect();
+    },
+    getSnapshot: () => overHero,
+  };
 }
 
 export function Chrome({ route }) {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { existsSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { join, resolve, dirname } from "node:path";
@@ -50,6 +50,10 @@ import { allPeople, evidenceFor } from "../../src/services/repository.ts";
  *
  * SKIPPING. .data/javora.db is gitignored and absent in CI and a fresh clone,
  * so these skip there — the same pattern queries.postgres.test.ts uses.
+ * The database is opened in `beforeAll`, never in the `describe` body:
+ * Vitest still RUNS a skipped suite's body to collect its tests, so opening
+ * it there throws "unable to open database file" at collection time and
+ * fails the whole file in exactly the environment the skip exists for.
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -69,24 +73,39 @@ const FIXED_DAY = new Date("2026-08-31T00:00:00Z");
  * No alias map is needed here any more; if a future override ever needs one,
  * add it back deliberately rather than leaving empty scaffolding.
  *
- * KNOWN DIVERGENCE 2 — 353 of the database's positions have no
- * source_evidence row. The bundle has none of this problem: all of its
+ * KNOWN DIVERGENCE 2 — 2 of the database's positions have no
+ * source_evidence row (both open offices: parliament:1432's non-cabinet
+ * tourism portfolio and parliament:71's Chief Government Whip). It was 353
+ * until 15 September 2026: 351 past spells written by an early
+ * `scripts/promote-detail.mjs` run, before that script wrote evidence for
+ * the past spells it promotes, were backfilled with the exact rows its
+ * current version writes (backup in .data/backups/). The bundle has none of this problem: all of its
  * positions resolve at least one evidence row (asserted below, strictly).
  *
  * Provenance per claim is the property this project exists to keep, so this is
  * a ratchet, not a permanent exemption: the count may fall, never rise.
  */
-const DB_POSITIONS_WITHOUT_EVIDENCE_BASELINE = 353;
+const DB_POSITIONS_WITHOUT_EVIDENCE_BASELINE = 2;
 
 describe.skipIf(!HAVE_DB)("bundled dataset and database agree where they overlap", () => {
-  const db = new DatabaseSync(DB_PATH, { readOnly: true });
+  // Opened in beforeAll, not here — see SKIPPING in the header comment.
+  let db: DatabaseSync;
   const rows = <T,>(sql: string): T[] => db.prepare(sql).all() as T[];
 
-  const dbPeople = rows<{ id: string; slug: string; canonical_name: string }>(
-    "SELECT id, slug, canonical_name FROM person",
-  );
+  let dbPeople: { id: string; slug: string; canonical_name: string }[];
   const bundle = allPeople(FIXED_DAY);
   const bundleById = new Map(bundle.map((v) => [v.person.id, v]));
+
+  beforeAll(() => {
+    db = new DatabaseSync(DB_PATH, { readOnly: true });
+    dbPeople = rows<{ id: string; slug: string; canonical_name: string }>(
+      "SELECT id, slug, canonical_name FROM person",
+    );
+  });
+
+  afterAll(() => {
+    db?.close();
+  });
 
   it("has people in both stores to compare", () => {
     expect(dbPeople.length).toBeGreaterThan(0);

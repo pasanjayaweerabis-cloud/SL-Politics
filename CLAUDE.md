@@ -239,9 +239,13 @@ deleted outright, so the history of what used to diverge is not lost:
   use; `.env.production.example`/`.env.staging.example` already carry the
   recommended intervals.
 
-1. **353 of the database's positions have no evidence row.** The bundle is
-   clean — all of its positions resolve at least one. Tracked as a ratchet
-   that may fall, never rise. 58 further positions (malformed source dates —
+1. **2 of the database's positions have no evidence row** (both open
+   offices: `parliament:1432`, `parliament:71`). The bundle is clean — all of
+   its positions resolve at least one. Tracked as a ratchet that may fall,
+   never rise. It was 353 until 15 September 2026, when the 351 past spells
+   an early `promote-detail.mjs` run wrote without evidence were backfilled
+   with the rows the current script writes — backup:
+   `.data/backups/javora-pre-evidence-backfill-2026-09-15T18-31-45Z.db`. 58 further positions (malformed source dates —
    Parliament's own past-member records occasionally publish an end date
    before the start date) are in the bundle but were skipped rather than
    written to the database at all, since the schema's `end_date >= start_date`
