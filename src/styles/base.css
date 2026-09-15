@@ -192,6 +192,63 @@ html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
   scroll-padding-top: calc(var(--nav-offset) + var(--space-4));
+
+  /* Reserve the scrollbar's width even when nothing is scrolling. The drawer
+     and the search overlay both set `overflow: hidden` on open; without this
+     the bar vanishes and every fixed/centred element on the page — the nav,
+     the hero headline — jumps sideways by the bar's width at the moment the
+     overlay appears. Costs a few px of gutter, removes a visible shift. */
+  scrollbar-gutter: stable;
+
+  /* Firefox / the standard property. The thumb colour is themed; the track
+     is transparent in BOTH themes so the hero photograph reads through it. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+/* ==========================================================================
+   Page scrollbar — WebKit/Blink
+   ==========================================================================
+   The scrollbar is deliberately NOT hidden over the hero image. It is the
+   page scrollbar, not the hero's: revealing it only below the fold would pop
+   it in mid-scroll, and on platforms with non-overlay scrollbars that pop is
+   also a layout reflow. Above the fold is precisely where a first-time reader
+   needs the "there is more below" signal, since the hero fills the viewport.
+
+   So this styles it down rather than away — transparent track, thin rounded
+   thumb inset from the edge by a transparent border, low contrast until
+   hovered. `background-clip: content-box` is what makes that border read as
+   padding around the thumb instead of as part of it; it must be repeated in
+   the :hover rule, because `background` shorthand there would reset it.
+
+   These selectors are ignored by Firefox, which uses the standard
+   `scrollbar-width`/`scrollbar-color` pair on `html` above. Both paths are
+   declared; neither is a fallback for the other. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+  background-clip: content-box;
+}
+
+/* Where the two bars meet, the default corner is an opaque light square —
+   as conspicuous over the photograph as the track it sits beside. */
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {

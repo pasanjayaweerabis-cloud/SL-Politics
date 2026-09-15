@@ -1117,6 +1117,7 @@ const PROFILE_TABS = [
   {
     id: 'performance',
     label: 'Performance',
+    icon: 'award',
     sections: [
       { id: 'hds-outcomes', title: 'Outcome indicators' },
       { id: 'hds-promises', title: 'Promises' },
@@ -1127,6 +1128,7 @@ const PROFILE_TABS = [
   {
     id: 'record',
     label: 'Decisions & voting',
+    icon: 'scale',
     sections: [
       { id: 'hds-votes', title: 'Voting record' },
       { id: 'hds-attribution', title: 'Responsibility' },
@@ -1135,11 +1137,13 @@ const PROFILE_TABS = [
   {
     id: 'policies',
     label: 'Policy positions',
+    icon: 'document',
     sections: [{ id: 'hds-policies', title: 'Policies & public positions' }],
   },
   {
     id: 'profile',
     label: 'Role & career',
+    icon: 'user',
     sections: [
       { id: 'hds-role', title: 'Position' },
       { id: 'hds-career', title: 'Career detail' },
@@ -1239,7 +1243,7 @@ export default function PortfolioProfile({ content }) {
 
   useHashNavigation(setActiveTab, setExpandedInterventions);
 
-  const tabs = useMemo(() => PROFILE_TABS.map(tab => ({ id: tab.id, label: tab.label })), []);
+  const tabs = useMemo(() => PROFILE_TABS.map(tab => ({ id: tab.id, label: tab.label, icon: tab.icon })), []);
   const sectionsOf = id => PROFILE_TABS.find(tab => tab.id === id)?.sections ?? [];
   /**
    * The per-panel "on this page" row. Rendered INSIDE its own TabPanel, not

@@ -570,53 +570,89 @@
 }
 
 /* ==========================================================================
-   Tabs — Tier A Performance / Tier B Record / Tier C Policies / Tier D
-   Profile.
-
+   Tabs — Performance / Decisions & voting / Policy positions / Role & career
+   ==========================================================================
    Reuses the sitewide Tabs/TabPanel components (src/components/Tabs.jsx) for
    their accessibility behaviour (roving tabindex, manual activation, real
-   role="tablist"/"tab"/"tabpanel"), but overrides their visual treatment
-   entirely for this page: four equal-width columns, each a small uppercase
-   "Tier X" eyebrow stacked over a larger serif label — a calm, editorial
-   strip with a thin gold underline on the active tab, never colour alone
-   (weight and the underline both change too). Below ~360px the four columns
-   no longer fit their comfortable minimum width, so the strip scrolls
-   horizontally as a single row rather than wrapping into a 2x2 grid — the
-   same overflow-x:auto fallback the sitewide `.tabs` already relies on
-   elsewhere, keeping one reading order instead of two. Scoped under
-   .hds-profile so no other page's tabs (the default Education/Political
-   pair) are affected.
+   role="tablist"/"tab"/"tabpanel") AND, since this rewrite, for their visual
+   language too: the same segmented control the two-tab person profile uses —
+   a padded inset track, a raised card on the active segment, icon beside a
+   serif label.
+
+   It previously overrode that language entirely, as a bare rule with a gold
+   underline travelling along it. The underline was not wrong in isolation;
+   it was wrong HERE, one row above a second navigation row (the "on this
+   page" jump links), because an underlined strip and a pill bar are two
+   different idioms carrying roughly equal weight, and a reader had nothing
+   to tell them which one switched the record and which one scrolled inside
+   it. Matching the sitewide control does two things at once: the tab strip
+   now reads the same on this page as on every other profile, and the jump
+   row below can be quieted (see the block after this one) into something
+   visibly subordinate rather than merely different.
+
+   What survives from the underlined version is its mechanism — four equal
+   columns, a single indicator whose position is arithmetic rather than
+   measured, hydration-gated so the prerendered HTML keeps a correct marker
+   without JS. Only the indicator's shape changed, from a 2px rule to the
+   card. Scoped under .hds-profile: the shared `.tabs` rules in
+   components.css are the source of the look, not a target of these edits.
    ========================================================================== */
 
 .hds-profile__tabs-wrap { display: contents; }
 
+/* The segmented control itself. `gap: 0` is load-bearing, not a default left
+   alone: the travelling card below is positioned in percentages of this box,
+   so any gap between the columns would make "one quarter of the track" stop
+   being "one tab" and slide the card progressively out of register across
+   the four positions. The separation image-wise comes from the card's own
+   inset inside the padded track, which is how a segmented control shows it. */
 .hds-profile .tabs {
+  /* Named once and read by BOTH the padding here and the travelling card's
+     arithmetic below — they are the same measurement, and a card computed
+     against a padding that had since changed would sit off its tab. */
+  --seg-pad: var(--space-1);
+
+  /* The divider above (.hds-profile__divider) carries `margin: 0` on
+     purpose — every OTHER section on this page supplies its own spacing
+     via padding (.hds-profile__section, .hds-profile__meta-strip), so the
+     divider stays a bare rule and each side of it is responsible for its
+     own clearance. `.hds-profile__tabs-wrap` is `display: contents` (it
+     exists only to carry `data-active-index`), so it generates no box of
+     its own for a margin to land on — this has to sit on `.tabs` directly,
+     same as the legend above it takes its own `margin-top`. Without it the
+     control sat flush against the divider's hairline, indistinguishable
+     from a border on the control itself. */
+  margin-top: var(--space-5);
+
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
   overflow-x: hidden;
-  padding: 0;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  border-bottom: 1px solid var(--line);
-  /* This block already strips the segmented-control look (background, border,
-     radius, padding) down to a bare underlined tab strip, and the width
-     belongs with them: `.tabs` now hugs its labels so a two-tab control does
-     not stretch across a whole column, but THIS variant is a full-width rule
-     with a travelling indicator positioned in percentages of it. Hugging the
-     labels would shorten the rule and leave the indicator's 25%-per-tab
-     arithmetic measuring the wrong box. */
-  width: auto;
-  max-width: none;
+  padding: var(--seg-pad);
+  background: var(--surface-inset);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  /* Hugs its labels, like the sitewide two-tab control: four equal columns
+     sized to the widest label, starting at the page's left edge rather than
+     stretched across the full 1152px column. The previous underlined variant
+     needed `width: auto` because its indicator measured a full-width rule;
+     the card is positioned against whatever box this actually is, so the
+     constraint is gone. `max-width` hands over to the scrolling rules below
+     once the labels outgrow a narrow viewport. */
+  width: fit-content;
+  max-width: 100%;
 }
 
-/* Travelling tier-tab indicator: the active tier's underline used to only
-   crossfade its border-color, which reads as two separate things lighting
-   up rather than one indicator moving. Four equal grid columns mean the
-   position is arithmetic (25% per index), not measurement — no JS, no
-   ResizeObserver. Hydration-gated: the per-tab border-bottom below is the
-   no-JS baseline and must keep working in the prerendered HTML.
+/* Travelling card: the active segment is a raised card that MOVES between
+   positions, rather than four cards crossfading their background — one
+   object changing place reads as the control responding, which is the whole
+   point of a segmented control over four separate buttons.
+
+   Four equal columns mean the position is arithmetic, not measurement: no
+   JS, no ResizeObserver. `inline-size` is one column — the track's content
+   width (the padding box less both paddings) over four — and `translate` is
+   then a whole multiple of the card's OWN width, which is what makes the
+   per-index rules below plain 100%/200%/300%.
 
    Driven by a `data-active-index` attribute, not an inline custom-property
    style: this site's CSP ships `style-src 'self'` with no `unsafe-inline`
@@ -625,6 +661,10 @@
    an inline `style` from React does trigger and get blocked by that policy.
    Four fixed columns means four fixed offsets, so a discrete attribute
    selector per index costs nothing over a computed custom property.
+
+   Hydration-gated: the per-tab card further down is the no-JS baseline and
+   must keep working in the prerendered HTML, where no index attribute has
+   been read and nothing can move.
 
    Uses the `translate` property, not `transform`, so it needs its own
    explicit reduced-motion opt-out in base.css (base.css's global override
@@ -636,45 +676,69 @@
 :root[data-hydrated] .hds-profile .tabs::after {
   content: "";
   position: absolute;
-  inset-block-end: -1px;
-  inset-inline-start: 0;
-  inline-size: 25%;
-  block-size: 2px;
-  background: var(--amber);
+  /* Absolute positioning resolves against the PADDING box, so insetting by
+     the same --seg-pad the track is padded with lands the card exactly on
+     the grid's content area. */
+  inset-block: var(--seg-pad);
+  inset-inline-start: var(--seg-pad);
+  inline-size: calc((100% - 2 * var(--seg-pad)) / 4);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
   translate: 0 0;
   transition: translate var(--dur) var(--ease-out);
   pointer-events: none;
+  /* Behind the labels. The buttons take `position: relative` + `z-index: 1`
+     for this: a positioned pseudo-element otherwise paints above its
+     non-positioned in-flow siblings and the card would cover its own text. */
+  z-index: 0;
 }
 
 :root[data-hydrated] .hds-profile__tabs-wrap[data-active-index="1"] .tabs::after { translate: 100% 0; }
 :root[data-hydrated] .hds-profile__tabs-wrap[data-active-index="2"] .tabs::after { translate: 200% 0; }
 :root[data-hydrated] .hds-profile__tabs-wrap[data-active-index="3"] .tabs::after { translate: 300% 0; }
 
-/* With the travelling indicator present, the per-tab underline would double it. */
+/* With the travelling card present, the per-tab one would double it — two
+   cards, one of them stationary under the wrong label mid-transition. */
 :root[data-hydrated] .hds-profile .tabs__tab--active {
-  border-bottom-color: transparent;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .hds-profile .tabs__tab {
-  display: flex;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: auto;
-  padding: var(--space-3) var(--space-2);
-  margin-bottom: -1px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
+  gap: var(--space-3);
+  min-height: 46px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
   background: transparent;
   text-align: center;
   line-height: 1.2;
   box-shadow: none;
-  transition: border-color var(--dur) var(--ease);
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    transform var(--dur-press) var(--ease-out);
 }
 
-/* One line, not two: the "Tier A" eyebrow that used to sit above each label
-   is gone (see PROFILE_TABS in PortfolioProfile.jsx), so the label itself is
-   the tab. */
+/* Icon + label, matching the sitewide control. The icon is a second,
+   non-verbal handle on a four-way choice whose labels are all abstract
+   nouns; it is never the only marking of anything. */
+.hds-profile .tabs__tab svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: color var(--dur) var(--ease);
+}
+
 .hds-profile .tabs__tab > span {
   display: block;
   font-family: var(--font-serif);
@@ -684,24 +748,32 @@
   transition: color var(--dur) var(--ease);
 }
 
-.hds-profile .tabs__tab:hover > span { color: var(--ink); }
+.hds-profile .tabs__tab:hover > span,
+.hds-profile .tabs__tab:hover svg { color: var(--ink); }
 
-/* The selected tab is marked by weight, colour AND the underline — never
-   colour alone, which would vanish for anyone who cannot see it. */
+/* Press feedback — scale only, ungated so it works on touch too. */
+.hds-profile .tabs__tab:active { transform: scale(0.98); }
+
+/* The selected tab is marked by the card, the weight AND the colour — never
+   colour alone, which would vanish for anyone who cannot see it. The card
+   declared here is the no-JS baseline; once hydrated the rule above hands
+   that job to the travelling one and only type and colour remain. */
 .hds-profile .tabs__tab--active {
-  background: transparent;
-  border-bottom-color: var(--amber);
-  box-shadow: none;
+  background: var(--surface-elevated);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-xs);
 }
 
 .hds-profile .tabs__tab--active > span {
-  color: var(--ink);
+  color: var(--primary);
   font-weight: 600;
 }
 
+.hds-profile .tabs__tab--active svg { color: var(--secondary); }
+
 .hds-profile .tabs__tab:focus-visible {
   outline: 2px solid var(--focus-outline);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
 .hds-profile [role="tabpanel"]:focus {
@@ -709,37 +781,120 @@
 }
 
 /*
-   Below ~405px the four labels no longer fit four equal columns: the grid's
-   content measures 365px against a 320-350px box. `overflow-x: hidden` was
-   clipping the difference, which meant "Role & career" — a quarter of this
+   Below ~420px the four labels no longer fit four equal columns, so the
+   track scrolls horizontally as a single row rather than wrapping into a
+   2x2 grid — one reading order instead of two. `overflow-x: hidden` used to
+   clip the difference here, which meant "Role & career" — a quarter of this
    profile — could not be reached at all with a finger or a mouse on a
    360/390px phone. (Keyboard users could still get there: focus scrolls a
-   clipped box into view even when a pointer cannot.) The comment at the top
-   of this section always described `overflow-x: auto`; only the value was
-   wrong.
+   clipped box into view even when a pointer cannot.)
 
    420px is measured, not chosen: the strip overflows at 390 and fits at 430.
+   `width: 100%` goes with it — a scrolling track should fill the column it
+   scrolls inside rather than hug labels it can no longer show at once.
 
-   The travelling indicator has to stand down here. Its position is
-   arithmetic — 25% of the box per tab index — which is only correct while
-   four columns really are a quarter of the visible width each. Once the
-   strip scrolls, 25% is no longer a tab, so the indicator would sit under
-   the wrong one. The per-tab `border-bottom` it replaces is still in the
-   stylesheet as the no-JS baseline, so standing down means falling back to
-   a marker that is always right rather than losing the marking entirely.
+   The travelling card has to stand down. Its position is arithmetic — one
+   quarter of the track per tab index — which is only correct while four
+   columns really are a quarter of the visible width each. Once the track
+   scrolls, a quarter is no longer a tab, so the card would sit under the
+   wrong one. The per-tab card it replaces is still in the stylesheet as the
+   no-JS baseline, so standing down means falling back to a marker that is
+   always right rather than losing the marking entirely.
 */
 @media (max-width: 420px) {
   .hds-profile .tabs {
     overflow-x: auto;
+    width: 100%;
     scrollbar-width: thin;
-    scrollbar-color: var(--border-strong) transparent;
+    /* The page scrollbar's own thumb tokens (base.css), so an inner
+       scrolling track does not introduce a second scrollbar treatment. */
+    scrollbar-color: var(--scrollbar-thumb) transparent;
   }
 
   :root[data-hydrated] .hds-profile .tabs::after { content: none; }
 
   :root[data-hydrated] .hds-profile .tabs__tab--active {
-    border-bottom-color: var(--amber);
+    background: var(--surface-elevated);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-xs);
   }
+}
+
+/* ==========================================================================
+   The per-tab "on this page" jump row, SUBORDINATE to the strip above
+   ==========================================================================
+   Both rows are navigation, they stack directly on top of each other, and
+   before this they carried nearly the same weight: a bordered, shadowed,
+   blurred pill bar under a bordered, shadowed control. Two controls of equal
+   weight do not tell a reader which one changes the page and which one moves
+   within it.
+
+   So the hierarchy is made explicit rather than left to position: the strip
+   above keeps the serif label, the 46px target and the raised card; this row
+   drops to small sans text, a 32px target, a hairline and no shadow, and
+   marks its current section with a flat tint instead of a card. It keeps its
+   translucent background because it is sticky (components.css) — a row that
+   dense record text scrolls underneath cannot be transparent.
+   ========================================================================== */
+
+/* The sitewide row carries its own page gutter (components.css:
+   `padding-inline: var(--space-6)`), because elsewhere it is a full-width
+   sticky band with no container around it. Here it sits INSIDE
+   .hds-profile__container, which already applies that same gutter — so the
+   two stacked and the jump row started 24px to the right of the tab strip
+   directly above it. Two navigation rows for the same panel, on two
+   different left edges. Zeroed at every width: the container's own
+   breakpoint (space-6, space-5 below 640px) is the gutter for both. */
+.hds-profile .section-nav {
+  padding-inline: 0;
+  /* Same reasoning as the tab strip's own `margin-top` above: nothing
+     between the strip and this row supplies vertical clearance on its own
+     (no divider sits between them in the markup at all), so the jump row
+     sat flush against the tab strip's bottom edge — two stacked
+     navigation rows reading as one fused control instead of a primary
+     strip with a subordinate row beneath it. */
+  margin-top: var(--space-4);
+}
+
+.hds-profile .section-nav__list {
+  padding: var(--space-1) var(--space-2);
+  min-height: auto;
+  border-color: var(--line);
+  box-shadow: none;
+  /* Hugs its links, like the segmented control above. Stretched, a panel
+     with two short sections ("Voting record", "Responsibility") drew a
+     912px capsule holding 190px of text, which reads as a bar that failed
+     to load rather than as two links. `max-width` keeps the existing
+     overflow-x scrolling intact once the links outgrow the column. */
+  width: fit-content;
+  max-width: 100%;
+}
+
+.hds-profile .section-nav__link {
+  min-height: 32px;
+  padding-inline: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.hds-profile .section-nav__link:hover {
+  background: var(--panel-soft);
+  color: var(--ink);
+}
+
+/* Flat tint, not the raised card above: current-within-the-panel, not
+   selected-panel. Still weight + background together, never colour alone. */
+.hds-profile .section-nav__link[aria-current] {
+  background: var(--surface-inset);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  /* Touch target back to the sitewide floor — the visual hierarchy above is
+     worth keeping, a 32px tap target on a phone is not. */
+  .hds-profile .section-nav__link { min-height: 40px; }
 }
 
 /* ==========================================================================

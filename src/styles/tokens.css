@@ -159,6 +159,14 @@
 
   --scrim: rgba(37, 50, 56, 0.32);
 
+  /* ---- Scrollbar --------------------------------------------------- */
+  /* Track is ALWAYS transparent (see base.css): the hero photograph runs
+     under the scrollbar, and a painted track would cut a bright hard-edged
+     strip across it. Only the thumb is visible, and it is deliberately
+     low-contrast until hovered — the affordance stays, the noise does not. */
+  --scrollbar-thumb:       rgba(37, 50, 56, 0.26);
+  --scrollbar-thumb-hover: rgba(37, 50, 56, 0.48);
+
   /* ---- Logo -------------------------------------------------------- */
   /* Supplied mark is a flat #939BA9 on transparency. Never recoloured. */
   --logo-opacity: 1;
@@ -286,6 +294,10 @@
 
   --d-scrim: rgba(6, 12, 13, 0.65);
 
+  /* Light thumb on the dark ground, same restraint as the light theme. */
+  --d-scrollbar-thumb:       rgba(226, 235, 233, 0.20);
+  --d-scrollbar-thumb-hover: rgba(226, 235, 233, 0.42);
+
   --d-logo-opacity: 0.94;
 
   /* Header card, dark mode: same surface family as --d-nav-bg, same alpha
@@ -401,7 +413,8 @@
   --hero-sub-text:     var(--d-hero-sub-text);
   --hero-hint-text:    var(--d-hero-hint-text);
 
-  --scrim: var(--d-scrim);
+  --scrim: var(--d-scrim);  --scrollbar-thumb:       var(--d-scrollbar-thumb);
+  --scrollbar-thumb-hover: var(--d-scrollbar-thumb-hover);
 
   --logo-opacity: var(--d-logo-opacity);
 
@@ -500,7 +513,8 @@
     --hero-sub-text:     var(--d-hero-sub-text);
     --hero-hint-text:    var(--d-hero-hint-text);
 
-    --scrim: var(--d-scrim);
+    --scrim: var(--d-scrim);    --scrollbar-thumb:       var(--d-scrollbar-thumb);
+    --scrollbar-thumb-hover: var(--d-scrollbar-thumb-hover);
 
     --logo-opacity: var(--d-logo-opacity);
 
