@@ -243,16 +243,25 @@
    ========================================================================== */
 
 .hds-profile__hero {
+  /* One value driving both the grid track and the image below, so desktop,
+     tablet and mobile portrait sizing can never drift apart into two numbers
+     that happen to agree at one width and not another. Tapers smoothly from
+     ~120px at a narrow phone to the full 180px at >=1200px desktop, rather
+     than jumping between two fixed sizes at a single breakpoint — see the
+     "no abrupt jump" requirement in the responsive spec this satisfies.
+     Overridden outright (not tapered further) for short-height landscape
+     phones below. */
+  --portrait-size: clamp(120px, 7vw + 96px, 180px);
   display: grid;
-  grid-template-columns: 180px 1fr;
+  grid-template-columns: var(--portrait-size) 1fr;
   gap: var(--space-6);
   align-items: start;
   padding: var(--space-8) 0 var(--space-10);
 }
 
 .hds-profile__portrait {
-  width: 180px;
-  height: 180px;
+  width: var(--portrait-size);
+  height: var(--portrait-size);
   background: var(--portrait-bg);
   border-radius: var(--radius-lg);
   /* A visible ring plus a soft cast shadow, not just a bigger box — makes
@@ -748,6 +757,17 @@
   transition: color var(--dur) var(--ease);
 }
 
+/* The short form is desktop-inert: hidden here, and only switched on inside
+   the compact layout below. Colour/weight/hover/active states come from the
+   generic `> span` rules above and stay shared between both spans — this
+   pair only ever differs on which one is visible and, in the compact
+   breakpoint, on font.
+   Selector includes the `span` type, matching `.tabs__tab > span` above
+   class-for-class plus one type selector — one class alone would lose that
+   specificity fight and both spans would render at once regardless of which
+   one this says to hide. */
+.hds-profile .tabs__tab > span.tabs__tab-label--short { display: none; }
+
 .hds-profile .tabs__tab:hover > span,
 .hds-profile .tabs__tab:hover svg { color: var(--ink); }
 
@@ -781,34 +801,72 @@
 }
 
 /*
-   Below ~420px the four labels no longer fit four equal columns, so the
-   track scrolls horizontally as a single row rather than wrapping into a
-   2x2 grid — one reading order instead of two. `overflow-x: hidden` used to
-   clip the difference here, which meant "Role & career" — a quarter of this
-   profile — could not be reached at all with a finger or a mouse on a
-   360/390px phone. (Keyboard users could still get there: focus scrolls a
-   clipped box into view even when a pointer cannot.)
+   Below 720px this becomes a compact, icon-over-label control — four equal
+   columns that always fit in one row, at any width down to a 375px phone,
+   with nothing to scroll.
 
-   420px is measured, not chosen: the strip overflows at 390 and fits at 430.
-   `width: 100%` goes with it — a scrolling track should fill the column it
-   scrolls inside rather than hug labels it can no longer show at once.
+   Two earlier approaches were tried and both failed the same way, for
+   related reasons:
 
-   The travelling card has to stand down. Its position is arithmetic — one
-   quarter of the track per tab index — which is only correct while four
-   columns really are a quarter of the visible width each. Once the track
-   scrolls, a quarter is no longer a tab, so the card would sit under the
-   wrong one. The per-tab card it replaces is still in the stylesheet as the
-   no-JS baseline, so standing down means falling back to a marker that is
-   always right rather than losing the marking entirely.
+   1. Side-by-side icon+label, `repeat(4, 1fr)`, no scrolling. "Performance"
+      is one unbreakable word, so its column can never shrink below that
+      word's full rendered width; the other three labels can each wrap to
+      their narrowest word instead. Below ~715px (measured against the
+      current English labels) that gap forces four UNEQUAL columns —
+      confirmed at 660px width: 164.9px / 145.7px / 145.7px / 145.7px, not
+      four quarters — while the travelling card (below) still moves in flat
+      25%-width, 100%-multiple steps and visibly drifts off the active tab.
+   2. Side-by-side icon+label, horizontally scrolling. Fixes the drift (the
+      travelling card stands down below), but a reader on a 360-390px phone
+      now has to scroll a nav bar sideways to find "Role & career", and nothing
+      on screen says the strip scrolls until they try.
+
+   Stacking the icon above a SHORT label sidesteps the actual constraint
+   instead of working around it: a word like "Positions" or "Career" sitting
+   under its icon needs only its own width, not the width of "Policy
+   positions" or "Role & career" beside an icon. All four short words fit
+   inside a quarter of even a 375px screen with room to spare, so the columns
+   stay genuinely equal — no wrap-driven asymmetry to produce, no overflow to
+   scroll. `Tabs.jsx` renders the short form as a second span
+   (`tab.shortLabel`, only when a caller supplies one); the full label stays
+   in the DOM either way; and `--min-width: 720px` in the section below flips
+   which span is visible. `display: none` on the hidden one drops it from the
+   accessibility tree too, so the control's accessible name always matches
+   what's actually on screen, not a truncation of it.
+
+   The travelling card still has to stand down, for the same reason as
+   before: its position is arithmetic — one quarter of the track per tab
+   index — which needs a JS-free way to KNOW the columns are equal, and nothing
+   here proves that at every possible width the way "always render short,
+   unbreakable words" does structurally. The flat per-tab card it falls back
+   to doesn't need that guarantee: it draws on the tab that's actually active,
+   whatever width that tab actually ended up.
 */
-@media (max-width: 420px) {
+@media (max-width: 720px) {
   .hds-profile .tabs {
-    overflow-x: auto;
     width: 100%;
-    scrollbar-width: thin;
-    /* The page scrollbar's own thumb tokens (base.css), so an inner
-       scrolling track does not introduce a second scrollbar treatment. */
-    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+
+  .hds-profile .tabs__tab {
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-1);
+    min-height: 64px;
+  }
+
+  .hds-profile .tabs__tab svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .hds-profile .tabs__tab > span.tabs__tab-label--full { display: none; }
+
+  .hds-profile .tabs__tab > span.tabs__tab-label--short {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: var(--text-micro);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
   }
 
   :root[data-hydrated] .hds-profile .tabs::after { content: none; }
@@ -895,6 +953,75 @@
   /* Touch target back to the sitewide floor — the visual hierarchy above is
      worth keeping, a 32px tap target on a phone is not. */
   .hds-profile .section-nav__link { min-height: 40px; }
+}
+
+/*
+   Below 720px this drops the pill-per-link treatment for the same reason the
+   tab strip above it does: short, evenly-spaced words that always fit beat a
+   row that silently scrolls sideways with no visible affordance saying so
+   (the sitewide `.section-nav__list` hides its own scrollbar — a real
+   overflow with nothing on screen to show it exists). "Major programmes" and
+   "Interventions" next to "Outcome indicators" and "Promises" do not fit
+   four-across on a 375px phone without either wrapping (see the tab strip's
+   own reasoning above for why that reads as two rows instead of one control)
+   or scrolling past the edge — so this uses the same fix: shorter words
+   (`section.shortTitle`, only where the full title is actually too long to
+   keep) and equal flex shares that fill the row exactly, so there is nothing
+   left over to scroll.
+
+   The active mark changes from a filled tint to an underline purely for
+   space: the tint's box-shadow and background needed padding around the text
+   to read as a pill, and that padding is exactly what a four-across row at
+   375px does not have to spare. The underline keeps two signals — weight AND
+   shape, never colour alone — same as the tint did.
+*/
+@media (max-width: 720px) {
+  .hds-profile .section-nav__list {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .hds-profile .section-nav__link {
+    flex: 1 1 0;
+    justify-content: center;
+    padding-inline: var(--space-1);
+    /* --text-micro, not --text-xs: matches the tab strip's own short-label
+       size above, and at --text-xs the four Performance-tab links (the
+       worst case — the other panels hold 2-3) measured 287px of content in
+       278px of track at a 320px viewport, a 9px overflow with nothing on
+       screen to show it was there. --text-micro closes it with room held in
+       reserve. */
+    font-size: var(--text-micro);
+    white-space: nowrap;
+  }
+
+  /* Hide the full title only on a link that actually HAS a short one to show
+     instead ("Promises" has no `shortTitle` — it's short enough already —
+     and rendered no `--short` span at all; unconditionally hiding `--full`
+     here left it with nothing visible at all, collapsed to a blank pill). */
+  .hds-profile .section-nav__link:has(.section-nav__link-label--short) > .section-nav__link-label--full {
+    display: none;
+  }
+
+  .hds-profile .section-nav__link-label--short { display: inline; }
+
+  .hds-profile .section-nav__link[aria-current] {
+    position: relative;
+    background: none;
+    box-shadow: none;
+  }
+
+  .hds-profile .section-nav__link[aria-current]::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 3px;
+    translate: -50% 0;
+    width: 18px;
+    height: 2px;
+    border-radius: var(--radius-full);
+    background: var(--secondary);
+  }
 }
 
 /* ==========================================================================
@@ -1081,6 +1208,20 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   overflow-x: auto;
+  /* Without this, a wide table (900-1150px) scrolling correctly inside this
+     wrap at tablet width still leaks into the PAGE's own scrollable area: the
+     wrap visibly clips and scrolls its table exactly as intended, but
+     `document.documentElement.scrollWidth` measures wider than the viewport
+     regardless, and a real trackpad/wheel gesture with any horizontal
+     component can drag the whole page sideways by the difference — reachable
+     only once tablet widths kept a real (wider-than-viewport) table here
+     instead of always converting to cards. `contain: layout paint` makes
+     this box a genuine containment boundary, so its internal scrollable
+     content stops counting towards any ancestor's — including the
+     document's — scrollable area. Confirmed by measurement, not merely
+     read from the spec; see the responsive audit this satisfies (no
+     unintended page-level horizontal scroll). */
+  contain: layout paint;
 }
 
 .hds-profile__table {
@@ -1172,6 +1313,20 @@
   transition: background-color var(--dur) var(--ease);
 }
 
+/* Defensive only: a table column can be sized generously today and still
+   meet an unusually long URL, identifier or name in imported data tomorrow.
+   `anywhere` only breaks a word that doesn't otherwise fit its column —
+   ordinary text wraps at spaces exactly as before. Scoped to the places a
+   long unbroken token could actually land: table cells, the sources list's
+   body copy, the generic card body and a section's own intro paragraph. */
+.hds-profile__table td,
+.hds-profile__table th,
+.hds-profile__source-body,
+.hds-profile__card,
+.hds-profile__section-intro {
+  overflow-wrap: anywhere;
+}
+
 .hds-profile__table tbody tr:last-child th,
 .hds-profile__table tbody tr:last-child td {
   border-bottom: none;
@@ -1184,13 +1339,13 @@
 }
 
 /* State indication: a tint across the whole row helps cross-read a
-   multi-column table. Desktop only — min-width matches the 1150px breakpoint
-   the table itself switches on (see "Table -> stacked accessible records"
-   below), where rows become stacked cards and a hover tint no longer reads
-   as "one row". Targets the cells, not the <tr>, so it overrides
-   .hds-profile__cell--title's own background too instead of being painted
-   over by it. */
-@media (hover: hover) and (pointer: fine) and (min-width: 1151px) {
+   multi-column table. Desktop and tablet only — min-width matches the 768px
+   breakpoint the table itself switches on (see "Table -> stacked accessible
+   records" below), where rows become stacked cards and a hover tint no
+   longer reads as "one row". Targets the cells, not the <tr>, so it
+   overrides .hds-profile__cell--title's own background too instead of being
+   painted over by it. */
+@media (hover: hover) and (pointer: fine) and (min-width: 768px) {
   .hds-profile__table tbody tr:hover th,
   .hds-profile__table tbody tr:hover td {
     background: var(--panel-soft);
@@ -1708,6 +1863,19 @@
   min-width: 0;
 }
 
+/* Groups the copy actions and the Visit/unavailable control into one unit
+   distinct from .hds-profile__source-body, so their placement is deliberate
+   at every width rather than left to wherever flex-wrap happens to break the
+   row. Desktop/tablet: unchanged from before this wrapper existed — an
+   inline group at the row's trailing edge. Mobile: promoted to its own full
+   row below the body text (see the 767px rule below). */
+.hds-profile__source-controls {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .hds-profile__source-org {
   margin: 0;
   font-size: var(--text-sm);
@@ -1742,6 +1910,12 @@
   color: var(--ink);
   text-decoration: none;
   transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+/* Same touch-target floor as .hds-profile__copy-btn beside it — the intrinsic
+   padding above is a fine-pointer density choice, not a touch target. */
+@media (pointer: coarse) {
+  .hds-profile__source-link { min-height: 44px; }
 }
 
 /* The real, clickable link gets the control-boundary pair (>=3:1, WCAG
@@ -1813,19 +1987,25 @@ a.hds-profile__source-link:focus-visible svg {
 }
 
 /* ==========================================================================
-   Responsive — table, below 1150px
+   Responsive — table, below 768px (phone only; tablet keeps the real table)
 
-   Split from the general 720px breakpoint below: everything else on this
-   page reflows fine via grid auto-fit well into tablet widths, but a
-   multi-column table forces horizontal scroll on any viewport under ~1150px
-   (an iPad-portrait width included, and the programmes/promises tables'
-   own 1150px min-width) unless it switches to stacked cards earlier than
-   the rest of the layout does. One breakpoint for every table variant on
-   this page keeps them consistent instead of some scrolling while others
-   have already stacked.
+   This used to switch at 1150px, which meant an iPad-portrait 768/834/1024px
+   reader — squarely a tablet, not a phone — got the stacked-card layout
+   built for a narrow screen: no cross-row comparison, and a seven-column
+   table (promises, programmes) turned into a scroll of 600px-tall cards.
+   Tablet doesn't need that. `.hds-profile__table-wrap` already scrolls
+   horizontally (`overflow-x: auto` in the base rule above) and the wider
+   tables already declare the min-width that scroll exists for
+   (`.hds-profile__table--programmes`/`--promises` at 1150px, everything
+   else at 900px) — that machinery was built for exactly this case and was
+   simply never reached, because stacking always won first. Dropping the
+   switch to 768px — the same floor the rest of this page's mobile rules use
+   — lets a tablet keep the real table, scrolling it locally where its own
+   min-width asks for more room than the viewport gives it, and reserves the
+   card rewrite for a genuine phone width.
    ========================================================================== */
 
-@media (max-width: 1150px) {
+@media (max-width: 767px) {
   /*
     Table -> stacked accessible records. The markup stays one real <table>
     (thead/th/scope unchanged) — only the visual presentation is remapped, so
@@ -1905,19 +2085,30 @@ a.hds-profile__source-link:focus-visible svg {
 }
 
 /* ==========================================================================
-   Responsive — below 720px
+   Responsive — tablet, 768-1199px
+
+   Tablet is not "a large phone": the two-column hero, the multi-column
+   tables above and the card grids below all keep their desktop shape here.
+   The only tablet-specific adjustment is a tighter gap between the portrait
+   and the hero body, since --portrait-size (declared on .hds-profile__hero)
+   already tapers the portrait itself down through this range on its own.
    ========================================================================== */
 
-@media (max-width: 720px) {
+@media (max-width: 1199px) {
+  .hds-profile__hero {
+    gap: var(--space-5);
+  }
+}
+
+/* ==========================================================================
+   Responsive — mobile, below 768px
+   ========================================================================== */
+
+@media (max-width: 767px) {
   .hds-profile__hero {
     grid-template-columns: 1fr;
     gap: var(--space-4);
     padding: var(--space-6) 0 var(--space-8);
-  }
-
-  .hds-profile__portrait {
-    width: 128px;
-    height: 128px;
   }
 
   .hds-profile__meta-strip {
@@ -1949,6 +2140,61 @@ a.hds-profile__source-link:focus-visible svg {
   .hds-profile__institutions,
   .hds-profile__education-list {
     columns: 1;
+  }
+
+  /* Explicit mobile source layout: [number] [title/info] on the first line,
+     then the copy/citation/Visit controls as their own row underneath,
+     indented to the body's own start rather than the row's — see the
+     comment on .hds-profile__source-controls above. Left as an inline group
+     at every wider width; only mobile needs a deliberate break. */
+  .hds-profile__source-controls {
+    flex: 1 0 100%;
+    margin: var(--space-2) 0 0 calc(2ch + var(--space-4));
+  }
+}
+
+/* ==========================================================================
+   Responsive — landscape phone (short viewport height, any width)
+
+   A width-only breakpoint can't see this case: a phone in landscape can be
+   740, 844 or even wider — well into "tablet" width — while still being
+   under 400px TALL, where the two-column hero above already fits but its
+   desktop/tablet vertical padding pushes the name and focus role below the
+   fold. Keyed on height, not width, so it applies on top of whichever
+   width-based mode (tablet's two-column hero or mobile's stacked one)
+   already matched — the compact portrait size below is set on the same
+   --portrait-size custom property the base hero rule declares, not a
+   competing width/height override.
+   ========================================================================== */
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .hds-profile__hero {
+    --portrait-size: 96px;
+    grid-template-columns: var(--portrait-size) 1fr;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) 0 var(--space-5);
+  }
+
+  .hds-profile__eyebrow {
+    margin-bottom: var(--space-1);
+  }
+
+  .hds-profile__focus-role {
+    margin-top: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    gap: 2px;
+  }
+
+  .hds-profile__focus-note {
+    margin-top: var(--space-2);
+  }
+
+  /* The "Why this role?" disclosure is the least essential thing in the
+     hero — collapsed already, it costs only its summary line, which the
+     hero's own tightened padding above is not enough to reclaim on its own. */
+  .hds-profile__disclosure {
+    margin-top: var(--space-1);
   }
 }
 
@@ -2064,13 +2310,16 @@ a.hds-profile__source-link:focus-visible svg {
 
 /* ---- Mobile row disclosure -------------------------------------------- */
 
-/* The column exists only in the stacked layout; on a wide screen the cells
-   it reveals are already visible, so both the header cell and the control
-   are removed from the table entirely. */
+/* The column exists only in the stacked layout; on a wide screen OR a
+   tablet-width horizontally-scrolled table, the cells it reveals are already
+   visible in the row itself, so both the header cell and the control are
+   removed from the table entirely — data-secondary columns are hidden ONLY
+   below 768px, matched to the same breakpoint the stacked-card layout
+   switches on above, never at tablet widths. */
 .hds-profile__row-more,
 .hds-profile__row-more-head { display: none; }
 
-@media (max-width: 1150px) {
+@media (max-width: 767px) {
   .hds-profile__table tbody tr:not([data-expanded="true"]) td[data-secondary] { display: none; }
 
   .hds-profile__row-more {

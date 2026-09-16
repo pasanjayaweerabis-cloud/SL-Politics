@@ -57,7 +57,14 @@ export function Tabs({ tabs, active, onChange, label, idPrefix = 'javora-tab' })
             onKeyDown={event => onKeyDown(event, index)}
           >
             {tab.icon ? <Icon name={tab.icon} /> : null}
-            <span>{tab.label}</span>
+            <span className="tabs__tab-label--full">{tab.label}</span>
+            {/* Optional short form (e.g. "Decisions & voting" -> "Decisions")
+                for layouts too narrow to set the full label beside or under
+                the icon without wrapping. Only rendered when a caller
+                supplies one, so tab sets that never pass `shortLabel` (the
+                sitewide two-tab strip) get exactly the same single <span>
+                as before. */}
+            {tab.shortLabel ? <span className="tabs__tab-label--short">{tab.shortLabel}</span> : null}
           </button>
         );
       })}

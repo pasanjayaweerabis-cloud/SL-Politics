@@ -36,9 +36,12 @@ import './PortfolioProfile.css';
  * HTML regardless of which one a reader lands on (the TabPanel invariant —
  * see CLAUDE.md and src/lib/prerenderContent.test.ts). Six of the ten
  * sections render as real `<table>`s with fixed columns, `<th scope="row">`
- * row titles and the site's existing ≤900px stacked-card responsive pattern
- * (`data-label` on every cell) — cards remain only where a comparison across
- * rows is not the point (promises, attribution, role summary). Tab selection
+ * row titles and a `data-label`-per-cell stacked-card fallback that only
+ * applies below 768px — tablet widths keep the real table, scrolling it
+ * horizontally where a table's own min-width demands more room than the
+ * viewport gives it (see PortfolioProfile.css's table responsive rules) —
+ * cards remain only where a comparison across rows is not the point
+ * (promises, attribution, role summary). Tab selection
  * is plain component state, not synced to the URL: src/lib/profileTabs.ts
  * already owns that job for the site's other (education/political) tab pair
  * and is hardcoded to that pair's two ids.
@@ -334,11 +337,14 @@ function PendingCitations({ ids, note }) {
 /* ==========================================================================
    Mobile row disclosure
    --------------------------------------------------------------------------
-   Below 1150px every table on this page becomes a stack of cards, one per
+   Below 768px every table on this page becomes a stack of cards, one per
    row, with each cell labelled by its column name. That is technically
    responsive and, on a seven-column table, produces a 600px-tall card per
    promise — the reader scrolls through "Expected outcome", "Action taken"
    and "Documented outcome" in full before reaching the next row's title.
+   Tablet widths (768-1199px) never reach this: they keep the real table and
+   scroll it horizontally instead (see PortfolioProfile.css) — only a
+   genuine phone width trades column comparison for a stack of cards.
 
    So the cards lead with what the row IS and hold the rest one tap away.
    Nothing is removed and nothing moves: the same cells, in the same DOM
@@ -382,8 +388,8 @@ function RowMoreCell({ rowId, rowLabel, expanded, onToggle }) {
 
 /** The header cell that pairs with RowMoreCell, so the row and the header
     row keep the same cell count in the DOM. Hidden in both layouts: on
-    desktop the whole column is `display: none`, and below 1150px the entire
-    `thead` is clipped away by the stacked-card rules. */
+    desktop and tablet the whole column is `display: none`, and below 768px
+    the entire `thead` is clipped away by the stacked-card rules. */
 function RowMoreHead() {
   return <th scope="col" className="hds-profile__row-more-head">Details</th>;
 }
@@ -1117,17 +1123,19 @@ const PROFILE_TABS = [
   {
     id: 'performance',
     label: 'Performance',
+    shortLabel: 'Performance',
     icon: 'award',
     sections: [
-      { id: 'hds-outcomes', title: 'Outcome indicators' },
+      { id: 'hds-outcomes', title: 'Outcome indicators', shortTitle: 'Outcome' },
       { id: 'hds-promises', title: 'Promises' },
-      { id: 'hds-programmes', title: 'Major programmes' },
-      { id: 'hds-interventions', title: 'Interventions' },
+      { id: 'hds-programmes', title: 'Major programmes', shortTitle: 'Programmes' },
+      { id: 'hds-interventions', title: 'Interventions', shortTitle: 'Actions' },
     ],
   },
   {
     id: 'record',
     label: 'Decisions & voting',
+    shortLabel: 'Decisions',
     icon: 'scale',
     sections: [
       { id: 'hds-votes', title: 'Voting record' },
@@ -1137,12 +1145,14 @@ const PROFILE_TABS = [
   {
     id: 'policies',
     label: 'Policy positions',
+    shortLabel: 'Positions',
     icon: 'document',
     sections: [{ id: 'hds-policies', title: 'Policies & public positions' }],
   },
   {
     id: 'profile',
     label: 'Role & career',
+    shortLabel: 'Career',
     icon: 'user',
     sections: [
       { id: 'hds-role', title: 'Position' },
@@ -1243,7 +1253,7 @@ export default function PortfolioProfile({ content }) {
 
   useHashNavigation(setActiveTab, setExpandedInterventions);
 
-  const tabs = useMemo(() => PROFILE_TABS.map(tab => ({ id: tab.id, label: tab.label, icon: tab.icon })), []);
+  const tabs = useMemo(() => PROFILE_TABS.map(tab => ({ id: tab.id, label: tab.label, shortLabel: tab.shortLabel, icon: tab.icon })), []);
   const sectionsOf = id => PROFILE_TABS.find(tab => tab.id === id)?.sections ?? [];
   /**
    * The per-panel "on this page" row. Rendered INSIDE its own TabPanel, not
@@ -1393,19 +1403,26 @@ export default function PortfolioProfile({ content }) {
                     {meta ? <p className="hds-profile__source-meta">{meta}</p> : null}
                     <p className="hds-profile__source-type">{source.type}</p>
                   </div>
-                  <div className="hds-profile__source-actions">
-                    <CopyLinkButton id={`hds-source-${source.id}`} label={`Source ${n}: ${source.organization}`}/>
-                    <CopyCitationButton source={source}/>
+                  {/* Grouped in one wrapper rather than left as two loose flex
+                      children, so mobile can lay them out as a single
+                      deliberate action row under the body text instead of
+                      whichever way flex-wrap happens to break the line —
+                      see .hds-profile__source-controls in the CSS. */}
+                  <div className="hds-profile__source-controls">
+                    <div className="hds-profile__source-actions">
+                      <CopyLinkButton id={`hds-source-${source.id}`} label={`Source ${n}: ${source.organization}`}/>
+                      <CopyCitationButton source={source}/>
+                    </div>
+                    {href ? (
+                      <a className="hds-profile__source-link" href={href} target="_blank" rel="noopener noreferrer">
+                        <Icon name="external" /><span>Visit</span>
+                      </a>
+                    ) : (
+                      <span className="hds-profile__source-link hds-profile__source-link--unavailable" title="No verified URL is on record for this source">
+                        <Icon name="slash" /><span>URL unavailable</span>
+                      </span>
+                    )}
                   </div>
-                  {href ? (
-                    <a className="hds-profile__source-link" href={href} target="_blank" rel="noopener noreferrer">
-                      <Icon name="external" /><span>Visit</span>
-                    </a>
-                  ) : (
-                    <span className="hds-profile__source-link hds-profile__source-link--unavailable" title="No verified URL is on record for this source">
-                      <Icon name="slash" /><span>URL unavailable</span>
-                    </span>
-                  )}
                 </li>
               );
             })}

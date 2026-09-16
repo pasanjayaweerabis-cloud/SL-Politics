@@ -26,7 +26,12 @@ export function SectionNav({ sections, activeId, label, sticky = true }) {
             href={`#${section.id}`}
             aria-current={section.id === activeId ? 'true' : undefined}
           >
-            {section.title}
+            <span className="section-nav__link-label--full">{section.title}</span>
+            {/* Optional short form, same contract as Tabs.jsx's `shortLabel`:
+                only rendered when a caller supplies one, so callers that
+                never pass `shortTitle` (Government page) get exactly the
+                markup this had before. */}
+            {section.shortTitle ? <span className="section-nav__link-label--short">{section.shortTitle}</span> : null}
             {typeof section.count === 'number' ? <span className="section-nav__count">{section.count}</span> : null}
           </a>
         </li>
