@@ -57,6 +57,15 @@ export function SectionNav({ sections, activeId, label, sticky = true }) {
  * never be reported as intersecting — which is exactly the behaviour the
  * portfolio profile needs: the active section is always one in the panel the
  * reader can actually see.
+ *
+ * Returns `[active, setActive]`, like `useState`: switching to a panel that
+ * was `hidden` a moment ago does not reliably re-fire the observer on the
+ * same frame (a `hidden` removal is a display change, not a scroll, and
+ * nothing here forces a synchronous re-check), so a reader who opens a tab
+ * without scrolling could see no "on this page" link marked current at all
+ * until they scrolled. Exposing the setter lets a caller that already knows
+ * which section a tab switch or a hash jump lands on say so immediately; the
+ * observer still takes over the moment the reader actually scrolls.
  */
 export function useActiveSection(ids) {
   const [active, setActive] = React.useState(ids[0] ?? null);
@@ -89,5 +98,5 @@ export function useActiveSection(ids) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return active;
+  return [active, setActive];
 }

@@ -1194,7 +1194,7 @@ function scrollWhenLaidOut(el, attempts = 10) {
   if (attempts > 0) requestAnimationFrame(() => scrollWhenLaidOut(el, attempts - 1));
 }
 
-function useHashNavigation(setActiveTab, setExpandedInterventions) {
+function useHashNavigation(setActiveTab, setActiveSection, setExpandedInterventions) {
   useEffect(() => {
     function focusHash() {
       const hash = window.location.hash.slice(1);
@@ -1204,6 +1204,11 @@ function useHashNavigation(setActiveTab, setExpandedInterventions) {
 
       const panel = el.closest('[role="tabpanel"]');
       if (panel) setActiveTab(panel.id.replace('hds-tab-panel-', ''));
+      // The hash names the exact target section, so there is no need to wait
+      // for IntersectionObserver to catch up once the tab panel that was
+      // holding it becomes visible — say so immediately, same reasoning as
+      // the tab-click handler below.
+      setActiveSection(hash);
 
       let details = el.closest('details');
       while (details) {
@@ -1251,10 +1256,33 @@ export default function PortfolioProfile({ content }) {
     return next;
   });
 
-  useHashNavigation(setActiveTab, setExpandedInterventions);
+  const sectionsOf = id => PROFILE_TABS.find(tab => tab.id === id)?.sections ?? [];
+  // Every section on the page, so one observer covers all four panels: a
+  // section inside a `hidden` panel has no layout box and can never be
+  // reported as visible, so the active section is always one on screen.
+  const allSectionIds = useMemo(() => PROFILE_TABS.flatMap(tab => tab.sections.map(section => section.id)), []);
+  const [activeSection, setActiveSection] = useActiveSection(allSectionIds);
+
+  useHashNavigation(setActiveTab, setActiveSection, setExpandedInterventions);
+
+  /**
+   * Switching tabs by itself only picks a panel — the "on this page" row
+   * underneath it marks its current link from `activeSection`, which
+   * otherwise stays whatever it last was until IntersectionObserver notices
+   * the newly-shown panel and fires again. A `hidden` attribute flipping off
+   * is a display change, not a scroll, and nothing here forces that check to
+   * happen before the next paint, so a reader who opens a tab without
+   * scrolling could see last tab's link still marked current, or none at
+   * all. Seeding it with the new tab's first section is exactly what the
+   * observer would settle on anyway for a panel opened at its own top.
+   */
+  const changeTab = tabId => {
+    setActiveTab(tabId);
+    const firstSection = sectionsOf(tabId)[0]?.id;
+    if (firstSection) setActiveSection(firstSection);
+  };
 
   const tabs = useMemo(() => PROFILE_TABS.map(tab => ({ id: tab.id, label: tab.label, shortLabel: tab.shortLabel, icon: tab.icon })), []);
-  const sectionsOf = id => PROFILE_TABS.find(tab => tab.id === id)?.sections ?? [];
   /**
    * The per-panel "on this page" row. Rendered INSIDE its own TabPanel, not
    * once beneath the tab strip, for the same reason the panels themselves
@@ -1275,11 +1303,6 @@ export default function PortfolioProfile({ content }) {
     activeId={activeSection}
     label={`Sections in ${PROFILE_TABS.find(tab => tab.id === id)?.label ?? ''}`}
   />;
-  // Every section on the page, so one observer covers all four panels: a
-  // section inside a `hidden` panel has no layout box and can never be
-  // reported as visible, so the active section is always one on screen.
-  const allSectionIds = useMemo(() => PROFILE_TABS.flatMap(tab => tab.sections.map(section => section.id)), []);
-  const activeSection = useActiveSection(allSectionIds);
 
   return (
     <div className="hds-profile">
@@ -1340,7 +1363,7 @@ export default function PortfolioProfile({ content }) {
           <Tabs
             tabs={tabs}
             active={activeTab}
-            onChange={setActiveTab}
+            onChange={changeTab}
             label={`${data.name}'s record, by category`}
             idPrefix="hds-tab"
           />

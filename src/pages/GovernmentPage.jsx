@@ -235,7 +235,9 @@ export default function GovernmentPage() {
     title: section.title,
     count: section.kind === 'group' ? section.members.length : undefined,
   }));
-  const activeSection = useActiveSection(navSections.map(section => section.id));
+  // No tabs on this page to seed the setter from; scroll-driven tracking is
+  // the whole story here, same as before `useActiveSection` gained one.
+  const [activeSection] = useActiveSection(navSections.map(section => section.id));
 
   return <>
     <header className="section section--tight gov-header">
