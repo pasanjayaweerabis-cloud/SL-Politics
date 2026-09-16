@@ -1,7 +1,7 @@
 import React from 'react';
 import { Avatar, VerifiedBadge, personHref } from './Primitives.jsx';
 import {
-  suggestPeopleRanked, queryPeople, facetOptions, emptyFacets, discoverablePeople, sortForDisplay, currentGovernment,
+  suggestPeopleRanked, queryPeople, facetOptions, emptyFacets, discoverablePeople, currentGovernment,
 } from '../services/repository.ts';
 import { navigate } from '../lib/router.tsx';
 import { moveActiveIndex, resolveKeyAction, shouldAutoJump, didYouMean } from '../lib/typeahead.ts';
@@ -22,13 +22,12 @@ import { useI18n } from '../lib/i18n.jsx';
  * autocomplete: only the input is ever focusable, so screen-reader and
  * keyboard behaviour is identical to typing into any other search field.
  * `aria-activedescendant` runs as ONE flat index across every group
- * (People/Jump to/Or, or Recent/Offices/Try searching) — grouping is visual
- * and structural (`role="group"`), not a second index space.
+ * (People/Jump to/Or, or Recent/Offices) — grouping is visual and structural
+ * (`role="group"`), not a second index space.
  *
  * Two different result sets share this shell:
- *  - Empty text, panel open on focus: Recent (client-only, last 3 profiles),
- *    Offices (the same featured office-holders as the homepage rail), and
- *    Try searching (three real examples pulled from the live dataset).
+ *  - Empty text, panel open on focus: Recent (client-only, last 3 profiles)
+ *    and Offices (the same featured office-holders as the homepage rail).
  *  - Non-empty text: People (direct/alias/office hits, rank 0-2), Jump to
  *    (district/office NAME matches, linking into a filtered directory
  *    search), and a single "See all N matches" row.
@@ -112,17 +111,6 @@ export function SearchTypeahead({
 
   const govOffices = React.useMemo(() => featuredOfficeHolders(currentGovernment(today)), [today]);
   const recent = useRecentProfiles();
-  const exampleChips = React.useMemo(() => {
-    const facets = facetOptions(emptyFacets(), '', today);
-    const topParty = [...facets.parties].sort((a, b) => b.count - a.count)[0];
-    const topDistrict = [...facets.districts].sort((a, b) => b.count - a.count)[0];
-    const person = sortForDisplay(discoverablePeople(today), today)[0];
-    return [
-      person ? { id: 'ex-name', value: person.person.canonicalName } : null,
-      topParty ? { id: 'ex-party', value: topParty.name } : null,
-      topDistrict ? { id: 'ex-district', value: topDistrict.name } : null,
-    ].filter(Boolean);
-  }, [today]);
 
   const didYouMeanNames = React.useMemo(() => {
     if (!debouncedTrimmed || ranked.length) return [];
@@ -153,9 +141,8 @@ export function SearchTypeahead({
     const options = [];
     for (const entry of recent) options.push({ kind: 'link', id: `recent-${entry.slug}`, href: `/person/${encodeURIComponent(entry.slug)}`, label: entry.name });
     for (const member of govOffices) options.push({ kind: 'link', id: `office-${member.personId}`, href: `/person/${encodeURIComponent(member.slug)}`, label: member.name, portraitUrl: member.portraitUrl, meta: member.offices[0]?.title });
-    for (const chip of exampleChips) options.push({ kind: 'trySearch', id: chip.id, value: chip.value });
     return options;
-  }, [debouncedTrimmed, ranked, jumpToChips, totalMatches, debouncedText, t, recent, govOffices, exampleChips]);
+  }, [debouncedTrimmed, ranked, jumpToChips, totalMatches, debouncedText, t, recent, govOffices]);
 
   const peopleRanks = React.useMemo(
     () => flatOptions.filter(o => o.kind === 'person').map(o => o.rank),
@@ -194,19 +181,12 @@ export function SearchTypeahead({
 
   const activateOption = option => {
     if (option.kind === 'person') { selectResult(option.view); return; }
-    if (option.kind === 'link') {
-      setOpen(false);
-      setActiveIndex(-1);
-      setText('');
-      closeMobile();
-      navigate(option.href);
-      return;
-    }
-    // 'trySearch': fills the query rather than navigating, so the reader
-    // sees what that example actually returns.
-    setText(option.value);
-    setUserMoved(false);
+    // 'link'
+    setOpen(false);
     setActiveIndex(-1);
+    setText('');
+    closeMobile();
+    navigate(option.href);
   };
 
   const handleChange = event => {
@@ -337,20 +317,15 @@ export function SearchTypeahead({
         <VerifiedBadge state={view.verification} compact/>
       </div>;
     }
-    if (option.kind === 'link') {
-      return <div key={option.id} {...rowProps} onClick={() => activateOption(option)}>
-        {option.portraitUrl !== undefined
-          ? <Avatar name={option.label} portraitUrl={option.portraitUrl} size="sm"/>
-          : null}
-        <span className="typeahead__text">
-          <span className="typeahead__name">{option.label}</span>
-          {option.meta ? <span className="typeahead__meta">{option.meta}</span> : null}
-        </span>
-      </div>;
-    }
-    // 'trySearch'
+    // 'link'
     return <div key={option.id} {...rowProps} onClick={() => activateOption(option)}>
-      <span className="typeahead__text"><span className="typeahead__name">{option.value}</span></span>
+      {option.portraitUrl !== undefined
+        ? <Avatar name={option.label} portraitUrl={option.portraitUrl} size="sm"/>
+        : null}
+      <span className="typeahead__text">
+        <span className="typeahead__name">{option.label}</span>
+        {option.meta ? <span className="typeahead__meta">{option.meta}</span> : null}
+      </span>
     </div>;
   };
 
@@ -382,11 +357,9 @@ export function SearchTypeahead({
 
     const recentOptions = flatOptions.filter(o => o.id.startsWith('recent-'));
     const officeOptions = flatOptions.filter(o => o.id.startsWith('office-'));
-    const tryOptions = flatOptions.filter(o => o.kind === 'trySearch');
     return <>
       {group('home.recentSearchesLabel', recentOptions)}
       {group('home.officesRailLabel', officeOptions)}
-      {group('home.trySearchingLabel', tryOptions)}
     </>;
   };
 

@@ -36,7 +36,7 @@ import { useI18n } from '../lib/i18n.jsx';
  * truncated to one: a minister holding two portfolios holds two, and showing
  * only the first would misrepresent the Cabinet.
  */
-function MemberCard({ member, size = 'md' }) {
+export function MemberCard({ member, size = 'md' }) {
   const { t } = useI18n();
   /*
     Every portfolio is still shown — a minister holding three holds three,

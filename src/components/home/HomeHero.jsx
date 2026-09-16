@@ -3,36 +3,56 @@ import { Icon } from '../../lib/icons.jsx';
 import { useI18n } from '../../lib/i18n.jsx';
 import { navigate } from '../../lib/router.tsx';
 import { SearchPill } from './SearchPill.jsx';
-import { datasetStats } from '../../services/repository.ts';
 
 /**
- * The four offices a reader most often arrives looking for, as real links
- * into a pre-filtered directory.
+ * "Try:" chips: two people, two categories.
  *
- * Every `href` is a facet the directory genuinely supports — the `role`
- * parameter and these four ids come straight from `RoleType`
- * (src/types/models.ts) via DirectoryPage's PARAM map — so each one lands on
- * a real, populated result set rather than an empty page. They are plain
- * anchors, present in the prerendered HTML, which is also what makes them
- * crawlable entry points into the register.
+ * The people chips name whoever currently holds the office, not an editorial
+ * pick — `gov.president`/`gov.primeMinister` come from `currentGovernment()`,
+ * the same derivation the Current Government section itself uses, so this
+ * updates on its own after an election with no code change. When an office is
+ * vacant (`null`), the slot falls back to the old role-search pill rather than
+ * rendering nothing.
+ *
+ * The two category chips are directory facets, not people, on purpose:
+ * featuring a party here would be an editorial act this platform doesn't take
+ * (see CLAUDE.md). Every `href` is a facet DirectoryPage's PARAM map actually
+ * supports, so each chip lands on a real, populated result set.
  */
-const POPULAR_SEARCHES = [
-  { key: 'home.hero.pillPresident', href: '/directory?role=president' },
-  { key: 'home.hero.pillPrimeMinister', href: '/directory?role=prime-minister' },
-  { key: 'home.hero.pillMinisters', href: '/directory?role=cabinet-minister' },
-  { key: 'home.hero.pillParliament', href: '/directory?role=member-of-parliament' },
-];
+function personOrRoleChip(t, member, roleKey, roleHref) {
+  if (!member) return { key: roleHref, href: roleHref, label: t(roleKey) };
+  return {
+    key: member.personId,
+    href: `/person/${encodeURIComponent(member.slug)}`,
+    label: t('home.hero.personChip', { name: member.name, role: t(roleKey) }),
+  };
+}
 
 /**
  * The home hero: full-viewport Sigiriya photo and search. Everything here must
  * render in the static HTML (see CLAUDE.md's prerender/crawlability invariants)
  * — no client-only gating, every link a real `<a href>`.
+ *
+ * `government` and `peopleCount` are computed once in HomePage, with the same
+ * `today`/memo it uses for the Current Government section and the trust
+ * figures — not recomputed here — so a prerendered page and its first client
+ * render can never read two different `new Date()` calls and disagree.
+ * `scrollTargetId` is likewise HomePage's own decision about which section
+ * actually rendered below, so the hero never links to an id that isn't there.
  */
-export function HomeHero() {
+export function HomeHero({ government, peopleCount, scrollTargetId }) {
   const { t } = useI18n();
-  const stats = datasetStats(new Date());
 
   const go = query => navigate(query ? `/directory?q=${encodeURIComponent(query)}` : '/directory');
+
+  const chips = [
+    personOrRoleChip(t, government.president, 'home.hero.pillPresident', '/directory?role=president'),
+    personOrRoleChip(t, government.primeMinister, 'home.hero.pillPrimeMinister', '/directory?role=prime-minister'),
+    { key: 'cabinet-ministers', href: '/directory?role=cabinet-minister', label: t('home.hero.pillMinisters') },
+    { key: 'members-of-parliament', href: '/directory?role=member-of-parliament', label: t('home.hero.pillParliament') },
+  ];
+
+  const scrollingToGovernment = scrollTargetId === 'current-government';
 
   return <section className="home-hero" aria-labelledby="home-hero-heading">
     <div className="home-hero__media">
@@ -57,11 +77,10 @@ export function HomeHero() {
       </p>
 
       <h1 id="home-hero-heading" className="home-hero__title">
-        {t('home.hero.titleLine1')}<br aria-hidden="true"/>
         {t('home.hero.titleBeforeAccent')}<span className="home-hero__title-accent">{t('home.hero.titleAccent')}</span>{t('home.hero.titleAfterAccent')}
       </h1>
 
-      <p className="home-hero__sub">{t('home.hero.sub')}</p>
+      <p className="home-hero__sub">{t('home.hero.sub', { count: peopleCount })}</p>
 
       <SearchPill
         id="home-hero-search-input"
@@ -70,33 +89,22 @@ export function HomeHero() {
         onSubmit={go}
       />
 
-      {/* What can I search for, in four real examples rather than a
-          sentence describing the scope. */}
-      <nav className="home-hero__popular" aria-label={t('home.hero.popularLabel')}>
+      {/* Two people (whoever holds the office today) plus two directory
+          categories, rather than a "Popular searches" claim this site has no
+          analytics to back. */}
+      <nav className="home-hero__popular" aria-label={t('home.hero.popularAriaLabel')}>
         <span className="home-hero__popular-label" aria-hidden="true">{t('home.hero.popularLabel')}</span>
-        {POPULAR_SEARCHES.map(item => (
-          <a className="home-hero__pill" key={item.href} href={item.href}>{t(item.key)}</a>
+        {chips.map(chip => (
+          <a className="home-hero__pill" key={chip.key} href={chip.href}>{chip.label}</a>
         ))}
       </nav>
 
       <div className="home-hero__bottom">
-        {/*
-          Was a button reading "Scroll to explore" — a sentence about the
-          browser, not about the register, whose only effect was to move the
-          page down by one viewport. This is a real link to the real
-          destination, and it says how much is behind it. The hero no longer
-          fills the viewport exactly (see `min-height` in home-hero.css), so
-          the next section shows at the fold and does the job the scroll
-          affordance was doing.
-        */}
-        <a className="home-hero__cta" href="/directory">
-          <span className="home-hero__scroll-circle" aria-hidden="true"><Icon name="arrowRight"/></span>
-          <span>{t('home.hero.exploreCta', { count: stats.people.toLocaleString('en-US') })}</span>
-        </a>
-        <p className="home-hero__bottom-tagline">
+        <a className="home-hero__scroll-cue" href={`#${scrollTargetId}`}>
           <span className="home-hero__bottom-rule" aria-hidden="true"></span>
-          <span>{t('home.hero.bottomTagline')}</span>
-        </p>
+          <span>{t(scrollingToGovernment ? 'home.hero.scrollCue' : 'home.hero.scrollCueFallback')}</span>
+          <Icon name="arrowDown"/>
+        </a>
       </div>
     </div>
   </section>;

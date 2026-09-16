@@ -314,11 +314,26 @@ export function EvidencePill({ evidence }) {
   </a>;
 }
 
-export function VerificationLegend({ states }) {
-  return <div className="legend">{states.map(state => {
+/**
+ * `counts`, when given, is a state → claim-count map (see
+ * `repository.ts`'s `verificationStateCounts`): each state then shows
+ * whether it is actually attached to any claim in the loaded dataset today,
+ * rather than listing all seven as if equally real. Labels and descriptions
+ * always come from `VERIFICATION_PRESENTATION` — never restated by a caller.
+ */
+export function VerificationLegend({ states, counts=null }) {
+  const { t, n } = useI18n();
+  return <dl className="definition-grid">{states.map(state => {
     const presentation = presentVerification(state);
-    return <span className="fact-line fact-line--muted" key={state}><Icon name={presentation.icon}/><span>{presentation.label} — {presentation.description}</span></span>;
-  })}</div>;
+    const count = counts ? (counts[state] ?? 0) : null;
+    return <div className="definition-grid__item" key={state}>
+      <dt><span className="definition-grid__icon" aria-hidden="true"><Icon name={presentation.icon}/></span>{presentation.label}</dt>
+      <dd>{presentation.description}</dd>
+      {counts ? <p className="definition-grid__status">
+        {count > 0 ? t('common.inUseCount', { count: n(count) }) : t('common.notInUseYet')}
+      </p> : null}
+    </div>;
+  })}</dl>;
 }
 
 export function Notice({ tone='neutral', title=null, body=[], iconName='info', className='' }) {
@@ -332,10 +347,18 @@ export function EmptyState({ title, message, iconName='search', action=null }) {
   return <div className="empty-state" role="status"><Icon name={iconName}/><h3>{title ?? t('directory.noMatching')}</h3><p>{message ?? t('directory.noMatchingMessage')}</p>{action ? <div className="empty-state__actions">{action}</div> : null}</div>;
 }
 
+/**
+ * `value` is formatted as a grouped count (`n()` — see `lib/i18n.jsx`) when
+ * it is a number, and printed as-is otherwise. A caller with a value that
+ * looks numeric but must NOT be grouped — a year, most notably: "1931" must
+ * never become "1,931" — passes it already as a string.
+ */
 export function StatsCard({ value, label, note=null, iconName=null }) {
+  const { n } = useI18n();
+  const display = typeof value === 'number' ? n(value) : String(value);
   return <div className="stat">
     {iconName ? <span className="stat__icon" aria-hidden="true"><Icon name={iconName}/></span> : null}
-    <p className="stat__value">{String(value)}</p>
+    <p className="stat__value">{display}</p>
     <p className="stat__label">{label}</p>
     {note ? <p className="stat__note">{note}</p> : null}
   </div>;
@@ -424,7 +447,7 @@ export function Unrecorded({ children, why = null }) {
 export function NotVerified({ children }) {
   return <p className="unverified-note">
     <Icon name="slash"/>
-    <span><strong>Not publicly verified.</strong> {children}</span>
+    <span><strong>Not published anywhere.</strong> {children}</span>
   </p>;
 }
 

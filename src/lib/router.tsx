@@ -454,7 +454,19 @@ export function useRouteTransition(route: Route): void {
      * raced the browser's own restoration and landed somewhere between the
      * two (1500 -> 949, measured). "instant" is the value that means jump.
      */
-    if (!poppedHistory) window.scrollTo({ top: 0, behavior: "instant" });
+    if (!poppedHistory) {
+      // A link to a new route can still carry a hash (`/about#methodology`,
+      // from the homepage's trust panel) — landing at the top and ignoring
+      // it would silently break every such link the moment the SPA is
+      // hydrated, even though the exact same URL loaded fresh (a crawler, or
+      // this same link before hydration) lands on the right section.
+      // `scrollIntoView` honours `html`'s global `scroll-padding-top`
+      // (base.css), the same offset a native fragment navigation gets, so
+      // this does not duplicate that offset locally.
+      const target = window.location.hash ? document.getElementById(window.location.hash.slice(1)) : null;
+      if (target) target.scrollIntoView({ behavior: "instant", block: "start" });
+      else window.scrollTo({ top: 0, behavior: "instant" });
+    }
     const main = document.getElementById("main");
     if (main) {
       main.setAttribute("tabindex", "-1");

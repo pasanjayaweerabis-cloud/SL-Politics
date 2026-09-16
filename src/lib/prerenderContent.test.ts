@@ -4,7 +4,7 @@ import React from "react";
 import { TabPanel } from "../components/Tabs.jsx";
 import { ProfileResult, ProfileResultLink } from "../components/Primitives.jsx";
 import App from "../App.jsx";
-import { discoverablePeople, sortForDisplay } from "../services/repository.ts";
+import { discoverablePeople, sortForDisplay, currentGovernment } from "../services/repository.ts";
 
 /**
  * Javora — what a crawler actually receives.
@@ -114,27 +114,29 @@ describe("ProfileResult renders a real anchor regardless of hidden", () => {
  * static HTML.
  */
 /**
- * The home hero build (HOMEPAGE_BUILD_PROMPT.md) requires every figure card,
- * every nav link and every popular-search pill to be a real `<a href>` in
- * the STATIC HTML — this renders the whole home route the same way the
- * prerender build does (`App` with an `ssrRoute`, exactly what
- * entry-server.jsx's `renderPage` calls) rather than mounting `HomeHero` in
- * isolation, so a regression in how HomePage.jsx wires props to it, or in
- * Chrome.jsx's route-based nav, would show up here too.
+ * The homepage UX build (homepage-ux-fixes-prompt.md) requires the hero's
+ * headline, its "Try:" chips, its scroll cue, and the browse-the-directory
+ * tiles to all be real content in the STATIC HTML — this renders the whole
+ * home route the same way the prerender build does (`App` with an
+ * `ssrRoute`, exactly what entry-server.jsx's `renderPage` calls) rather
+ * than mounting `HomeHero` in isolation, so a regression in how
+ * HomePage.jsx wires props to it, or in Chrome.jsx's route-based nav, would
+ * show up here too.
  */
 describe("Home hero + header render real content in the static HTML", () => {
+  const today = new Date();
   const homeRoute = { name: "home" as const, params: {}, path: "/", search: "" };
   const html = () => renderToString(React.createElement(App, { ssrRoute: homeRoute }));
 
   it("renders the one <h1> with the hero headline", () => {
     const out = html();
     expect(out).toMatch(/<h1[^>]*>/);
-    expect(out).toContain("Source-linked public records");
-    expect(out).toContain("Sri Lankan");
-    expect(out).toContain("public figures.");
+    expect(out).toContain("Who holds power in");
+    expect(out).toContain("Sri Lanka");
+    expect(out).toContain("recorded.");
   });
 
-  it("renders all five primary nav links as real anchors", () => {
+  it("renders all four primary nav links as real anchors", () => {
     const out = html();
     for (const href of ["/", "/government", "/directory", "/about"]) {
       expect(out).toContain(`href="${href}"`);
@@ -144,24 +146,83 @@ describe("Home hero + header render real content in the static HTML", () => {
     // only asserts the distinct hrefs, not a count of five anchors.
   });
 
-  it("renders all five popular-search pills as real anchors", () => {
+  it("renders the two category 'Try:' chips as real anchors", () => {
     const out = html();
+    for (const href of ["/directory?role=cabinet-minister", "/directory?role=member-of-parliament"]) {
+      expect(out).toContain(`href="${href}"`);
+    }
+  });
+
+  it("renders the President/PM 'Try:' chips with real names from the data, not a static role link", () => {
+    // Reads the SAME derivation HomePage.jsx feeds the hero, so this fails if
+    // either diverges from `currentGovernment()` — never a hardcoded name.
+    const gov = currentGovernment(today);
+    const out = html();
+    if (gov.president) {
+      expect(out).toContain(`href="/person/${encodeURIComponent(gov.president.slug)}"`);
+      expect(out).toContain(gov.president.name);
+    } else {
+      expect(out).toContain('href="/directory?role=president"');
+    }
+    if (gov.primeMinister) {
+      expect(out).toContain(`href="/person/${encodeURIComponent(gov.primeMinister.slug)}"`);
+      expect(out).toContain(gov.primeMinister.name);
+    } else {
+      expect(out).toContain('href="/directory?role=prime-minister"');
+    }
+  });
+
+  it("renders the scroll cue pointing at a real section id on the page", () => {
+    const out = html();
+    expect(out).toContain('href="#current-government"');
+    expect(out).toMatch(/id="current-government"/);
+  });
+
+  it("renders the browse-the-directory tiles as real anchors, not a 6-card profile preview", () => {
+    const out = html();
+    // React escapes `&` to `&amp;` in serialized attribute values.
     for (const href of [
-      "/directory?role=president",
-      "/directory?role=prime-minister",
       "/directory?role=cabinet-minister",
-      "/directory?role=member-of-parliament",
+      "/directory?role=member-of-parliament&amp;status=serving",
+      "/directory?role=member-of-parliament&amp;status=former",
+      "/directory",
     ]) {
       expect(out).toContain(`href="${href}"`);
     }
   });
 
-  it("renders all four key-figure cards as real anchors to their profiles", () => {
+  it("does not contain the copy this build removed", () => {
     const out = html();
-    const hrefCount = (out.match(/href="\/person\//g) ?? []).length;
-    // At least four: the four hero cards, plus however many of them also
-    // recur in the "Public Figures Directory" grid further down the page.
-    expect(hrefCount).toBeGreaterThanOrEqual(4);
+    expect(out).not.toContain("Popular searches");
+    expect(out).not.toContain("Trusted data");
+    expect(out).not.toContain("A more informed Sri Lanka");
+  });
+});
+
+/**
+ * Javora — one search entry point on the homepage (homepage-ux-fixes-prompt.md
+ * Task 6). The nav's search icon and the hero's own big search field sat
+ * directly on top of each other on `/`, going to two different experiences
+ * (`/directory#search` vs. the in-page typeahead). Every other route keeps
+ * the nav icon, since it is the only search entry point there.
+ */
+describe("nav search icon is homepage-only", () => {
+  const render = (route: { name: string; params: object; path: string; search: string }) =>
+    renderToString(React.createElement(App, { ssrRoute: route }));
+  // The mobile drawer (closed by default) does not render its body into the
+  // static HTML at all — see `rendered` in Primitives.jsx's Drawer, an
+  // existing progressive-enhancement pattern this test doesn't change — so
+  // the nav bar's own icon-button is the only source of this href here.
+  const searchHrefCount = (out: string) => (out.match(/href="\/directory#search"/g) ?? []).length;
+
+  it("is absent from the nav bar on the home route", () => {
+    const homeRoute = { name: "home", params: {}, path: "/", search: "" };
+    expect(searchHrefCount(render(homeRoute))).toBe(0);
+  });
+
+  it("is present in the nav bar on another route, e.g. the directory", () => {
+    const directoryRoute = { name: "directory", params: {}, path: "/directory", search: "" };
+    expect(searchHrefCount(render(directoryRoute))).toBe(1);
   });
 });
 
@@ -224,5 +285,87 @@ describe("person profile heading outline", () => {
     // the skip check above fires too — this one names the cause.
     expect(levels).toContain(2);
     expect(html).toMatch(/<h2[^>]*>.*?Official Overview/s);
+  });
+});
+
+/**
+ * About-page cleanup (about-page-ux-fixes-prompt.md) — the contradictions
+ * and repetition the audit found, pinned against the static HTML so they
+ * cannot silently return. `isApiEnabled()` reads `VITE_API_URL`, which is
+ * unset in the test environment, so this renders the DISCONNECTED
+ * corrections branch — the one CLAUDE.md's honesty rule is strictest about.
+ */
+describe("About page: no contradictions, no repetition, honest disconnected state", () => {
+  const aboutRoute = { name: "about" as const, params: {}, path: "/about", search: "" };
+  const html = () => renderToString(React.createElement(App, { ssrRoute: aboutRoute }));
+
+  it("does not repeat 'Official sources first' as both a section heading and a principle title", () => {
+    const out = html();
+    const occurrences = out.match(/Official sources first/g) ?? [];
+    // Exactly once — the principle's own title. The section heading is now
+    // "How records are sourced".
+    expect(occurrences).toHaveLength(1);
+    expect(out).toContain("How records are sourced");
+  });
+
+  it("states the update mechanism once, and does not say records update 'on a schedule'", () => {
+    const out = html();
+    expect(out).not.toContain("Records update on a schedule");
+    expect(out).toContain("Records are refreshed when we re-check the official sources");
+  });
+
+  it("does not name the Election Commission as a source for anything shown", () => {
+    // Zero bundled evidence records cite S002 (verified directly against
+    // src/data/imported/*.json) — no displayed fact is Election-Commission
+    // sourced, so the page must not claim otherwise.
+    expect(html()).not.toContain("Election Commission");
+  });
+
+  it("uses the renamed 'Not published anywhere' label, not 'Not publicly verified'", () => {
+    const out = html();
+    expect(out).toContain("Not published anywhere");
+    expect(out).not.toContain("Not publicly verified");
+  });
+
+  it("keeps the three anchor ids the footer/homepage and any bookmarked link depend on", () => {
+    const out = html();
+    for (const id of ["methodology", "labels", "limitations"]) {
+      expect(out).toContain(`id="${id}"`);
+    }
+  });
+
+  it("disconnected state: says reports aren't connected, and shows no 4-step workflow list", () => {
+    const out = html();
+    expect(out).toContain("Online reports aren’t connected yet.");
+    expect(out).not.toContain("Under review");
+    expect(out).not.toContain("Verified or rejected");
+  });
+
+  it("states the sources-in-use figure honestly, naming only the connected institutions", () => {
+    const out = html();
+    expect(out).toContain("Official sources in use");
+    expect(out).toContain("Parliament of Sri Lanka");
+    expect(out).toContain("Cabinet Office of Sri Lanka");
+  });
+});
+
+/**
+ * Footer once linked "How SL Politics works" (`/about`) and "Methodology"
+ * (`/about#methodology`) side by side inside its own nav list — two links to
+ * the same page for the same navigational purpose (About page cleanup, Task
+ * 2d). Scoped to `.footer__nav` specifically, not the whole `<footer>`: the
+ * brand mark beside it also links `/`, which is the ordinary "logo goes
+ * home" pattern, not the repetition this guards against. Rendered on any
+ * route, since the footer is in `Layout` and does not vary by page.
+ */
+describe("Footer: no two nav links point at the same URL", () => {
+  it("every link inside .footer__nav is distinct", () => {
+    const homeRoute = { name: "home" as const, params: {}, path: "/", search: "" };
+    const out = renderToString(React.createElement(App, { ssrRoute: homeRoute }));
+    const navStart = out.indexOf('class="footer__nav"');
+    const navHtml = out.slice(navStart, out.indexOf("</nav>", navStart));
+    const hrefs = [...navHtml.matchAll(/<a[^>]*\shref="([^"]+)"/g)].map((m) => m[1]);
+    expect(hrefs.length).toBeGreaterThan(0);
+    expect(new Set(hrefs).size).toBe(hrefs.length);
   });
 });

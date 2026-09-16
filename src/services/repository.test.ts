@@ -20,6 +20,8 @@ import {
   sourcesCitedBy,
   evidenceFor,
   recordsCiting,
+  sourcesInUse,
+  verificationStateCounts,
   parties,
   districts,
   DATASET,
@@ -325,6 +327,38 @@ describe("evidence and verification", () => {
     const view = allPeople(TODAY)[0]!;
     const cited = sourcesCitedBy(view);
     expect(cited.map((c) => c.sourceId)).toContain("S001");
+  });
+});
+
+describe("sourcesInUse", () => {
+  it("names exactly the connected, authoritative sources — Parliament and the Cabinet Office", () => {
+    // S002-S005 are declared but "not-connected"; S900 is connected
+    // ("manual-import") but authoritativeFor: [] by its own definition, so
+    // it must not appear here even though it is not "not-connected".
+    expect(sourcesInUse().map((s) => s.id).sort()).toEqual(["S001", "S006"]);
+  });
+});
+
+describe("verificationStateCounts", () => {
+  it("tallies claims across every claim-bearing record kind, not just positions", () => {
+    const counts = verificationStateCounts(TODAY);
+    const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
+    // One claim per person (their own identity claim) plus one per position,
+    // qualification, event and affiliation they hold — necessarily more than
+    // the position count alone, since every person contributes at least their
+    // own person-level claim on top of their positions.
+    const positionCount = allPeople(TODAY).reduce((sum, v) => sum + v.positions.length, 0);
+    expect(total).toBeGreaterThan(positionCount);
+    // Every key returned is a real verification state, never `undefined` —
+    // regression guard for tallying `position` itself instead of
+    // `position.claim`, which silently produces an `undefined` bucket.
+    for (const state of Object.keys(counts)) {
+      expect(Object.values(VerificationState)).toContain(state);
+    }
+    // The dataset is imported, not hand-confirmed: every claim is at most
+    // SOURCE_LINKED or CONFLICTING (the two states an import can actually
+    // produce), never VERIFIED, which requires a human confirmation date.
+    expect(counts[VerificationState.VERIFIED] ?? 0).toBe(0);
   });
 });
 

@@ -132,9 +132,19 @@ describe("route-change scroll", () => {
   });
 
   it("leaves a back/forward navigation's scroll position to the browser", () => {
-    // The other half of the fix: following a link starts at the top, pressing
-    // Back resumes where the reader was. See `poppedHistory`.
-    expect(router).toMatch(/if\s*\(!poppedHistory\)\s*window\.scrollTo/);
+    // The other half of the fix: following a link starts at the top (or, if
+    // the new URL also carries a hash, at that section — see the next test),
+    // pressing Back resumes where the reader was. See `poppedHistory`.
+    expect(router).toMatch(/if\s*\(!poppedHistory\)\s*\{/);
     expect(router).toMatch(/poppedHistory = true;/);
+  });
+
+  it("scrolls to a route-change link's hash target instead of the top, when the new page has one", () => {
+    // A link to a new route can still carry a hash (`/about#methodology`) —
+    // without this, a hydrated SPA navigation would silently ignore it and
+    // land on the page's top, even though the exact same URL loaded fresh
+    // (a crawler, or this link before hydration) lands on the right section.
+    expect(router).toMatch(/document\.getElementById\(window\.location\.hash\.slice\(1\)\)/);
+    expect(router).toMatch(/target\.scrollIntoView\(\{\s*behavior:\s*"instant"/);
   });
 });

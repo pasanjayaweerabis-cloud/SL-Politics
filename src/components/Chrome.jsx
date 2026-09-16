@@ -66,7 +66,6 @@ const FOOTER_GROUPS = [
     titleKey: 'footer.trustHeading',
     links: [
       { href: '/about', key: 'nav.howItWorks' },
-      { href: '/about#methodology', key: 'footer.methodology' },
       { href: '/corrections', key: 'common.reportError' },
     ],
   },
@@ -287,7 +286,16 @@ export function Chrome({ route }) {
         </div>
         <div className="nav__actions">
           <LanguageSwitcher/>
-          <a className="icon-btn" href="/directory#search" aria-label={t('nav.searchRecords')} title={t('nav.searchRecords')}><Icon name="search"/></a>
+          {/* Home already leads with its own big search field one section down
+              (see HomeHero.jsx) — a second search entry point directly above
+              it, going to a different experience (`/directory#search`), was
+              redundant there. Every other route still gets it: `route?.name`
+              is known identically on the server (prerender of `/`) and the
+              client's first render, so this never causes a hydration
+              mismatch, and the mobile drawer's search link is unaffected. */}
+          {route?.name !== 'home'
+            ? <a className="icon-btn" href="/directory#search" aria-label={t('nav.searchRecords')} title={t('nav.searchRecords')}><Icon name="search"/></a>
+            : null}
           <ThemeToggle/>
           <button className="icon-btn nav__burger" type="button" aria-label={t('nav.openMenu')} aria-expanded={menuOpen} aria-controls="javora-drawer" onClick={() => setMenuOpen(true)}><Icon name="menu"/></button>
         </div>
@@ -318,6 +326,11 @@ export function Chrome({ route }) {
 
 export function Footer() {
   const { t } = useI18n();
+  // Same `useMemo(() => new Date(), [])` idiom `HomePage`/`AboutPage` already
+  // use for `today`: computed once per render pass, identically on the
+  // server and the client's first render, so this carries no new hydration
+  // risk despite calling `new Date()`.
+  const year = React.useMemo(() => new Date().getFullYear(), []);
   return <footer className="footer"><div className="container footer__inner">
     <div className="footer__brand">
       <BrandLockup markSize={30} name={t('footer.brandName')} highlight="Javora"/>
@@ -333,7 +346,7 @@ export function Footer() {
         </div>
       ))}
     </nav>
-    <p className="footer__copyright">{t('footer.copyright')}</p>
+    <p className="footer__copyright">{t('footer.copyright', { year })}</p>
   </div></footer>;
 }
 

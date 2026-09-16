@@ -64,6 +64,7 @@ import type {
   VitalStatus,
   RoleTypeValue,
   VerificationStateValue,
+  InstitutionalSource,
 } from "../types/models.ts";
 
 export { DATASET, getSource, getParty, getDistrict, partyLabel, districtLabel };
@@ -948,6 +949,37 @@ export function recordsCiting(sourceId: string, today: Date = new Date()): numbe
   ).length;
 }
 
+/**
+ * How many CLAIMS — not people, not positions alone — currently carry each
+ * verification state, across every claim-bearing record a person has: their
+ * own identity claim, each position, qualification, event and affiliation.
+ * "Claims" is the unit because that is what the verification model actually
+ * attaches a state to (see `lib/verification.ts`); a single person can carry
+ * many claims in many states at once, so counting people or positions alone
+ * would either double-count or silently drop qualification/event/affiliation
+ * claims.
+ *
+ * Used by the About page's legend so it can say which states are actually in
+ * use on the loaded dataset instead of listing all seven as if they were
+ * equally real.
+ */
+export function verificationStateCounts(
+  today: Date = new Date(),
+): Record<VerificationStateValue, number> {
+  const counts = {} as Record<VerificationStateValue, number>;
+  const tally = (claim: { verification: VerificationStateValue }) => {
+    counts[claim.verification] = (counts[claim.verification] ?? 0) + 1;
+  };
+  for (const view of allPeople(today)) {
+    tally(view.person.claim);
+    view.positions.forEach((p) => tally(p.claim));
+    view.qualifications.forEach((q) => tally(q.claim));
+    view.events.forEach((e) => tally(e.claim));
+    view.affiliations.forEach((a) => tally(a.claim));
+  }
+  return counts;
+}
+
 /* ==========================================================================
    Elections — modelled, not yet populated
    ========================================================================== */
@@ -964,6 +996,18 @@ export const allCandidacies = (): never[] => [];
 /* ==========================================================================
    Dataset statistics
    ========================================================================== */
+
+/**
+ * Institutional sources actually feeding a record shown on the site today —
+ * connected AND authoritative for something, the same predicate
+ * `computeStats` counts by (see the comment on `connectedSources` below). S900
+ * is excluded by construction: its own definition declares `authoritativeFor`
+ * empty, because a research compilation is not a source, it is a compilation
+ * about sources.
+ */
+export function sourcesInUse(): InstitutionalSource[] {
+  return sources.filter((s) => s.syncState !== "not-connected" && s.authoritativeFor.length > 0);
+}
 
 function computeStats(views: PersonView[], today: Date) {
   const offices = new Set<string>();
@@ -999,9 +1043,7 @@ function computeStats(views: PersonView[], today: Date) {
       authoritativeFor to be non-empty is the same rule sources.ts already uses
       to mark a source non-authoritative, rather than a second hard-coded list.
     */
-    connectedSources: sources.filter(
-      (s) => s.syncState !== "not-connected" && s.authoritativeFor.length > 0,
-    ).length,
+    connectedSources: sourcesInUse().length,
     evidenceRecords: allEvidence.length,
     elections: 0,
     earliestYear: years.length ? Math.min(...years) : null,

@@ -1,77 +1,58 @@
 import React from 'react';
-import { Icon } from '../lib/icons.jsx';
-import { ProfileCard, SectionHead, ActionLink } from '../components/Primitives.jsx';
+import { SectionHead, ActionLink } from '../components/Primitives.jsx';
 import { HomeHero } from '../components/home/HomeHero.jsx';
+import { MemberCard } from './GovernmentPage.jsx';
 import {
-  discoverablePeople, datasetStats, directoryStats, sortForDisplay,
+  datasetStats, directoryStats, queryPeople, emptyFacets, currentGovernment, sourcesInUse,
 } from '../services/repository.ts';
+import { featuredOfficeHolders } from '../lib/featuredOffices.ts';
 import { applyPageMeta } from '../lib/seo.ts';
 import { routeMeta } from '../lib/pageMeta.ts';
 import { useI18n } from '../lib/i18n.jsx';
 
-/**
- * The four places this site can take you, stated before the reader has to
- * go looking for them.
- *
- * The homepage used to be a full-viewport photograph followed directly by
- * six profile cards: nothing on it said that a Current Government page
- * existed, that corrections could be filed, or where the records come
- * from — the nav bar named them, in 14px, above the fold of a photo. This
- * is the site's information architecture, written out once, in the order a
- * reader needs it. Editorial rows rather than cards on purpose: four
- * equally-sized boxes with icons would say "product features", and these
- * are destinations.
- *
- * Every `href` is a route in lib/routeManifest.ts. Nothing here links to a
- * page that does not exist.
- */
-const QUICK_ACCESS = [
-  { href: '/directory', titleKey: 'home.quickDirectoryTitle', bodyKey: 'home.quickDirectoryBody', icon: 'users' },
-  { href: '/government', titleKey: 'home.quickGovernmentTitle', bodyKey: 'home.quickGovernmentBody', icon: 'building' },
-  { href: '/about', titleKey: 'home.quickAboutTitle', bodyKey: 'home.quickAboutBody', icon: 'shield' },
-  { href: '/corrections', titleKey: 'home.quickCorrectionsTitle', bodyKey: 'home.quickCorrectionsBody', icon: 'alert' },
-];
-
 export default function HomePage() {
   const { t } = useI18n();
   const today = React.useMemo(() => new Date(), []);
-  // Discovery surface: excludes confirmed deceased people, same pool the
-  // directory and search draw from. `stats` below stays the FULL dataset —
-  // it is a coverage/provenance figure, not a discovery listing.
-  const people = discoverablePeople(today);
-  const featured = React.useMemo(() => sortForDisplay(people, today).slice(0, 6), [people, today]);
+  const government = React.useMemo(() => currentGovernment(today), [today]);
+  const featuredGovernment = React.useMemo(() => featuredOfficeHolders(government), [government]);
   const stats = React.useMemo(() => datasetStats(today), [today]);
   const dirStats = React.useMemo(() => directoryStats(today), [today]);
+  // Facet counts for the browse tiles, computed from the same pool and
+  // filter logic the Directory page itself uses — never typed in — so a
+  // tile can never claim a count the Directory wouldn't also show for that
+  // same filter.
+  const browseCounts = React.useMemo(() => ({
+    cabinet: queryPeople({ facets: { ...emptyFacets(), roles: ['cabinet-minister'] } }, today).length,
+    currentMPs: queryPeople({ facets: { ...emptyFacets(), roles: ['member-of-parliament'], statuses: ['serving'] } }, today).length,
+    formerMPs: queryPeople({ facets: { ...emptyFacets(), roles: ['member-of-parliament'], statuses: ['former'] } }, today).length,
+  }), [today]);
   const number = value => (typeof value === 'number' ? value.toLocaleString('en-US') : String(value ?? '—'));
+  const usedSourceNames = React.useMemo(() => sourcesInUse().map(s => s.institution).join(' · '), []);
+  // Where the hero's scroll cue points: the Current Government section when
+  // it actually rendered, otherwise the next real section below it — never
+  // an id that isn't on the page.
+  const scrollTargetId = featuredGovernment.length ? 'current-government' : 'trust-heading';
 
   React.useEffect(() => { applyPageMeta(routeMeta('home')); }, []);
 
   return <>
-    <HomeHero/>
+    <HomeHero government={government} peopleCount={number(stats.people)} scrollTargetId={scrollTargetId}/>
 
-    <section className="section" id="explore" aria-labelledby="explore-heading">
+    {/* Rendered only when the derivation actually resolved someone — an empty
+        heading over nothing would read as "no current government" rather
+        than "no source check has completed yet", the same rule
+        GovernmentPage's own `Section` applies. */}
+    {featuredGovernment.length ? <section className="section section--tight" id="current-government" aria-labelledby="government-heading">
       <div className="container">
         <SectionHead
-          id="explore-heading"
-          title={t('home.exploreHeading')}
-          description={t('home.exploreDescription')}
+          id="government-heading"
+          title={t('home.governmentHeading')}
+          description={t('home.governmentDescription')}
+          action={<ActionLink label={t('home.governmentAction')} href="/government"/>}
         />
-        <nav className="quick-access" aria-labelledby="explore-heading">
-          {QUICK_ACCESS.map(item => (
-            <a className="quick-access__item" key={item.href} href={item.href}>
-              <span className="quick-access__icon" aria-hidden="true"><Icon name={item.icon}/></span>
-              <span className="quick-access__text">
-                <span className="quick-access__title">{t(item.titleKey)}</span>
-                <span className="quick-access__body">
-                  {t(item.bodyKey, { people: number(dirStats.people), serving: number(dirStats.serving) })}
-                </span>
-              </span>
-              <Icon name="arrowRight" className="quick-access__go"/>
-            </a>
-          ))}
-        </nav>
+        <div className="gov-grid">{featuredGovernment.map(member => <MemberCard key={member.personId} member={member}/>)}</div>
       </div>
-    </section>
+    </section> : null}
 
     <section className="section section--tight" aria-labelledby="directory-heading">
       <div className="container">
@@ -79,10 +60,25 @@ export default function HomePage() {
           id="directory-heading"
           title={t('home.directoryHeading')}
           description={t('home.directoryDescription')}
-          action={<ActionLink label={t('common.viewAll')} href="/directory"/>}
         />
-        <div className="grid-cards">{featured.map(view => <ProfileCard key={view.person.id} view={view} today={today}/>)}</div>
-        <p className="divider-note"><Icon name="layers"/><span>{t('home.showingOfDirectory', { shown: featured.length, total: number(dirStats.people) })}</span></p>
+        <nav className="browse-tiles" aria-labelledby="directory-heading">
+          <a className="browse-tile" href="/directory?role=cabinet-minister">
+            <span className="browse-tile__label">{t('home.browseCabinet')}</span>
+            <span className="browse-tile__count">{t('home.browseCount', { count: number(browseCounts.cabinet) })}</span>
+          </a>
+          <a className="browse-tile" href="/directory?role=member-of-parliament&status=serving">
+            <span className="browse-tile__label">{t('home.browseCurrentMPs')}</span>
+            <span className="browse-tile__count">{t('home.browseCount', { count: number(browseCounts.currentMPs) })}</span>
+          </a>
+          <a className="browse-tile" href="/directory?role=member-of-parliament&status=former">
+            <span className="browse-tile__label">{t('home.browseFormerMPs')}</span>
+            <span className="browse-tile__count">{t('home.browseCount', { count: number(browseCounts.formerMPs) })}</span>
+          </a>
+          <a className="browse-tile browse-tile--all" href="/directory">
+            <span className="browse-tile__label">{t('home.browseViewAll')}</span>
+            <span className="browse-tile__count">{t('home.browseCount', { count: number(dirStats.people) })}</span>
+          </a>
+        </nav>
       </div>
     </section>
 
@@ -105,24 +101,24 @@ export default function HomePage() {
           </div>
           <dl className="home-trust__figures">
             <div className="home-trust__figure">
-              <dt>{t('home.statPeople')}</dt>
+              <dt>{t('dataset.statPeople')}</dt>
               <dd>{number(stats.people)}</dd>
-              <p>{t('home.statPeopleNote', { count: number(stats.serving) })}</p>
+              <p>{t('dataset.statPeopleNote', { count: number(stats.serving) })}</p>
             </div>
             <div className="home-trust__figure">
-              <dt>{t('home.statPositions')}</dt>
+              <dt>{t('dataset.statPositions')}</dt>
               <dd>{number(stats.positions)}</dd>
-              <p>{t('home.statPositionsNote', { count: number(stats.distinctOffices) })}</p>
+              <p>{t('dataset.statPositionsNote', { count: number(stats.distinctOffices) })}</p>
             </div>
             <div className="home-trust__figure">
-              <dt>{t('home.statSources')}</dt>
-              <dd>{number(stats.sources)}</dd>
-              <p>{stats.connectedSources ? t('home.statSourcesConnected', { count: stats.connectedSources }) : t('home.statSourcesNone')}</p>
+              <dt>{t('dataset.statSourcesInUse')}</dt>
+              <dd>{number(stats.connectedSources)}</dd>
+              <p>{stats.connectedSources ? t('dataset.statSourcesInUseNote', { names: usedSourceNames }) : t('dataset.statSourcesNone')}</p>
             </div>
             <div className="home-trust__figure">
-              <dt>{t('home.statEarliest')}</dt>
+              <dt>{t('dataset.statEarliest')}</dt>
               <dd>{stats.earliestYear ?? '—'}</dd>
-              <p>{stats.earliestYear ? t('home.statEarliestRetained') : t('home.statEarliestNone')}</p>
+              <p>{stats.earliestYear ? t('dataset.statEarliestNote', { year: stats.earliestYear }) : t('dataset.statEarliestNone')}</p>
             </div>
           </dl>
         </div>

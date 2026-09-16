@@ -247,7 +247,10 @@
 .home-hero__pill {
   display: inline-flex;
   align-items: center;
-  height: 40px;
+  /* 44px, not the 40px this used to be: the smallest comfortable touch
+     target, and now load-bearing since two of these four chips are a
+     person's name rather than a short role word — see HomeHero.jsx. */
+  height: 44px;
   padding-inline: 20px;
   border: 1px solid var(--hh-pill-border);
   border-radius: 999px;
@@ -261,210 +264,50 @@
 .home-hero__pill:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.45); }
 .home-hero__pill:focus-visible { outline: 2px solid var(--hh-mint-300); outline-offset: 2px; }
 
-/* ---- Key public figures ------------------------------------------------- */
-
-.home-hero__figures-head {
-  margin-top: 44px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.home-hero__figures-heading {
-  margin: 0;
-  max-width: none;
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 1.5rem;
-  color: var(--hh-white);
-}
-
-.home-hero__figures-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: var(--hh-white);
-}
-
-.home-hero__figures-link svg { width: 18px; height: 18px; }
-.home-hero__figures-link:focus-visible { outline: 2px solid var(--hh-mint-300); outline-offset: 2px; border-radius: 4px; }
-
-.home-hero__figures {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-
-.home-hero__figure,
-.home-hero__figure--empty {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  height: 96px;
-  padding: 16px 20px;
-  background: var(--hh-glass-bg);
-  border: 1px solid var(--hh-glass-border);
-  border-radius: 16px;
-  backdrop-filter: blur(14px) saturate(120%);
-  -webkit-backdrop-filter: blur(14px) saturate(120%);
-  text-decoration: none;
-  color: inherit;
-  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
-}
-
-@supports not (backdrop-filter: blur(1px)) {
-  .home-hero__figure,
-  .home-hero__figure--empty { background: rgba(9, 28, 22, 0.86); }
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .home-hero__figure:hover {
-    border-color: rgba(255, 255, 255, 0.28);
-    background: color-mix(in srgb, var(--hh-glass-bg) 94%, white 6%);
-    transform: translateY(-2px);
-  }
-}
-
-.home-hero__figure:focus-visible { outline: 2px solid var(--hh-mint-300); outline-offset: 2px; }
-
-@media (prefers-reduced-motion: reduce) {
-  .home-hero__figure { transition: none; }
-  .home-hero__figure:hover { transform: none; }
-}
-
-.home-hero__figure .avatar,
-.home-hero__figure--empty .avatar {
-  flex: none;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
-}
-
-.home-hero__figure--empty .avatar { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); opacity: 0.7; }
-
-.home-hero__figure-text { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
-
-.home-hero__figure-name {
-  font-weight: 600;
-  color: var(--hh-white);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-  text-decoration-color: rgba(255, 255, 255, 0.5);
-}
-
-.home-hero__figure--empty .home-hero__figure-name { text-decoration: none; }
-
-.home-hero__figure-role { font-size: 0.9rem; color: var(--hh-text-dim); }
-
-.home-hero__figure-chevron { flex: none; width: 18px; height: 18px; color: rgba(255, 255, 255, 0.5); }
-
-/* ---- Stats strip --------------------------------------------------------- */
-
-.home-hero__stats {
-  margin-top: 24px;
-  display: flex;
-  align-items: center;
-  height: 92px;
-  padding-inline: 32px;
-  background: var(--hh-glass-bg);
-  border: 1px solid var(--hh-glass-border);
-  border-radius: 16px;
-  backdrop-filter: blur(14px) saturate(120%);
-  -webkit-backdrop-filter: blur(14px) saturate(120%);
-}
-
-@supports not (backdrop-filter: blur(1px)) {
-  .home-hero__stats { background: rgba(9, 28, 22, 0.86); }
-}
-
-.home-hero__stats-count { flex: none; display: flex; align-items: center; gap: 16px; padding-right: 32px; }
-.home-hero__stats-count svg { flex: none; width: 28px; height: 28px; color: rgba(255, 255, 255, 0.75); }
-.home-hero__stats-number { display: block; font-family: var(--font-serif); font-weight: 700; font-size: 2.6rem; line-height: 1; color: var(--hh-white); }
-.home-hero__stats-label { display: block; margin-top: 4px; font-size: 0.9rem; color: var(--hh-text-dim); }
-
-.home-hero__stats-item { position: relative; flex: 1; display: flex; align-items: center; gap: 12px; padding-inline: 32px; }
-.home-hero__stats-item::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 1px;
-  height: 48px;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.14);
-}
-.home-hero__stats-item svg { flex: none; width: 22px; height: 22px; color: rgba(255, 255, 255, 0.75); }
-.home-hero__stats-item-title { display: block; font-size: 0.95rem; font-weight: 600; color: var(--hh-white); }
-.home-hero__stats-item-sub { display: block; margin-top: 2px; font-size: 0.85rem; color: var(--hh-text-dim); }
-
 /* ---- Bottom row ----------------------------------------------------------- */
 
 .home-hero__bottom {
   margin-top: clamp(24px, 5vw, 40px);
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 24px;
 }
 
-/* `.home-hero__cta` is the same affordance `.home-hero__scroll` was, as a
-   real link — see HomeHero.jsx. The two share every rule; only the element
-   and the destination changed. */
-.home-hero__scroll,
-.home-hero__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--hh-text-dim);
-  font: inherit;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-.home-hero__cta { text-decoration: none; }
-.home-hero__cta:hover { color: var(--hh-white); }
-
-.home-hero__scroll-circle {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: clamp(36px, 6vw, 44px);
-  height: clamp(36px, 6vw, 44px);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 50%;
-  color: var(--hh-white);
-  transition: border-color var(--dur) var(--ease);
-}
-
-.home-hero__scroll-circle svg { width: 18px; height: 18px; }
-
-@media (hover: hover) and (pointer: fine) {
-  .home-hero__scroll:hover .home-hero__scroll-circle,
-  .home-hero__cta:hover .home-hero__scroll-circle { border-color: rgba(255, 255, 255, 0.6); }
-}
-
-.home-hero__cta:focus-visible .home-hero__scroll-circle,
-.home-hero__scroll:focus-visible .home-hero__scroll-circle { outline: 2px solid var(--hh-mint-300); outline-offset: 2px; }
-
-.home-hero__bottom-tagline {
+/* A real link to the section it names, not a sentence about the browser —
+   see HomeHero.jsx. Thin rule plus text, the same small/subtle weight the
+   tagline it replaced used, so it reads as a footnote-level affordance
+   rather than a second call to action competing with the search pill. */
+.home-hero__scroll-cue {
   margin: 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 16px;
   color: var(--hh-text-dim);
   font-size: 0.9rem;
+  text-decoration: none;
+  transition: color var(--dur) var(--ease);
 }
 
-.home-hero__bottom-rule { width: 64px; height: 1px; background: rgba(255, 255, 255, 0.35); flex: none; }
+.home-hero__scroll-cue svg { width: 16px; height: 16px; flex: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .home-hero__scroll-cue:hover { color: var(--hh-white); }
+  .home-hero__scroll-cue:hover .home-hero__bottom-rule { background: rgba(255, 255, 255, 0.6); }
+}
+
+.home-hero__scroll-cue:focus-visible {
+  outline: 2px solid var(--hh-mint-300);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.home-hero__bottom-rule {
+  width: 64px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.35);
+  flex: none;
+  transition: background-color var(--dur) var(--ease);
+}
 
 /* ==========================================================================
    Responsive
@@ -502,10 +345,9 @@
   .home-hero__media img { object-position: 40% center; }
 }
 
-/* <640px: bottom row stacks and drops the tagline. */
+/* <640px: bottom row stacks. */
 @media (max-width: 639px) {
   .home-hero__bottom { flex-direction: column; align-items: flex-start; gap: 16px; }
-  .home-hero__bottom-tagline { display: none; }
 
   /*
      "Popular searches:" is a label for the four pills, but in a single wrap
