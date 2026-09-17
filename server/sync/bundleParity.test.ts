@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { existsSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { join, resolve, dirname } from "node:path";
@@ -79,12 +79,24 @@ const FIXED_DAY = new Date("2026-08-31T00:00:00Z");
 const DB_POSITIONS_WITHOUT_EVIDENCE_BASELINE = 353;
 
 describe.skipIf(!HAVE_DB)("bundled dataset and database agree where they overlap", () => {
-  const db = new DatabaseSync(DB_PATH, { readOnly: true });
-  const rows = <T,>(sql: string): T[] => db.prepare(sql).all() as T[];
+  let db: DatabaseSync | null = null;
+  const rows = <T,>(sql: string): T[] => {
+    if (!db) throw new Error("parity database not opened");
+    return db.prepare(sql).all() as T[];
+  };
 
-  const dbPeople = rows<{ id: string; slug: string; canonical_name: string }>(
-    "SELECT id, slug, canonical_name FROM person",
-  );
+  beforeAll(() => {
+    db = new DatabaseSync(DB_PATH, { readOnly: true });
+    dbPeople = rows<{ id: string; slug: string; canonical_name: string }>(
+      "SELECT id, slug, canonical_name FROM person",
+    );
+  });
+
+  afterAll(() => {
+    db?.close();
+  });
+
+  let dbPeople: Array<{ id: string; slug: string; canonical_name: string }> = [];
   const bundle = allPeople(FIXED_DAY);
   const bundleById = new Map(bundle.map((v) => [v.person.id, v]));
 
