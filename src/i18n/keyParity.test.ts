@@ -27,9 +27,11 @@ import ta from "./ta.js";
  * `about` and `corrections` were added once the About-page cleanup closed
  * their own gap (about.* was previously 100% untranslated in si/ta;
  * corrections.* was missing one key in each) — see the About-page prompt's
- * Task 8.
+ * Task 8. `portfolioProfile` was added with the namespace itself (the
+ * portfolio-profile voter-clarity pass), so it starts in sync rather than
+ * inheriting the pre-existing gap the namespaces above it carry.
  */
-const SYNCED_NAMESPACES = ["nav", "footer", "home", "dataset", "about", "corrections"];
+const SYNCED_NAMESPACES = ["nav", "footer", "home", "dataset", "about", "corrections", "portfolioProfile"];
 
 function collectKeyPaths(node: unknown, prefix = ""): string[] {
   if (typeof node !== "object" || node === null) return [prefix];

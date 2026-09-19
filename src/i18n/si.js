@@ -377,6 +377,87 @@ export default {
     unknown: 'නොදනී',
   },
 
+  portfolioProfile: {
+    eyebrow: 'අමාත්‍ය ධුරය',
+    today: 'වත්මන් තත්ත්වය',
+    recordLevelSummary: 'පහත සෑම කරුණක්ම එය කියවූ නිල පිටුවට සම්බන්ධ වේ.',
+    scopeSentence: 'මෙම පිටුව {{name}} හිමිකම් කී වූ ඉහළම තනතුර ආවරණය කරයි: {{office}}, {{start}} සිට {{end}} දක්වා.',
+
+    theOffice: 'තනතුර',
+    appointments: 'පත්වීම්',
+    gazettedDuties: 'ගැසට් කළ රාජකාරි',
+    noDutiesRecorded: 'මෙම තනතුර සඳහා ගැසට් කළ රාජකාරි ප්‍රකාශයක් මෙහි සටහන් වී නැත.',
+    institutions: 'ආයතන',
+    noInstitutionsRecorded: 'මූලාශ්‍රයක් මගින් මෙම තනතුරට සම්බන්ධ කළ ආයතනයක් මෙහි සටහන් වී නැත.',
+
+    whatWasDone: 'සිදු කළ දේ',
+    noActionsRecorded: 'මෙම තනතුරේ කාලය තුළ එයට සම්බන්ධ ක්‍රියාමාර්ගයක් හමු වී නැත.',
+    colAction: 'ක්‍රියාමාර්ගය',
+    colDocumentedRole: '{{name}} ගේ සටහන් වූ භූමිකාව',
+    colWhatSourcesShow: 'මූලාශ්‍ර පෙන්වන දේ',
+    colStatus: 'තත්ත්වය',
+    moreDetails: 'තව විස්තර',
+    fewerDetails: 'අඩු විස්තර',
+    statedAim: 'ප්‍රකාශිත අරමුණ',
+    asOf: '{{date}} වන විට',
+    laterResult: 'කාලය තුළ ආරම්භ කළ දෙයක පසුකාලීන, මූලාශ්‍රගත ප්‍රතිඵලයකි.',
+
+    attribution: {
+      documentedPersonalAction: '{{name}} විසින් සටහන් කළ ක්‍රියාමාර්ගය.',
+      officeInstitution: 'මෙම තනතුර යටතේ ආයතනයක් විසින් ක්‍රියාත්මක කරන ලදී.',
+      governmentWide: 'රජයේ පුළුල් ක්‍රියාමාර්ගයකි; මෙම තනතුරට හිමිකම් කිව නොහැක.',
+    },
+
+    status: {
+      completed: 'සම්පූර්ණයි',
+      partlyCompleted: 'අර්ධ වශයෙන් සම්පූර්ණයි',
+      delayed: 'ප්‍රමාද වී ඇත',
+      notCompleted: 'සම්පූර්ණ වී නැත',
+      intendedOutcomeNotEstablished: 'අපේක්ෂිතයි, ප්‍රතිඵලය තහවුරු වී නැත',
+      outcomeNotEstablished: 'ප්‍රතිඵලය තහවුරු වී නැත',
+      sourcesConflict: 'මූලාශ්‍ර පරස්පර වේ',
+    },
+    statusHint: {
+      completed: 'අපේක්ෂිත පරිදි මෙය අවසන් කළ බව මූලාශ්‍රය තහවුරු කරයි.',
+      partlyCompleted: 'මෙයින් කොටසක් අවසන් කළ බව මූලාශ්‍රය තහවුරු කරයි; කොටසක් නැත.',
+      delayed: 'ක්‍රියාත්මක වෙමින් පවතී, නමුත් මූලාශ්‍රයේම කාලසටහනට හෝ අපේක්ෂාවට වඩා ප්‍රමාදයි.',
+      notCompleted: 'මෙය අවසන් නොකළ බව මූලාශ්‍රය තහවුරු කරයි.',
+      intendedOutcomeNotEstablished: 'මූලාශ්‍රයක් අභිප්‍රායක් හෝ ඉලක්කයක් ප්‍රකාශ කරයි; ප්‍රතිඵලයක් සටහන් වී නැත.',
+      outcomeNotEstablished: 'මෙය සිදු කරන ලදී, නමුත් එහි ප්‍රතිඵලය කිසිදු මූලාශ්‍රයක් තහවුරු නොකරයි.',
+      sourcesConflict: 'මූලාශ්‍ර දෙකක් හෝ වැඩි ගණනක් එකඟ නොවේ, හෝ සැලකිය යුතු ලෙස වෙනස් සංඛ්‍යා ලබා දෙයි.',
+    },
+
+    decisionsVotes: 'තීරණ සහ ඡන්ද',
+    noDecisionsRecorded: 'මෙම තනතුරේ විෂයයන් පිළිබඳ කාලය තුළ සටහන් වූ ඡන්ද හෝ තීරණ හමු වී නැත.',
+    colDate: 'දිනය',
+    colMatter: 'කරුණ',
+    colRecordedAction: '{{name}} ගේ සටහන් වූ ක්‍රියාව',
+    colResult: 'ප්‍රතිඵලය',
+    publicPositionLabel: 'මහජන ස්ථාවරයකි, ලේඛන ඡන්දයක් නොවේ',
+
+    notInThisRecord: 'මෙම වාර්තාවේ නොමැති දේ',
+    notRecorded: {
+      budget: 'මෙම තනතුරට වෙන් කළ අයවැය',
+      spent: 'සැබවින්ම වියදම් කළ මුදල්',
+      audit: 'විගණන සොයාගැනීම්',
+    },
+
+    otherOfficesHeld: 'දරන ලද අනෙකුත් තනතුරු',
+
+    sources: 'මූලාශ්‍ර',
+    source: 'මූලාශ්‍රය',
+    sourceNotYetListed: 'මූලාශ්‍රය තවම ලැයිස්තුගත කර නැත',
+    usedFor: 'භාවිතා කළේ: {{rows}}',
+    noLinkOnRecord: 'සටහන් සබැඳියක් නැත',
+    furtherReferencesNotListed: 'තවත් යොමු {{count}} ක් තවම මූලාශ්‍ර ලෙස ලැයිස්තුගත කර නැත.',
+
+    howToReadLabels: 'ලේබල් අදහස් කරන දේ',
+    howSourcedHeading: 'කරුණක් කෙතරම් තදින් මූලාශ්‍ර කර ඇත්ද?',
+    statusHeading: 'තත්ත්වය අදහස් කරන්නේ කුමක්ද?',
+
+    onThisPage: 'මෙම පිටුවේ',
+  },
+
   corrections: {
     eyebrow: 'දත්ත අඛණ්ඩතාව',
     title: 'දෝෂයක් වාර්තා කරන්න',

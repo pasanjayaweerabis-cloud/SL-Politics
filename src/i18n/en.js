@@ -501,6 +501,87 @@ export default {
     unknown: 'Unknown',
   },
 
+  portfolioProfile: {
+    eyebrow: 'Ministerial portfolio',
+    today: 'Today',
+    recordLevelSummary: 'every fact below links back to the official page it was read from.',
+    scopeSentence: 'This page covers {{name}}’s highest-ranking office on record: {{office}}, {{start}} to {{end}}.',
+
+    theOffice: 'The office',
+    appointments: 'Appointments',
+    gazettedDuties: 'Gazetted duties',
+    noDutiesRecorded: 'No gazetted duty statement for this office is on record here.',
+    institutions: 'Institutions',
+    noInstitutionsRecorded: 'No institution is tied to this office by a source on record here.',
+
+    whatWasDone: 'What was done',
+    noActionsRecorded: 'No action tied to this office during its term has been located.',
+    colAction: 'Action',
+    colDocumentedRole: '{{name}}’s documented role',
+    colWhatSourcesShow: 'What the sources show',
+    colStatus: 'Status',
+    moreDetails: 'More details',
+    fewerDetails: 'Fewer details',
+    statedAim: 'Stated aim',
+    asOf: 'as of {{date}}',
+    laterResult: 'A later, sourced result of something begun during the term.',
+
+    attribution: {
+      documentedPersonalAction: 'Documented action by {{name}}.',
+      officeInstitution: 'Run by an institution under this office.',
+      governmentWide: 'Government-wide; not attributable to this office.',
+    },
+
+    status: {
+      completed: 'Completed',
+      partlyCompleted: 'Partly completed',
+      delayed: 'Delayed',
+      notCompleted: 'Not completed',
+      intendedOutcomeNotEstablished: 'Intended, outcome not established',
+      outcomeNotEstablished: 'Outcome not established',
+      sourcesConflict: 'Sources conflict',
+    },
+    statusHint: {
+      completed: 'The source confirms this was finished as intended.',
+      partlyCompleted: 'The source confirms part of this was finished; part was not.',
+      delayed: 'Underway, but later than a source’s own schedule or expectation.',
+      notCompleted: 'The source confirms this was not finished.',
+      intendedOutcomeNotEstablished: 'A source states an intention or target; no outcome is recorded.',
+      outcomeNotEstablished: 'This was carried out, but no source establishes its outcome.',
+      sourcesConflict: 'Two or more sources disagree, or give materially inconsistent figures.',
+    },
+
+    decisionsVotes: 'Decisions & votes',
+    noDecisionsRecorded: 'No recorded votes or decisions on this office’s subjects during the term have been located.',
+    colDate: 'Date',
+    colMatter: 'Matter',
+    colRecordedAction: '{{name}}’s recorded action',
+    colResult: 'Result',
+    publicPositionLabel: 'Public position, not a roll-call vote',
+
+    notInThisRecord: 'Not in this record',
+    notRecorded: {
+      budget: 'Budget allocated to this office',
+      spent: 'Money actually spent',
+      audit: 'Audit findings',
+    },
+
+    otherOfficesHeld: 'Other offices held',
+
+    sources: 'Sources',
+    source: 'Source',
+    sourceNotYetListed: 'Source not yet listed',
+    usedFor: 'Used for: {{rows}}',
+    noLinkOnRecord: 'No link on record',
+    furtherReferencesNotListed: '{{count}} further references are not yet listed as sources.',
+
+    howToReadLabels: 'What the labels mean',
+    howSourcedHeading: 'How solidly is a fact sourced?',
+    statusHeading: 'What does the status mean?',
+
+    onThisPage: 'On this page',
+  },
+
   corrections: {
     eyebrow: 'Data integrity',
     title: 'Report an error',

@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { renderToString } from "react-dom/server";
 import PersonPage from "./PersonPage.jsx";
+import { getPersonBySlug } from "../services/repository.ts";
+import { formatDate } from "../lib/date.ts";
+import { HARSHA_DE_SILVA } from "../data/harshaDeSilva.ts";
 
 /**
  * Javora — which layout /person/:slug renders.
@@ -18,8 +21,8 @@ describe("PersonPage layout dispatch", () => {
   it("renders the portfolio profile for /person/harsha-de-silva", () => {
     const html = renderToString(<PersonPage slug="harsha-de-silva" />);
     expect(html).toContain("hds-profile");
-    expect(html).toContain("Major programmes and interventions documented during");
-    expect(html).toContain("Position and responsibilities");
+    expect(html).toContain("What was done");
+    expect(html).toContain("The office");
   });
 
   it("still keeps the site's 'Back to Directory' affordance on the portfolio profile", () => {
@@ -46,116 +49,27 @@ describe("PersonPage layout dispatch", () => {
 });
 
 /**
- * The portfolio profile's structure: four tabs, ten sections in one
- * continuous order across them, six of them real tables, and a working
- * Details control on the interventions table. These pin the structure so a
- * future pass can't silently flatten it back into cards or reorder the
- * sections per tab, the same bug class the original restructure exists to
- * fix.
+ * The portfolio profile's structure: one office, one guided scroll, no tabs.
+ * These pin the section order, the "on this page" nav, and the honesty
+ * rules the voter-clarity pass exists to enforce — that nothing here can
+ * show "Verified" without real evidence and a check date, that an unlisted
+ * reference never masquerades as a real citation, and that every fact still
+ * in the prerendered HTML even where it starts collapsed.
  *
- * What these tests DELIBERATELY no longer pin is the "Tier A / Tier B"
- * labelling and the 01-10 numerals that used to lead every heading. Those
- * were the research taxonomy the content was assembled under, printed as
- * the primary navigation of a public page; the UX pass replaced them with
- * labels that say what is inside each tab (see PROFILE_TABS in
- * PortfolioProfile.jsx) and with a per-tab jump row. The grouping, the
- * order, and every row of data are unchanged — which is exactly what the
- * tests below now assert, rather than the vocabulary that carried it.
+ * What these tests DELIBERATELY do not pin: exact column widths, exact
+ * copy wording (covered by PortfolioProfile.copy.test.jsx and the banned-
+ * phrase check below), or anything about `TabbedPersonPage` — this page no
+ * longer uses `Tabs`/`TabPanel` at all.
  */
-describe("PortfolioProfile — tab structure", () => {
+describe("PortfolioProfile — single-scroll structure", () => {
   const html = () => renderToString(<PersonPage slug="harsha-de-silva" />);
+  const SECTION_IDS = ["hds-office", "hds-actions", "hds-decisions", "hds-not-recorded", "hds-other-offices", "hds-sources"];
 
-  it("renders one tablist with the four tabs in order", () => {
+  it("renders no tablist, and orders every section the reader's-path table asks for", () => {
     const out = html();
-    const tablistMatches = out.match(/role="tablist"/g) ?? [];
-    expect(tablistMatches).toHaveLength(1);
+    expect(out).not.toContain('role="tablist"');
 
-    const labelIndexes = ["Performance", "Decisions &amp; voting", "Policy positions", "Role &amp; career"]
-      .map(label => out.indexOf(label));
-    expect(labelIndexes.every(i => i !== -1)).toBe(true);
-    expect([...labelIndexes]).toEqual([...labelIndexes].sort((a, b) => a - b));
-  });
-
-  it("shows no internal tier vocabulary to the reader", () => {
-    // The regression this guards is the reverse of the old one: the four
-    // groups must keep their reader-facing names rather than drifting back
-    // to the taxonomy they were filed under.
-    const out = html();
-    for (const tier of ["Tier A", "Tier B", "Tier C", "Tier D"]) {
-      expect(out).not.toContain(tier);
-    }
-  });
-
-  it("gives each multi-section tab a jump link to every section it contains", () => {
-    const out = html();
-    // The per-tab "on this page" row: one real anchor per section, rendered
-    // inside its own panel so every tab's row is in the prerendered HTML and
-    // works without JavaScript. A tab with a single section renders no row —
-    // one destination is not navigation — which is why the Policies tab's
-    // own id is not in this list.
-    for (const id of ["hds-outcomes", "hds-promises", "hds-votes", "hds-attribution", "hds-career", "hds-research"]) {
-      expect(out).toContain(`href="#${id}"`);
-    }
-  });
-
-  it("shows 'Portfolio at a glance' before the tablist", () => {
-    const out = html();
-    expect(out.indexOf("Portfolio at a glance")).toBeGreaterThan(-1);
-    expect(out.indexOf("Portfolio at a glance")).toBeLessThan(out.indexOf('role="tablist"'));
-  });
-
-  it("orders the numbered sections 01-10 correctly within their tab panels", () => {
-    const out = html();
-    const panelIds = ["performance", "record", "policies", "profile"].map(id => `id="hds-tab-panel-${id}"`);
-    const bounds = panelIds.map(marker => out.indexOf(marker));
-    expect(bounds.every(i => i !== -1)).toBe(true);
-
-    const sliceFor = index => {
-      const start = bounds[index];
-      const end = index + 1 < bounds.length ? bounds[index + 1] : out.indexOf('id="hds-sources"');
-      return out.slice(start, end);
-    };
-
-    const performance = sliceFor(0);
-    const record = sliceFor(1);
-    const policies = sliceFor(2);
-    const profile = sliceFor(3);
-
-    const headingsInOrder = (slice, headings) => {
-      const indexes = headings.map(h => slice.indexOf(h));
-      expect(indexes.every(i => i !== -1)).toBe(true);
-      expect(indexes).toEqual([...indexes].sort((a, b) => a - b));
-    };
-
-    headingsInOrder(performance, [
-      "Performance / outcome indicators",
-      "Promises &amp; outcomes",
-      "Major programmes and interventions documented during",
-      "Programmes &amp; interventions",
-    ]);
-    headingsInOrder(record, ["Voting &amp; decision record", "Responsibility &amp; attribution"]);
-    headingsInOrder(policies, ["Policies &amp; public positions"]);
-    headingsInOrder(profile, [
-      "Position and responsibilities",
-      "Detailed position &amp; responsibilities",
-      "Research notes &amp; historical context",
-    ]);
-  });
-
-  it("anchors each of the ten sections exactly once, in one continuous order", () => {
-    const out = html();
-    // Replaces the old "prints 01-10 exactly once" assertion. Same guard,
-    // without depending on the numerals: each section appears once (not
-    // duplicated across panels) and the ten run in one order across the four
-    // tabs rather than restarting per tab — which is what the numbering was
-    // really pinning. These ids are also the page's deep-link targets, so a
-    // duplicate or a reorder would break shared links too.
-    const ids = [
-      "hds-outcomes", "hds-promises", "hds-programmes", "hds-interventions",
-      "hds-votes", "hds-attribution", "hds-policies", "hds-role", "hds-career",
-      "hds-research",
-    ];
-    const positions = ids.map(id => {
+    const positions = SECTION_IDS.map(id => {
       const marker = `<h2 id="${id}"`;
       const count = out.split(marker).length - 1;
       expect(count, `expected exactly one heading with id "${id}"`).toBe(1);
@@ -164,52 +78,121 @@ describe("PortfolioProfile — tab structure", () => {
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
   });
 
-  it("labels an unresolved research citation instead of printing a bare token", () => {
+  it("gives the sticky nav a real anchor to every section that rendered", () => {
     const out = html();
-    // S1..S22 are references whose source records are not transcribed yet.
-    // Rendered bare they read as a broken link; the page must say what they
-    // are, and must still never link them.
-    expect(out).toContain("Source pending");
+    for (const id of SECTION_IDS) {
+      expect(out).toContain(`href="#${id}"`);
+    }
   });
 
-  it("states the record's own status above the tabs, not only at the foot", () => {
+  it("derives the hero term and appointments from the canonical record, not string literals", () => {
+    const view = getPersonBySlug("harsha-de-silva");
+    const focusPositions = view.positions.filter(p => p.roleType === HARSHA_DE_SILVA.focusPosition.roleType);
+    expect(focusPositions.length).toBe(HARSHA_DE_SILVA.focusPosition.appointments.length);
+
     const out = html();
-    const glance = out.indexOf("Portfolio at a glance");
-    const tablist = out.indexOf('role="tablist"');
-    expect(glance).toBeGreaterThan(-1);
-    expect(out.indexOf("Record status")).toBeGreaterThan(glance);
-    expect(out.indexOf("Record status")).toBeLessThan(tablist);
+    for (const position of focusPositions) {
+      expect(out).toContain(position.title);
+      expect(out).toContain(formatDate(position.startDate));
+      expect(out).toContain(formatDate(position.endDate));
+    }
   });
 
-  it("renders at least six real tables", () => {
-    const out = html();
-    const tableCount = (out.match(/<table\b/g) ?? []).length;
-    expect(tableCount).toBeGreaterThanOrEqual(6);
+  it("keeps every action and decision inside the term, or marks it a later sourced result", () => {
+    const termStart = HARSHA_DE_SILVA.focusPosition.appointments[0].start.date;
+    const termEnd = HARSHA_DE_SILVA.focusPosition.appointments.at(-1).end.date;
+    for (const row of HARSHA_DE_SILVA.actions) {
+      if (!row.period) continue; // no date recorded at all — nothing to check against the term
+      const inTerm = row.period.start.date >= termStart && (!row.period.end || row.period.end.date <= termEnd);
+      expect(inTerm || row.isLaterResult, `${row.id} is dated outside the term and not marked as a later result`).toBe(true);
+    }
+    // All four researched votes/positions fell outside the term (see
+    // docs/research/harsha-de-silva-out-of-scope.md) — the section renders
+    // its honest empty line instead of any of them.
+    expect(HARSHA_DE_SILVA.decisions).toEqual([]);
   });
 
-  it("includes content from collapsed and hidden places in the prerendered HTML", () => {
+  it("never shows a Verified badge — nothing in this hand-researched file carries a check date", () => {
     const out = html();
-    // A research-note label (inside the closed Research notes <details>).
-    expect(out).toContain("Evidence-backed strengths to investigate further");
-    // A source organisation (inside the closed Evidence & sources <details>).
-    expect(out).toContain("Parliament of Sri Lanka");
-    // An education entry (inside the Profile tab's collapsed-by-default panel).
-    expect(out).toContain("Truman State University");
-    // pi1's linked indicator text, inside its hidden Details row.
-    expect(out).toContain("1990 Suwa Seriya fleet");
+    expect(out).not.toContain("badge--verified");
   });
 
-  it("never links an S1..S22 pending-citation token", () => {
+  it("lists only the sourcing and status labels that actually render on this page", () => {
+    const out = html();
+    const legend = out.slice(out.indexOf('id="hds-labels"'));
+    expect(legend).toContain("Source-linked");
+    expect(legend).toContain("Unverified");
+    expect(legend).toContain("Intended, outcome not established");
+    expect(legend).toContain("Delayed");
+    for (const unused of [
+      "Pending review", "Demonstration", "Secondary source", "Sources conflict",
+      "Completed", "Partly completed", "Not completed", "Outcome not established",
+    ]) {
+      expect(legend).not.toContain(unused);
+    }
+  });
+
+  it("never prints removed editorial language or internal jargon", () => {
+    const out = html();
+    for (const banned of [
+      "What it tells the voter", "Effect on people", "Potentially positive",
+      "strengths", "should still verify", "dossier", "prototype", "research file",
+      "transcribed", "Tier", "See in 01", "2015 / Baseline", "records shown",
+    ]) {
+      expect(out).not.toContain(banned);
+    }
+  });
+
+  it("never links an unlisted reference, and never prints one as a bare visible token", () => {
     const out = html();
     const hrefs = [...out.matchAll(/href="([^"]*)"/g)].map(m => m[1]);
-    const badHref = hrefs.find(h => /^#?S(1?[0-9]|2[0-2])$/.test(h) || /S(1?[0-9]|2[0-2])"/.test(h));
-    expect(badHref).toBeUndefined();
+    expect(hrefs.some(h => h.includes("S17") || h.includes("S18"))).toBe(false);
+    expect(out).not.toMatch(/>S1[0-9]</);
+    expect(out).toContain('data-unlisted-ids="S17,S18"');
+    expect(out).toContain("Source not yet listed");
   });
 
-  it("renders 'No further detail' for interventions with no matched indicator (pi5, pi3)", () => {
+  it("keeps content inside closed <details> and hidden detail rows in the prerendered HTML", () => {
     const out = html();
-    const noFurther = out.split("No further detail").length - 1;
-    // pi5 (hasDetails: false) and pi3 (hasDetails: true but no indicatorIds yet).
-    expect(noFurther).toBeGreaterThanOrEqual(2);
+    expect(out).toContain("State Minister of National Policies"); // closed "Other offices held"
+    expect(out).toContain("Sunday Times (Business Times)"); // closed "Sources"
+    expect(out).toContain("Helps rice millers operate and purchase paddy"); // hidden action detail row
+  });
+
+  it("renders What was done as a real table, and never an empty table for the empty Decisions & votes", () => {
+    const out = html();
+    const tableCount = (out.match(/<table\b/g) ?? []).length;
+    // Decisions & votes is empty for Harsha de Silva — an honest empty line,
+    // never an empty <table>. Only "What was done"'s six rows render one.
+    expect(tableCount).toBe(1);
+  });
+});
+
+describe("harshaDeSilva.focusPosition matches the precedence rule", () => {
+  it("is the role type with the lowest precedenceFor() among his real positions", async () => {
+    const { precedenceFor } = await import("../data/roles.ts");
+    const view = getPersonBySlug("harsha-de-silva");
+    const byType = new Map();
+    for (const position of view.positions) {
+      if (!byType.has(position.roleType)) byType.set(position.roleType, []);
+      byType.get(position.roleType).push(position);
+    }
+    let winner = null;
+    for (const [roleType, positions] of byType) {
+      const precedence = precedenceFor(roleType);
+      if (!winner || precedence < winner.precedence) winner = { roleType, precedence, positions };
+    }
+    expect(HARSHA_DE_SILVA.focusPosition.roleType).toBe(winner.roleType);
+
+    // Every real position of the winning role type is declared, and nothing
+    // extra is — this is what "back-to-back appointments count as one
+    // continuous term" means in practice: both spells, not a hand-merged one.
+    const declared = HARSHA_DE_SILVA.focusPosition.appointments;
+    expect(declared.length).toBe(winner.positions.length);
+    for (const position of winner.positions) {
+      const match = declared.find(a => a.title === position.title && a.start.date === position.startDate);
+      expect(match, `no declared appointment matches "${position.title}" (${position.startDate})`).toBeTruthy();
+      expect(match.end?.date).toBe(position.endDate ?? undefined);
+    }
   });
 });
