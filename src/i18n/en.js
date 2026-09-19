@@ -575,9 +575,6 @@ export default {
     noLinkOnRecord: 'No link on record',
     furtherReferencesNotListed: '{{count}} further references are not yet listed as sources.',
 
-    howToReadLabels: 'What the labels mean',
-    howSourcedHeading: 'How solidly is a fact sourced?',
-    statusHeading: 'What does the status mean?',
 
     onThisPage: 'On this page',
   },

@@ -35,6 +35,8 @@ export default [
       'coverage/**',
       'ds-bundle/**',
       '.ds-sync/**',
+      'Claude outputs/**',
+      '.impeccable/**',
       '**/*.ts',
       '**/*.tsx',
     ],

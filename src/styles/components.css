@@ -1979,6 +1979,24 @@
 .form-field .search__field { border: 1px solid var(--control-border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
 .form-field .search__field:focus-within { outline: 2px solid var(--focus-outline); outline-offset: 1px; border-color: var(--secondary); }
 
+/* The wrapper above already draws the focus ring via :focus-within. Without
+   this, `.form-field input:focus-visible` also ringed the inner input, which
+   showed as a second line beside the clear button. */
+.form-field .search__input:focus-visible {
+  outline: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+/* The 44px touch-size clear button (see the coarse-pointer rule) fills the
+   field's whole 44px inner height here, so its hover circle touches the
+   border. Cap it and inset it; the 36px hit area stays comfortable. */
+.form-field .search__clear {
+  width: 36px;
+  height: 36px;
+  margin-right: var(--space-2);
+}
+
 .form-error {
   font-size: var(--text-sm);
   color: var(--danger-text);

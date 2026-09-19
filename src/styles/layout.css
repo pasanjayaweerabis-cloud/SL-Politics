@@ -7,7 +7,7 @@
    ========================================================================== */
 
 /*
- * The floating header card — see HOMEPAGE_BUILD_PROMPT.md §3.1.
+ * The floating header card — see docs/prompts/HOMEPAGE_BUILD_PROMPT.md §3.1.
  * `--hh-header-bg`/`--hh-header-text`/`--hh-header-rgb` are theme-mapped in
  * tokens.css (light card in light mode, dark card in dark mode) so the
  * header follows the reader's chosen palette instead of staying fixed.

@@ -335,14 +335,6 @@
    invariant applies here too, even without a TabPanel).
    ========================================================================== */
 
-.hds-profile__section--collapsible {
-  padding-bottom: 0;
-}
-
-.hds-profile__section--collapsible[open] {
-  padding-bottom: var(--space-10);
-}
-
 .hds-profile__collapsible-summary {
   cursor: pointer;
   list-style: none;
@@ -944,69 +936,6 @@ a.hds-profile__source-link:focus-visible svg {
   font-weight: 600;
   color: var(--muted);
   vertical-align: middle;
-}
-
-/* ==========================================================================
-   Labels explanation — closed by default, lists only the labels that
-   actually render on this page (computed in PortfolioProfile.jsx, not
-   hardcoded here).
-   ========================================================================== */
-
-.hds-profile__legend {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--panel-soft);
-}
-
-.hds-profile__legend > summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 48px;
-  padding: var(--space-3) var(--space-5);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.hds-profile__legend > summary::after {
-  content: "";
-  width: 8px;
-  height: 8px;
-  margin-left: var(--space-1);
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: translateY(-2px) rotate(45deg);
-  transition: transform var(--dur-fast) var(--ease);
-}
-
-.hds-profile__legend[open] > summary::after { transform: translateY(1px) rotate(-135deg); }
-
-.hds-profile__legend-body {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--space-6);
-  padding: 0 var(--space-5) var(--space-5);
-}
-
-.hds-profile__legend-list { margin: var(--space-3) 0 0; }
-
-.hds-profile__legend-list > div {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding-block: var(--space-2);
-  border-top: 1px dashed var(--line);
-}
-
-.hds-profile__legend-list dt { margin: 0; }
-
-.hds-profile__legend-list dd {
-  margin: 0;
-  font-size: var(--text-sm);
-  line-height: var(--lh-body);
-  color: var(--muted);
 }
 
 /* ==========================================================================

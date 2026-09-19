@@ -117,21 +117,6 @@ describe("PortfolioProfile — single-scroll structure", () => {
     expect(out).not.toContain("badge--verified");
   });
 
-  it("lists only the sourcing and status labels that actually render on this page", () => {
-    const out = html();
-    const legend = out.slice(out.indexOf('id="hds-labels"'));
-    expect(legend).toContain("Source-linked");
-    expect(legend).toContain("Unverified");
-    expect(legend).toContain("Intended, outcome not established");
-    expect(legend).toContain("Delayed");
-    for (const unused of [
-      "Pending review", "Demonstration", "Secondary source", "Sources conflict",
-      "Completed", "Partly completed", "Not completed", "Outcome not established",
-    ]) {
-      expect(legend).not.toContain(unused);
-    }
-  });
-
   it("never prints removed editorial language or internal jargon", () => {
     const out = html();
     for (const banned of [

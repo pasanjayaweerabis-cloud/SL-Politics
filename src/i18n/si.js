@@ -451,9 +451,6 @@ export default {
     noLinkOnRecord: 'සටහන් සබැඳියක් නැත',
     furtherReferencesNotListed: 'තවත් යොමු {{count}} ක් තවම මූලාශ්‍ර ලෙස ලැයිස්තුගත කර නැත.',
 
-    howToReadLabels: 'ලේබල් අදහස් කරන දේ',
-    howSourcedHeading: 'කරුණක් කෙතරම් තදින් මූලාශ්‍ර කර ඇත්ද?',
-    statusHeading: 'තත්ත්වය අදහස් කරන්නේ කුමක්ද?',
 
     onThisPage: 'මෙම පිටුවේ',
   },

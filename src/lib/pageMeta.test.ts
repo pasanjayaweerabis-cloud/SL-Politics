@@ -136,7 +136,7 @@ describe("person routes", () => {
 /**
  * The one profile with its own share card — see
  * docs/design/share-card-philosophy.md and the "Wiring og:image" section of
- * docs/portfolio-and-shared-visuals-toasts-prompt.md. Both the canonical
+ * docs/prompts/portfolio-and-shared-visuals-toasts-prompt.md. Both the canonical
  * `/person/harsha-de-silva` route and the retired `/politician/harsha-de-silva`
  * alias resolve through this same `personMeta("harsha-de-silva", ...)` call
  * (see routeMeta's "harsha-de-silva-profile" case above), so one assertion

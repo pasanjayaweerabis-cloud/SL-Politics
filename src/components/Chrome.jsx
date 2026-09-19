@@ -16,7 +16,7 @@ import { Dropdown } from './Dropdown.jsx';
  * information still live in the directory filters and the profile page; see
  * the note above `legacyRedirect` in `lib/router.tsx`.
  *
- * The home hero build (see HOMEPAGE_BUILD_PROMPT.md) asked for one more nav
+ * The home hero build (see docs/prompts/HOMEPAGE_BUILD_PROMPT.md) asked for one more nav
  * word — "Institutions" — that names no route this app has, and CLAUDE.md's
  * build-time rules forbid adding one ("do not change routes, the route
  * manifest"; Javora's one-loop nav above is a deliberate decision, not an

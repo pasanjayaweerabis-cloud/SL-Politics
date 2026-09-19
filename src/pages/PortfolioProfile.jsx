@@ -659,41 +659,6 @@ function SourcesSection({ content, t }) {
 }
 
 /* ==========================================================================
-   Labels explanation — only the labels that actually render on this page.
-   ========================================================================== */
-
-function LabelsExplanation({ sourcingStates, statuses, t }) {
-  return <details className="hds-profile__legend" id="hds-labels">
-    <summary>{t('portfolioProfile.howToReadLabels')}</summary>
-    <div className="hds-profile__legend-body">
-      <div>
-        <h3 className="hds-profile__sub-heading">{t('portfolioProfile.howSourcedHeading')}</h3>
-        <dl className="hds-profile__legend-list">
-          {sourcingStates.map(state => {
-            const presentation = presentVerification(state);
-            return <div key={state}>
-              <dt><VerifiedBadge state={state} compact/></dt>
-              <dd>{presentation.description}</dd>
-            </div>;
-          })}
-        </dl>
-      </div>
-      <div>
-        <h3 className="hds-profile__sub-heading">{t('portfolioProfile.statusHeading')}</h3>
-        <dl className="hds-profile__legend-list">
-          {statuses.map(status => (
-            <div key={status}>
-              <dt>{t(`portfolioProfile.status.${STATUS_KEY[status]}`)}</dt>
-              <dd>{t(`portfolioProfile.statusHint.${STATUS_KEY[status]}`)}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    </div>
-  </details>;
-}
-
-/* ==========================================================================
    Hash navigation — redirects a link built for the old tiered structure to
    the nearest section that still exists, opens any closed native <details>
    ancestor, and scrolls the target into view. Effect-only: it never touches
@@ -784,11 +749,6 @@ export default function PortfolioProfile({ content }) {
     return claims;
   }, [content]);
   const baseline = useMemo(() => recordLevelState(allClaims), [allClaims]);
-  const sourcingStates = useMemo(
-    () => [...new Set([baseline, ...allClaims.map(c => c.verification)])],
-    [baseline, allClaims],
-  );
-  const statuses = useMemo(() => [...new Set(content.actions.map(row => row.status))], [content.actions]);
 
   const sections = useMemo(() => {
     const list = [
@@ -834,11 +794,6 @@ export default function PortfolioProfile({ content }) {
         {content.sources.length ? <>
           <hr className="hds-profile__divider" />
           <SourcesSection content={content} t={t}/>
-        </> : null}
-
-        {allClaims.length ? <>
-          <hr className="hds-profile__divider" />
-          <LabelsExplanation sourcingStates={sourcingStates} statuses={statuses} t={t}/>
         </> : null}
       </div>
     </div>

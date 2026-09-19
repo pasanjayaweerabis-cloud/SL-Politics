@@ -451,9 +451,6 @@ export default {
     noLinkOnRecord: 'பதிவில் இணைப்பு இல்லை',
     furtherReferencesNotListed: 'மேலும் {{count}} குறிப்புகள் இன்னும் மூலாதாரங்களாக பட்டியலிடப்படவில்லை.',
 
-    howToReadLabels: 'லேபிள்கள் என்ன அர்த்தம்',
-    howSourcedHeading: 'ஒரு உண்மை எவ்வளவு உறுதியாக மூலாதாரம் கொண்டது?',
-    statusHeading: 'நிலை என்றால் என்ன?',
 
     onThisPage: 'இந்தப் பக்கத்தில்',
   },
