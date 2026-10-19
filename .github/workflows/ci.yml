@@ -125,7 +125,7 @@ jobs:
         with:
           languages: javascript-typescript
 
-      - uses: github/codeql-action/analyze@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+      - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v3
 
   # Flags newly-introduced dependencies with known vulnerabilities or
   # disallowed licenses, scoped to what a PR actually changes. Only
